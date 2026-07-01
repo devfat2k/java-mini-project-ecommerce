@@ -1,0 +1,3 @@
+# Production profile configuration
+server:
+  port: 8083

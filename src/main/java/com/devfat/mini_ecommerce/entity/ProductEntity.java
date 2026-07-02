@@ -1,7 +1,6 @@
-package com.devfat.mini_ecommerce.entity.product;
+package com.devfat.mini_ecommerce.entity;
 
 
-import com.devfat.mini_ecommerce.entity.categories.CategoryEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,8 +39,8 @@ public class ProductEntity {
     @Column(nullable = false)
     private Integer stock = 0;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "categories")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     private CategoryEntity category;
 
     @Column(name = "is_active", nullable = false)

@@ -1,4 +1,4 @@
-package com.devfat.mini_ecommerce.entity.user;
+package com.devfat.mini_ecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

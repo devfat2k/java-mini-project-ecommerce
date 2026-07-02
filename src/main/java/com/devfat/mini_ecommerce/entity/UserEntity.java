@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "users")
 public class UserEntity {
+    public enum Role { USER, ADMIN }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +37,7 @@ public class UserEntity {
     @Column(name = "phone_number",nullable = false, unique = true, length = 15)
     private String phoneNumber;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, length = 20)
@@ -54,5 +55,5 @@ public class UserEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public enum Role { USER, ADMIN }
+
 }

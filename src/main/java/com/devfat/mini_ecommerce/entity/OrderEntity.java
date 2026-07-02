@@ -24,6 +24,7 @@ import java.util.List;
 @Builder
 @Table(name = "orders")
 public class OrderEntity {
+    public enum OrderStatus { DONE, PENDING, SHIPPED, CONFIRMED, CANCELLED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,9 +45,8 @@ public class OrderEntity {
     private String note;
 
     // ← 1-N: 1 Order có nhiều OrderItem
-    // cascade ALL: save/delete Order sẽ tự save/delete các Item, orphanRemoval: xoá item khỏi list = xoá khỏi DB
     @OneToMany(mappedBy = "order",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     @Builder.Default
@@ -60,5 +60,5 @@ public class OrderEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public enum OrderStatus { DONE, PENDING, SHIPPED, CONFIRMED, CANCELLED }
+
 }

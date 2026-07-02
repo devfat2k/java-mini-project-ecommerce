@@ -34,5 +34,5 @@ public class OrderItemEntity {
     private Integer quantity;
 
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal unitPrice;
+    private BigDecimal unitPrice = BigDecimal.ZERO;
 }

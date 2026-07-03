@@ -23,7 +23,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.findByUserIdWithDetails(userId));
     }
 
-    @GetMapping("/order/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> getOrderById(
             @PathVariable("id") Long orderId
     ) {

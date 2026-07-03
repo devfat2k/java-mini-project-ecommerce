@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.service.impl;
 
+import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
 import com.devfat.mini_ecommerce.entity.ProductEntity;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
@@ -15,22 +16,35 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<ProductEntity> getAll(Pageable pageable) {
-        return productRepository.findAll(pageable);
+    private ProductResponseDto toResponse(ProductEntity productEntity) {
+       return ProductResponseDto.builder()
+               .id(productEntity.getId())
+               .name(productEntity.getName())
+               .price(productEntity.getPrice())
+               .stock(productEntity.getStock())
+               .categoryName(productEntity.getCategory() != null ? productEntity.getCategory().getName() : null)
+               .build();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ProductEntity findById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy id = " + id));
+    public Page<ProductResponseDto> getAll(Pageable pageable) {
+        return productRepository.findByStockGreaterThan(0, pageable)
+                .map(this::toResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ProductResponseDto findById(Long id) {
+        return productRepository.findById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy id = " + id));
+    }
+
     @Transactional
     public ProductEntity decreaseStock(Long productId, int quantity) {
-        ProductEntity product = findById(productId);
+        ProductEntity product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy id = " + productId));
 
         if(product.getStock() < quantity) {
             throw new RuntimeException("Không đủ số lượng");
@@ -45,5 +59,6 @@ public class ProductServiceImpl implements ProductService {
     public ProductEntity create(ProductEntity product) {
         return null;
     }
+
 
 }

@@ -1,12 +1,16 @@
 package com.devfat.mini_ecommerce.service;
+import com.devfat.mini_ecommerce.dto.request.CreateProductRequestDto;
+import com.devfat.mini_ecommerce.dto.request.UpdateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
-import com.devfat.mini_ecommerce.entity.ProductEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProductService {
-    Page<ProductResponseDto> getAll(Pageable pageable);
+    Page<ProductResponseDto> getProductsWithSearch(String search, Pageable pageable);
     ProductResponseDto findById(Long id);
-//    ProductEntity decreaseStock(Long productId, int quantity);
-    ProductEntity create(ProductEntity product);
+    ProductResponseDto create(CreateProductRequestDto createProductRequestDto);
+    ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequestDto);
+    Boolean softDelete(Long id);
+    ProductResponseDto decreaseStock(Long id, int quantity);
+    ProductResponseDto increaseStock(Long id, int quantity);
 }

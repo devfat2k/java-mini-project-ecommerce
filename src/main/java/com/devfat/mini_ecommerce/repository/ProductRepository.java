@@ -31,4 +31,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     // Pageable (phân trang, dùng cho API danh sách) - "Lấy sản phẩm còn hàng, có phân trang"
     Page<ProductEntity> findByStockGreaterThan(int stock, Pageable pageable);
 
+    // Pageable - "Lấy sản phẩm có phân trang, có search theo tên sản phầm"
+    Page<ProductEntity> findByNameContainsIgnoreCase(String search, Pageable pageable);
+
 }

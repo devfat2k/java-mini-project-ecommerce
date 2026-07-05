@@ -1,7 +1,14 @@
 package com.devfat.mini_ecommerce.service.impl;
 
+import com.devfat.mini_ecommerce.dto.request.CreateProductRequestDto;
+import com.devfat.mini_ecommerce.dto.request.UpdateProductRequestDto;
+import com.devfat.mini_ecommerce.dto.response.CategoryResponseDto;
 import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
+import com.devfat.mini_ecommerce.entity.CategoryEntity;
 import com.devfat.mini_ecommerce.entity.ProductEntity;
+import com.devfat.mini_ecommerce.exception.InsufficientStockException;
+import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
+import com.devfat.mini_ecommerce.repository.CategoryRepository;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -10,26 +17,48 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     private ProductResponseDto toResponse(ProductEntity productEntity) {
+        CategoryResponseDto categoryDto = productEntity.getCategory() != null
+                ? CategoryResponseDto.builder()
+                .id(productEntity.getCategory().getId())
+                .categoryName(productEntity.getCategory().getName())
+                .build()
+                : null;
        return ProductResponseDto.builder()
                .id(productEntity.getId())
                .name(productEntity.getName())
                .price(productEntity.getPrice())
                .stock(productEntity.getStock())
-               .categoryName(productEntity.getCategory() != null ? productEntity.getCategory().getName() : null)
-               .build();
+               .category(categoryDto) .build();
+    }
+
+    @Override
+    @Transactional
+    public ProductResponseDto create(CreateProductRequestDto createProductRequestDto) {
+        CategoryEntity category = categoryRepository.findById(createProductRequestDto.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
+        ProductEntity product = new ProductEntity();
+        product.setName(createProductRequestDto.name());
+        product.setCategory(category);
+        product.setDescription(createProductRequestDto.description());
+        product.setPrice(createProductRequestDto.price());
+        product.setStock(createProductRequestDto.stock());
+        product.setActive(createProductRequestDto.isActive());
+
+        return toResponse(productRepository.save(product));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductResponseDto> getAll(Pageable pageable) {
-        return productRepository.findByStockGreaterThan(0, pageable)
+    public Page<ProductResponseDto> getProductsWithSearch(String search, Pageable pageable) {
+        return productRepository.findByNameContainsIgnoreCase(search, pageable)
                 .map(this::toResponse);
     }
 
@@ -38,27 +67,68 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDto findById(Long id) {
         return productRepository.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy id = " + id));
-    }
-
-    @Transactional
-    public ProductEntity decreaseStock(Long productId, int quantity) {
-        ProductEntity product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy id = " + productId));
-
-        if(product.getStock() < quantity) {
-            throw new RuntimeException("Không đủ số lượng");
-        }
-
-        product.setStock(product.getStock() - quantity);
-        productRepository.save(product);
-        return product;
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy id = " + id));
     }
 
     @Override
-    public ProductEntity create(ProductEntity product) {
-        return null;
+    @Transactional
+    public ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequest) {
+        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+
+        if(updateProductRequest.name() != null) {
+            product.setName(updateProductRequest.name());
+        }
+        if(updateProductRequest.description() != null) {
+            product.setDescription(updateProductRequest.description());
+        }
+        if(updateProductRequest.stock() != null) {
+            product.setStock(updateProductRequest.stock());
+        }
+        if(updateProductRequest.categoryId() != null) {
+            CategoryEntity category = categoryRepository.findById(updateProductRequest.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
+            product.setCategory(category);
+        }
+
+        return toResponse(productRepository.save(product));
     }
 
 
+    @Transactional
+    public ProductResponseDto decreaseStock(Long id, int quantity) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy id = " + id));
+
+        if(quantity <= 0) throw new InsufficientStockException("Quantity must than 0");
+        if(product.getStock() < quantity) throw new InsufficientStockException("Không đủ số lượng");
+
+        product.setStock(product.getStock() - quantity);
+        productRepository.save(product);
+
+        return toResponse(product);
+    }
+
+    @Override
+    @Transactional
+    public ProductResponseDto increaseStock(Long id, int quantity) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+        if(quantity <= 0) throw new InsufficientStockException("Quantity must than 0");
+
+        product.setStock(product.getStock() + quantity);
+        productRepository.save(product);
+
+        return toResponse(product);
+    }
+
+    @Override
+    @Transactional
+    public Boolean softDelete(Long id) {
+        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+        if(!(product.isActive())) throw new ResourceNotFoundException("Products is unactive");
+
+        product.setActive(false);
+        productRepository.save(product);
+
+        return true;
+    }
 }

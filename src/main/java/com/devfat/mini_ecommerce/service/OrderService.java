@@ -10,4 +10,5 @@ public interface OrderService {
     List<OrderResponseDto> findByUserIdWithDetails(Long userId);
     OrderResponseDto findById(Long id);
     OrderResponseDto create(CreateOrderRequestDto createOrderRequestDto);
+    OrderResponseDto changeStatus(Long id, OrderEntity.OrderStatus orderStatus, OrderEntity.OrderStatus newStatus);
 }

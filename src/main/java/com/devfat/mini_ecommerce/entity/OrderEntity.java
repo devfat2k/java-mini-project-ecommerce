@@ -45,13 +45,13 @@ public class OrderEntity {
     private String note;
 
     // ← 1-N: 1 Order có nhiều OrderItem
-
     @OneToMany(mappedBy = "order",
             fetch = FetchType.LAZY,
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     @Builder.Default
     private List<OrderItemEntity> items = new ArrayList<>();
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -2,6 +2,7 @@ package com.devfat.mini_ecommerce.controller;
 import com.devfat.mini_ecommerce.dto.request.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
+import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @Operation(
             summary = "Create product",
@@ -106,5 +110,20 @@ public class ProductController {
             @PathVariable Long id, @RequestParam int quantity
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(productService.decreaseStock(id, quantity));
+    }
+
+    @GetMapping("/top-buy")
+    public ResponseEntity<List<ProductRepository.TopProductView>> getTopBuyProduct() {
+        return ResponseEntity.status(HttpStatus.OK).body(productRepository.getTopViewProduct(PageRequest.of(0, 10)));
+    }
+
+    @GetMapping("/revenue-by-category")
+    public ResponseEntity<List<ProductRepository.CategoryRevenueView>> getRevenueByCategory() {
+        return ResponseEntity.status(HttpStatus.OK).body(productRepository.getCategoryRevenue(PageRequest.of(0, 10)));
+    }
+
+    @GetMapping("/revenue-in-month")
+    public ResponseEntity<List<ProductRepository.MonthlyRevenueView>> getMonthlyRevenue() {
+        return ResponseEntity.status(HttpStatus.OK).body(productRepository.getMonthlyRevenue());
     }
 }

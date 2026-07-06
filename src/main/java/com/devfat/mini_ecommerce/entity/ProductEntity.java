@@ -1,6 +1,5 @@
 package com.devfat.mini_ecommerce.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -47,6 +47,9 @@ public class ProductEntity {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
+    @OneToMany(mappedBy = "product")
+    private List<OrderItemEntity> orderItems;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -54,5 +57,7 @@ public class ProductEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+
 
 }

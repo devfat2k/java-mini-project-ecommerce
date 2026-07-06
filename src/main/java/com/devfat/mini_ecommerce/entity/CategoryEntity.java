@@ -9,6 +9,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +27,9 @@ public class CategoryEntity {
 
     @Column(nullable = false, unique = true , length = 50)
     private String name;
+
+   @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
+   private List<ProductEntity> products;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

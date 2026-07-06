@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     //tìm orders theo userId
-    List<OrderResponseDto> findAllByUserId(Long userId);
+    List<OrderEntity> findAllByUserId(Long userId);
     //tìm orders theo status
     List<OrderEntity> findAllByStatus(OrderEntity.OrderStatus status);
     //Tìm orders theo userId VÀ status

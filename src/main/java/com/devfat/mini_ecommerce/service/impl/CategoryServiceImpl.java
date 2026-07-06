@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-
 @Service
 @AllArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -30,7 +29,6 @@ public class CategoryServiceImpl implements CategoryService {
                 .categoryName(categoryEntity.getName())
                 .build();
     }
-
 
     @Override
     @Transactional

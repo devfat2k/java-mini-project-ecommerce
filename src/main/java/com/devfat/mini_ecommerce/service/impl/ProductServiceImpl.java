@@ -13,9 +13,12 @@ import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 
 @Service
@@ -96,10 +99,10 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponseDto decreaseStock(Long id, int quantity) {
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Not found id = " + id));
 
         if(quantity <= 0) throw new InsufficientStockException("Quantity must than 0");
-        if(product.getStock() < quantity) throw new InsufficientStockException("Không đủ số lượng");
+        if(product.getStock() < quantity) throw new InsufficientStockException("Quantity must less than 0");
 
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);
@@ -130,5 +133,10 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
 
         return true;
+    }
+
+    @Override
+    public List<ProductRepository.TopProductView> getTopProducts(int limit) {
+        return productRepository.getTopViewProduct(PageRequest.of(0, limit));
     }
 }

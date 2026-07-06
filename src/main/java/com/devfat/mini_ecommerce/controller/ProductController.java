@@ -72,7 +72,8 @@ public class ProductController {
     )
     @PatchMapping("/{id}")
     public ResponseEntity<ProductResponseDto> updateProduct(
-            @Valid @PathVariable Long id, @RequestBody UpdateProductRequestDto updateProductRequest
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProductRequestDto updateProductRequest
     ) {
         ProductResponseDto productResponse = productService.update(id, updateProductRequest);
         return ResponseEntity.status(HttpStatus.OK).body(productResponse);
@@ -113,8 +114,10 @@ public class ProductController {
     }
 
     @GetMapping("/top-buy")
-    public ResponseEntity<List<ProductRepository.TopProductView>> getTopBuyProduct() {
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.getTopViewProduct(PageRequest.of(0, 10)));
+    public ResponseEntity<List<ProductRepository.TopProductView>> getTopBuyProduct(
+            @RequestParam  int limit
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.getTopProducts(limit));
     }
 
     @GetMapping("/revenue-by-category")

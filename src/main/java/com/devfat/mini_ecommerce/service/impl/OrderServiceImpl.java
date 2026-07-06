@@ -39,7 +39,6 @@ public class OrderServiceImpl implements OrderService {
             CANCELLED, Set.of(PENDING, CONFIRMED)
     );
 
-
     private OrderResponseDto toOrderResponse(OrderEntity orderEntity) {
         return OrderResponseDto.builder()
                 .id(orderEntity.getId())
@@ -76,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponseDto findById(Long orderId) {
         if(orderId == null) {
-            throw new IllegalArgumentException("orderId is null");
+            throw new ResourceNotFoundException("Order id is null");
         }
         return toOrderResponse(Objects.requireNonNull(orderRepository.findById(orderId).orElse(null)));
     }
@@ -100,9 +99,9 @@ public class OrderServiceImpl implements OrderService {
          * Gắn item vào order.getItems().add(item) + set item.setOrder(order)
          */
         createOrderRequestDto.items().forEach(requestItem -> {
-           ProductEntity product = productRepository.findById(requestItem.productId()).orElseThrow(() ->  new ResourceNotFoundException("Sản phẩm không tồn tại"));
+           ProductEntity product = productRepository.findById(requestItem.productId()).orElseThrow(() ->  new ResourceNotFoundException("Product not found!"));
             if (product.getStock() < requestItem.quantity()) {
-                throw new InsufficientStockException("Không đủ hàng cho sản phẩm: " + product.getName());
+                throw new InsufficientStockException("Not enough product: " + product.getName());
             }
            product.setStock(product.getStock() - requestItem.quantity());
             OrderItemEntity orderItem = OrderItemEntity.builder()
@@ -121,7 +120,6 @@ public class OrderServiceImpl implements OrderService {
         return toOrderResponse(orderRepository.save(order));
     }
 
-
     @Transactional
     @Override
     public OrderResponseDto changeStatus(Long id, UpdateOrderStatusRequestDto updateOrderStatusRequestDto) {
@@ -131,7 +129,6 @@ public class OrderServiceImpl implements OrderService {
         if (allowedNext == null || !allowedNext.contains(updateOrderStatusRequestDto.orderStatus())) {
             throw new InvalidStatusTransitionException("Do not change from " +  order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
         }
-
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
         return toOrderResponse(orderRepository.save(order));
     }

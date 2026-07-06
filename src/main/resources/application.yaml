@@ -3,13 +3,7 @@ spring:
     name: mini-ecommerce
   profiles:
     active: dev
-  #    ============ My SQL ======================
-  #    datasource:
-  #    url: jdbc:mysql://localhost:33336/shopdevgo
-  #    username: root
-  #    password: root1234
-  #    driver-class-name: com.mysql.cj.jdbc.Driver
-  #    ============== PostgressSql ===============
+
   datasource:
     url: jdbc:postgresql://localhost:5432/mini_shop
     username: postgres
@@ -54,13 +48,6 @@ spring:
             required: true
           ssl:
             enable: false
-
-  #  logging:
-  #    level:
-  #      org:
-  #        springframework:
-  #          web: DEBUG
-
   springdoc:
     api-docs:
       path: /v1/api-docs
@@ -72,3 +59,18 @@ spring:
       org.springframework.web: DEBUG
       org.hibernate.SQL: DEBUG          # thêm để thấy SQL rõ hơn
       org.hibernate.type: TRACE
+
+      #    ============ My SQL ======================
+      #    datasource:
+      #    url: jdbc:mysql://localhost:33336/shopdevgo
+      #    username: root
+      #    password: root1234
+      #    driver-class-name: com.mysql.cj.jdbc.Driver
+      #    ============== PostgressSql ===============
+
+
+      #  logging:
+      #    level:
+      #      org:
+      #        springframework:
+      #          web: DEBUG

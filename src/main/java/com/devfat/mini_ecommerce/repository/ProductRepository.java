@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Repository
 @EnableJpaRepositories
 public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
@@ -48,7 +47,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             " COALESCE(SUM(oi.quantity), 0) as mostBuy" +
             " FROM ProductEntity p " +
             " LEFT JOIN p.orderItems oi" +
-            " GROUP BY p.id, p.name, p.price " +
+            " GROUP BY  p.id, p.name, p.price " +
             " ORDER BY  COALESCE(SUM(oi.quantity), 0) DESC")
     List<TopProductView> getTopViewProduct(Pageable pageable);
 
@@ -62,7 +61,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             " LEFT JOIN c.products p" +
             " LEFT JOIN p.orderItems oi" +
             " GROUP BY  c.id, c.name" +
-            " ORDER BY COALESCE(SUM(oi.unitPrice * oi.quantity), 0) DESC")
+            " ORDER BY  COALESCE(SUM(oi.unitPrice * oi.quantity), 0) DESC")
     List<CategoryRevenueView> getCategoryRevenue(Pageable pageable);
 
     //MonthlyRevenueView
@@ -71,8 +70,9 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
         BigDecimal getRevenue();
     }
     @Query("  SELECT DATE_TRUNC('month', o.createdAt) as month, COALESCE(SUM(oi.unitPrice * oi.quantity) , 0) as revenue" +
-            " FROM ProductEntity o LEFT JOIN o.orderItems oi" +
+            " FROM OrderEntity o " +
+            " LEFT JOIN o.items oi" +
             " GROUP BY DATE_TRUNC('month', o.createdAt)" +
-            " ORDER BY DATE_TRUNC('month', o.createdAt)")
+            " ORDER BY DATE_TRUNC('month', o.createdAt) DESC")
     List<MonthlyRevenueView> getMonthlyRevenue();
 }

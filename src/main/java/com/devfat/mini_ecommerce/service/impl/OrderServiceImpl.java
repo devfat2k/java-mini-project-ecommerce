@@ -1,6 +1,7 @@
 package com.devfat.mini_ecommerce.service.impl;
 
 import com.devfat.mini_ecommerce.dto.request.CreateOrderRequestDto;
+import com.devfat.mini_ecommerce.dto.request.UpdateOrderStatusRequestDto;
 import com.devfat.mini_ecommerce.dto.response.OrderItemResponseDto;
 import com.devfat.mini_ecommerce.dto.response.OrderResponseDto;
 import com.devfat.mini_ecommerce.entity.OrderEntity;
@@ -123,14 +124,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public OrderResponseDto changeStatus(Long id, OrderEntity.OrderStatus orderStatus, OrderEntity.OrderStatus newStatus) {
+    public OrderResponseDto changeStatus(Long id, UpdateOrderStatusRequestDto updateOrderStatusRequestDto) {
         OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found!"));
 
-        Set<OrderEntity.OrderStatus> allowedNext = ALLOWED_ORDERS.get(orderStatus);
-        if (allowedNext == null || !allowedNext.contains(newStatus)) {
-            throw new InvalidStatusTransitionException("Do not change from " +  orderStatus + " to " + newStatus);
+        Set<OrderEntity.OrderStatus> allowedNext = ALLOWED_ORDERS.get(order.getStatus());
+        if (allowedNext == null || !allowedNext.contains(updateOrderStatusRequestDto.orderStatus())) {
+            throw new InvalidStatusTransitionException("Do not change from " +  order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
         }
-        order.setStatus(newStatus);
+
+        order.setStatus(updateOrderStatusRequestDto.orderStatus());
         return toOrderResponse(orderRepository.save(order));
     }
 

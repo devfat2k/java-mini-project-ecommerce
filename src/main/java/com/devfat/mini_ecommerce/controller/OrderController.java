@@ -1,15 +1,14 @@
 package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.dto.request.CreateOrderRequestDto;
+import com.devfat.mini_ecommerce.dto.request.UpdateOrderStatusRequestDto;
 import com.devfat.mini_ecommerce.dto.response.OrderResponseDto;
-import com.devfat.mini_ecommerce.entity.OrderEntity;
 import com.devfat.mini_ecommerce.service.OrderService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,13 +41,12 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderResponse);
     }
 
-    @PatchMapping("{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<OrderResponseDto> updateOrderStatus(
             @PathVariable Long id,
-            @RequestParam OrderEntity.OrderStatus currentStatus,
-            @RequestParam OrderEntity.OrderStatus newStatus
+            @Valid @RequestBody UpdateOrderStatusRequestDto updateOrderStatusRequestDto
             ) {
-        OrderResponseDto orderResponse = orderService.changeStatus(id, currentStatus, newStatus);
+        OrderResponseDto orderResponse = orderService.changeStatus(id, updateOrderStatusRequestDto);
         return ResponseEntity.status(HttpStatus.OK).body(orderResponse);
     }
 }

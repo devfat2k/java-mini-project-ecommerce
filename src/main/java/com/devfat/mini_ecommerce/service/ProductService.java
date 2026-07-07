@@ -17,4 +17,6 @@ public interface ProductService {
     ProductResponseDto decreaseStock(Long id, int quantity);
     ProductResponseDto increaseStock(Long id, int quantity);
     List<ProductRepository.TopProductView> getTopProducts(int limit);
+    List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable);
+    List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue();
 }

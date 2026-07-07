@@ -87,6 +87,9 @@ public class ProductServiceImpl implements ProductService {
         if(updateProductRequest.stock() != null) {
             product.setStock(updateProductRequest.stock());
         }
+        if (updateProductRequest.isActive() != null) {
+            product.setActive(updateProductRequest.isActive());
+        }
         if(updateProductRequest.categoryId() != null) {
             CategoryEntity category = categoryRepository.findById(updateProductRequest.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
             product.setCategory(category);
@@ -138,5 +141,15 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductRepository.TopProductView> getTopProducts(int limit) {
         return productRepository.getTopViewProduct(PageRequest.of(0, limit));
+    }
+
+    @Override
+    public List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable) {
+        return productRepository.getCategoryRevenue(pageable);
+    }
+
+    @Override
+    public List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue() {
+        return productRepository.getMonthlyRevenue();
     }
 }

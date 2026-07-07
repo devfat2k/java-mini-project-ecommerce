@@ -25,7 +25,6 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final ProductRepository productRepository;
 
     @Operation(
             summary = "Create product",
@@ -115,18 +114,18 @@ public class ProductController {
 
     @GetMapping("/top-buy")
     public ResponseEntity<List<ProductRepository.TopProductView>> getTopBuyProduct(
-            @RequestParam  int limit
+            @RequestParam int limit
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(productService.getTopProducts(limit));
     }
 
     @GetMapping("/revenue-by-category")
     public ResponseEntity<List<ProductRepository.CategoryRevenueView>> getRevenueByCategory() {
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.getCategoryRevenue(PageRequest.of(0, 10)));
+        return ResponseEntity.status(HttpStatus.OK).body(productService.getCategoryRevenue(PageRequest.of(0, 10)));
     }
 
     @GetMapping("/revenue-in-month")
     public ResponseEntity<List<ProductRepository.MonthlyRevenueView>> getMonthlyRevenue() {
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.getMonthlyRevenue());
+        return ResponseEntity.status(HttpStatus.OK).body(productService.getMonthlyRevenue());
     }
 }

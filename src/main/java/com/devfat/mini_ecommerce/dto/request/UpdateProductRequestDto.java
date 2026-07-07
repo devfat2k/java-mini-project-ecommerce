@@ -12,7 +12,7 @@ public record UpdateProductRequestDto(
          String description,
          @DecimalMin(value = "0", inclusive = false) BigDecimal price,  // đúng kiểu ngay từ đầu
          @Min(1) Integer stock,
-         boolean isActive,
+         Boolean isActive,
          Long categoryId
 )
 {}

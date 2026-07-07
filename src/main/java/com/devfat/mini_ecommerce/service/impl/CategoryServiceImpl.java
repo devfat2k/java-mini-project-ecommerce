@@ -7,6 +7,7 @@ import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.CategoryRepository;
 import com.devfat.mini_ecommerce.service.CategoryService;
 import lombok.AllArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponseDto findById(Long id) {
         return categoryRepository.findById(id)
                 .map(this::toCategoryResponseDto)
-                .orElseThrow(() -> new RuntimeException("Category is not found. Id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category is not found. Id = " + id));
     }
 
 
@@ -69,8 +70,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public Boolean deleteById(Long id) {
+    public Boolean deleteById(Long id) throws BadRequestException {
         CategoryEntity categoryEntity = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category is not found. id = " + id));
+        if (!categoryEntity.getProducts().isEmpty()) {
+            throw new BadRequestException("Category is had products. Do not delete any products.");
+        }
         categoryRepository.delete(categoryEntity);
         return true;
     }

@@ -35,8 +35,8 @@ public class OrderServiceImpl implements OrderService {
     private static final Map<OrderEntity.OrderStatus, Set<OrderEntity.OrderStatus>> ALLOWED_ORDERS = Map.of(
             PENDING, Set.of(CONFIRMED),
             CONFIRMED, Set.of(SHIPPED),
-            SHIPPED, Set.of(DONE),
-            CANCELLED, Set.of(PENDING, CONFIRMED)
+            SHIPPED, Set.of(DONE)
+//            CANCELLED, Set.of(PENDING, CONFIRMED)
     );
 
     private OrderResponseDto toOrderResponse(OrderEntity orderEntity) {
@@ -132,5 +132,4 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
         return toOrderResponse(orderRepository.save(order));
     }
-
 }

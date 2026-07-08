@@ -33,10 +33,10 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
 
     private static final Map<OrderEntity.OrderStatus, Set<OrderEntity.OrderStatus>> ALLOWED_ORDERS = Map.of(
-            PENDING, Set.of(CONFIRMED),
-            CONFIRMED, Set.of(SHIPPED),
-            SHIPPED, Set.of(DONE)
-//            CANCELLED, Set.of(PENDING, CONFIRMED)
+            PENDING,   Set.of(CONFIRMED, CANCELLED),
+            CONFIRMED, Set.of(SHIPPED, CANCELLED),
+            SHIPPED,   Set.of(DONE)
+            // DONE, CANCELLED không có entry -> get() trả null -> exception -> đúng vì đây là trạng thái kết thúc
     );
 
     private OrderResponseDto toOrderResponse(OrderEntity orderEntity) {

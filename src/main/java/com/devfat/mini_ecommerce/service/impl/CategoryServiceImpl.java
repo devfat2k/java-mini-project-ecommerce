@@ -3,6 +3,7 @@ package com.devfat.mini_ecommerce.service.impl;
 import com.devfat.mini_ecommerce.dto.request.CreateCategoryRequestDto;
 import com.devfat.mini_ecommerce.dto.response.CategoryResponseDto;
 import com.devfat.mini_ecommerce.entity.CategoryEntity;
+import com.devfat.mini_ecommerce.exception.CategoryHasProductsException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.CategoryRepository;
 import com.devfat.mini_ecommerce.service.CategoryService;
@@ -70,10 +71,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public Boolean deleteById(Long id) throws BadRequestException {
+    public Boolean deleteById(Long id) {
         CategoryEntity categoryEntity = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category is not found. id = " + id));
         if (!categoryEntity.getProducts().isEmpty()) {
-            throw new BadRequestException("Category is had products. Do not delete any products.");
+            throw new CategoryHasProductsException("Category is had products. Do not delete any products.");
         }
         categoryRepository.delete(categoryEntity);
         return true;

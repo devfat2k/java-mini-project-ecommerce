@@ -12,5 +12,5 @@ public interface CategoryService {
     Page<CategoryResponseDto> findByNameContainingIgnoreCase(String name, Pageable pageable);
     CategoryResponseDto findById(Long id);
     CategoryResponseDto update(Long id, CreateCategoryRequestDto createCategoryRequestDto);
-    Boolean deleteById(Long id) throws BadRequestException;
+    Boolean deleteById(Long id);
 }

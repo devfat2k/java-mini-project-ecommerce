@@ -23,13 +23,14 @@ public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false)
     private Long id;
 
     @Column(nullable = false, unique = true , length = 50)
     private String name;
 
-   @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
-   private List<ProductEntity> products;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
+    private List<ProductEntity> products;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

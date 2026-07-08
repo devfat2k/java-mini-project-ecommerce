@@ -1,13 +1,11 @@
 package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.dto.request.CreateCategoryRequestDto;
-import com.devfat.mini_ecommerce.dto.request.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.response.CategoryResponseDto;
 import com.devfat.mini_ecommerce.service.CategoryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,7 +57,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Boolean> deleteCategory(@PathVariable Long id) throws BadRequestException {
+    public ResponseEntity<Boolean> deleteCategory(@PathVariable Long id) {
         boolean isDeletedCategory = categoryService.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(isDeletedCategory);
     }

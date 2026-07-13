@@ -23,6 +23,10 @@ public class UserPrincipal implements UserDetails {
         return userEntity.getId();
     }
 
+    public String getRole() {
+        return userEntity.getRole().name();
+    }
+
     @Override
     public String getPassword() {
         return userEntity.getPassword();

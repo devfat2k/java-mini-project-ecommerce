@@ -1,7 +1,9 @@
 package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.dto.request.LoginRequestDto;
 import com.devfat.mini_ecommerce.dto.request.RegisterRequestDto;
+import com.devfat.mini_ecommerce.dto.response.AuthResponseDto;
 import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
 import com.devfat.mini_ecommerce.service.AuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +30,18 @@ public class AuthController {
         UserResponseDto response = authService.register(registerRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
                 response,
-                "Create User successfully!"
+                "Create User Successfully!"
+        ));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponseDto>> login(
+            @Valid @RequestBody LoginRequestDto loginRequestDto
+            ) {
+        AuthResponseDto response = authService.login(loginRequestDto);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                response,
+                "Login Successfully!"
         ));
     }
 }

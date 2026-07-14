@@ -1,10 +1,13 @@
 package com.devfat.mini_ecommerce.controller;
+
+import com.devfat.mini_ecommerce.common.ApiResponse;
 import com.devfat.mini_ecommerce.dto.request.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,38 +17,46 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
 @RequestMapping("/api/v1/products")
+@RestController
 @RequiredArgsConstructor
 @Tag(name = "Product", description = "Product Manager")
 public class ProductController {
 
     private final ProductService productService;
 
+
     @Operation(
             summary = "Create product",
             description = "Create a new product using the request body."
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping()
-    public ResponseEntity<ProductResponseDto> createProduct(
+    public ResponseEntity<ApiResponse<ProductResponseDto>> createProduct(
             @Valid @RequestBody()CreateProductRequestDto createProductRequest
     ) {
         ProductResponseDto productResponseDto = productService.create(createProductRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(productResponseDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+                productResponseDto,
+                "Create Product Successfully!"
+        ));
     }
+
 
     @Operation(
             summary = "Get products",
             description = "Retrieve products with pagination, search and sorting."
     )
+    @SecurityRequirements({})
     @GetMapping
-    public Page<ProductResponseDto> getAll(
+    public ResponseEntity<ApiResponse<Page<ProductResponseDto>>> getAll(
             @RequestParam int page,
-            @RequestParam int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String search,
             @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "asc") String direction
@@ -53,79 +64,127 @@ public class ProductController {
         Sort.Direction sortDirection = direction.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Sort sortBy = Sort.by(sortDirection, sort);
         Pageable pageable = PageRequest.of(page, size, sortBy);
-        return productService.getProductsWithSearch(search, pageable);
+
+        return ResponseEntity.ok().body(ApiResponse.success(
+                productService.getProductsWithSearch(search, pageable),
+                "Get product successfully"
+        ));
+
     }
+
 
     @Operation(
             summary = "Get product by ID",
             description = "Retrieve a product by its ID."
     )
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponseDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.findById(id));
+    public ResponseEntity<ApiResponse<ProductResponseDto>> getById(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.success(
+                        productService.findById(id),
+                        "Get Product Success"
+                ));
     }
+
 
     @Operation(
             summary = "Update product",
             description = "Update one or more product fields. Only provided fields will be updated."
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
-    public ResponseEntity<ProductResponseDto> updateProduct(
+    public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody UpdateProductRequestDto updateProductRequest
     ) {
         ProductResponseDto productResponse = productService.update(id, updateProductRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(productResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productResponse,
+                "Update Product Successfully!"
+        ));
     }
 
+    //============================================================//
     @Operation(
             summary = "Soft delete product",
             description = "Mark the product as inactive."
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Boolean> deleteProduct(
+    public ResponseEntity<ApiResponse<Boolean>> deleteProduct(
             @PathVariable Long id
     ) {
+
         boolean isSoftDelete = productService.softDelete(id);
-        return ResponseEntity.status(HttpStatus.OK).body(isSoftDelete);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                isSoftDelete,
+                "Delete product successfully!"
+        ));
     }
 
+    //============================================================//
     @Operation(
             summary = "Increase product stock",
             description = "Increase the stock quantity of a product."
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/increase/{id}")
-    public ResponseEntity<ProductResponseDto> increaseStock(
-            @PathVariable Long id, @RequestParam int quantity
+    public ResponseEntity<ApiResponse<ProductResponseDto>> increaseStock(
+            @PathVariable Long id,
+            @RequestParam int quantity
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.increaseStock(id, quantity));
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.increaseStock(id, quantity),
+                "Increase Stock Successfully!"
+        ));
     }
 
+    //============================================================//
     @Operation(
             summary = "Decrease product stock",
             description = "Decrease the stock quantity of a product."
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/decrease/{id}")
-    public ResponseEntity<ProductResponseDto> decreaseStock(
+    public ResponseEntity<ApiResponse<ProductResponseDto>> decreaseStock(
             @PathVariable Long id, @RequestParam int quantity
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.decreaseStock(id, quantity));
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.decreaseStock(id, quantity),
+                "Decrease Stock Successfully!"
+        ));
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/top-buy")
-    public ResponseEntity<List<ProductRepository.TopProductView>> getTopBuyProduct(
-            @RequestParam int limit
+    public ResponseEntity<ApiResponse<List<ProductRepository.TopProductView>>> getTopBuyProduct(
+            @RequestParam(defaultValue = "10") int limit
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.getTopProducts(limit));
+        return ResponseEntity.ok().body(ApiResponse.success(
+                productService.getTopProducts(limit),
+                "Get Top Product Successfully!"
+        ));
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/revenue-by-category")
-    public ResponseEntity<List<ProductRepository.CategoryRevenueView>> getRevenueByCategory() {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.getCategoryRevenue(PageRequest.of(0, 10)));
+    public ResponseEntity<ApiResponse<List<ProductRepository.CategoryRevenueView>>> getRevenueByCategory() {
+        return ResponseEntity.ok().body(ApiResponse.success(
+                productService.getCategoryRevenue(PageRequest.of(0, 10)),
+                "Get Revenue By Category Success!"
+        ));
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/revenue-in-month")
-    public ResponseEntity<List<ProductRepository.MonthlyRevenueView>> getMonthlyRevenue() {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.getMonthlyRevenue());
+    public ResponseEntity<ApiResponse<List<ProductRepository.MonthlyRevenueView>>> getMonthlyRevenue() {
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        productService.getMonthlyRevenue(),
+                        "Get Monthly Revenue Success!"
+                ));
     }
 }

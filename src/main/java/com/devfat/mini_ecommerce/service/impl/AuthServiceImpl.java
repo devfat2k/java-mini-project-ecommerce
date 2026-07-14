@@ -47,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public UserResponseDto register(RegisterRequestDto registerRequestDto) {
         String email = registerRequestDto.email().trim().toLowerCase(Locale.ROOT);
-        String phone = registerRequestDto.phoneNumber().trim();
+        String phone = registerRequestDto.phoneNumber().trim(); // KHÔNG ĐUỌC toLowerCase vì sẽ lấy sai khi so sánh với pw dưới db
 
         boolean presentEmail = userRepository.findByEmail(email).isPresent();
         boolean presentPhone = userRepository.findByPhoneNumber(phone).isPresent();
@@ -70,9 +70,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     *
-     * @param loginRequestDto
-     * @return
      * 1. Tạo UsernamePasswordAuthenticationToken(email, password) — token "thô" chưa xác thực
      * 2. Gọi authenticationManager.authenticate(token đó)
      *    -> Bên trong Spring tự gọi CustomUserDetailsService (B1) + PasswordEncoder (B2)
@@ -85,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
         String email = loginRequestDto.email().trim().toLowerCase(Locale.ROOT);
-        String password = loginRequestDto.password().trim().toLowerCase(Locale.ROOT);
+        String password = loginRequestDto.password().trim();
 
         UsernamePasswordAuthenticationToken tokenRequest = new UsernamePasswordAuthenticationToken(email, password);
         Authentication lastestResult = authenticationManager.authenticate(tokenRequest);

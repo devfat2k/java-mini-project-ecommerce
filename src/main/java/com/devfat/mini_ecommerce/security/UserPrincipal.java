@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,17 +15,17 @@ public class UserPrincipal implements UserDetails {
 
     private final UserEntity userEntity;
 
-    @Override
-    public String getUsername() {
-        return userEntity.getEmail();
-    }
-
     public Long getUserId() {
         return userEntity.getId();
     }
 
     public String getRole() {
         return userEntity.getRole().name();
+    }
+
+    @Override
+    public String getUsername() {
+        return userEntity.getEmail();
     }
 
     @Override

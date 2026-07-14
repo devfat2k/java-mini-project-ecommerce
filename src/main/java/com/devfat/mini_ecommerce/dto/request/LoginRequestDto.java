@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Size;
 public record LoginRequestDto(
         @NotNull
         @NotBlank(message = "Email is required!")
-        @Email
         @Size(min = 5, max = 255, message = "Email is valid patent!")
+        @Email
         String email,
 
         @NotBlank(message = "Password is required!")

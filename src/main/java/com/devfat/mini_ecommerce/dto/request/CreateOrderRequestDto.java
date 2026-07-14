@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record CreateOrderRequestDto(
-        @NotNull  Long userId,
+//        @NotNull  Long userId, -- KHÔNG SỬ DỤNG UserId mà sử dụng từ TOKEN lấy từ UserPrincipal
         @NotEmpty @Valid List<OrderItemRequest> items
 ) {
     public record OrderItemRequest(

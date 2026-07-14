@@ -16,21 +16,27 @@ import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
 import com.devfat.mini_ecommerce.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import static com.devfat.mini_ecommerce.entity.OrderEntity.OrderStatus.*;
 import java.math.BigDecimal;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+
+
 
     private static final Map<OrderEntity.OrderStatus, Set<OrderEntity.OrderStatus>> ALLOWED_ORDERS = Map.of(
             PENDING,   Set.of(CONFIRMED, CANCELLED),
@@ -56,35 +62,61 @@ public class OrderServiceImpl implements OrderService {
                 ).build();
     }
 
+
+    /**
+     * 1. Lấy userId hiện tại từ @AuthenticationPrincipal (giống trên)
+     * 2. Lấy role hiện tại từ userPrincipal (dùng lại getAuthorities() đã có, hoặc thêm getRole() nếu UserPrincipal đã có sẵn từ C3)
+     * 3. Nếu role là ADMIN -> cho phép xem bất kỳ userId nào trong path (không cần so sánh)
+     * 4. Nếu role là USER -> so sánh userId trong path với userId hiện tại:
+     *      - Khớp -> cho qua
+     *      - Không khớp -> throw AccessDeniedException (dùng đúng class Spring Security,
+     *        để rơi vào đúng handler đã có sẵn từ D2 -> tự động trả 403 đúng format)
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponseDto> findByUserIdWithDetails(Long userId) {
-        if(userId == null) {
+    public List<OrderResponseDto> findByUserIdWithDetails(Long userIdPath, Long userIdInToken, String userRole) throws AccessDeniedException {
+        if(userIdPath == null && userIdInToken == null) {
             throw new ResourceNotFoundException("User id is required!");
         }
-        if(userRepository.findById(userId).isEmpty()) {
+        if(userRepository.findById(Objects.requireNonNull(userIdPath)).isEmpty() || userRepository.findById(userIdInToken).isEmpty()) {
             throw new ResourceNotFoundException("User not found!");
         }
-        return orderRepository.findByUserIdWithDetails(userId)
+
+        if(userRole.equalsIgnoreCase("USER") && !(userIdInToken.equals(userIdPath))) {
+            throw new AccessDeniedException("Access denied!. User ID is invalid or does not belong to you!");
+        }
+
+        return orderRepository.findByUserIdWithDetails(userIdPath)
                 .stream()
                 .map(this::toOrderResponse)
                 .toList();
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public OrderResponseDto findById(Long orderId) {
+    public OrderResponseDto findById(Long orderId, Long userIdInToken, String userRole) throws AccessDeniedException {
         if(orderId == null) {
             throw new ResourceNotFoundException("Order id is null");
         }
-        return toOrderResponse(Objects.requireNonNull(orderRepository.findById(orderId).orElse(null)));
+
+        if(userIdInToken == null) {
+            throw new AccessDeniedException("User ID is invalid or does not belong to you!");
+        }
+
+        //nếu KHÔNG phải ADMIN thì phải đúng userId -> cùng đơn hàng user đang có mới xem được -> Bắt trường hợp xem orderId của người khác
+        if(!(userRole.equalsIgnoreCase("ADMIN"))) {
+            orderRepository.findAllByUserId(userIdInToken).orElseThrow(() -> new AccessDeniedException("Access denied! Order ID is invalid or does not belong to you!"));
+        }
+
+        return toOrderResponse(Objects.requireNonNull(orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order is not found or null!"))));
     }
 
     @Override
     @Transactional
-    public OrderResponseDto create(CreateOrderRequestDto createOrderRequestDto) {
+    public OrderResponseDto create(Long userId, CreateOrderRequestDto createOrderRequestDto) {
         // b1. Tìm User theo user id
-        UserEntity user = userRepository.findById(createOrderRequestDto.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
         // b2. Tạo đơn hàng rỗng - có total amount =0
         OrderEntity order = new OrderEntity();
         order.setUser(Objects.requireNonNull(user));
@@ -127,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
 
         Set<OrderEntity.OrderStatus> allowedNext = ALLOWED_ORDERS.get(order.getStatus());
         if (allowedNext == null || !allowedNext.contains(updateOrderStatusRequestDto.orderStatus())) {
-            throw new InvalidStatusTransitionException("Do not change from " +  order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
+            throw new InvalidStatusTransitionException("Do not change from " + order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
         }
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
         return toOrderResponse(orderRepository.save(order));

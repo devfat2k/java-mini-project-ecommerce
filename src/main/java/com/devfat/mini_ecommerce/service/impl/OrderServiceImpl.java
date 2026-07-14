@@ -104,12 +104,19 @@ public class OrderServiceImpl implements OrderService {
             throw new AccessDeniedException("User ID is invalid or does not belong to you!");
         }
 
-        //nếu KHÔNG phải ADMIN thì phải đúng userId -> cùng đơn hàng user đang có mới xem được -> Bắt trường hợp xem orderId của người khác
-        if(!(userRole.equalsIgnoreCase("ADMIN"))) {
-            orderRepository.findAllByUserId(userIdInToken).orElseThrow(() -> new AccessDeniedException("Access denied! Order ID is invalid or does not belong to you!"));
+//        //nếu KHÔNG phải ADMIN thì phải đúng userId -> cùng đơn hàng user đang có mới xem được -> Bắt trường hợp xem orderId của người khác
+//        if(!(userRole.equalsIgnoreCase("ADMIN"))) {
+//            orderRepository.findAllByUserId(userIdInToken).orElseThrow(() -> new AccessDeniedException("Access denied! Order ID is invalid or does not belong to you!"));
+//        }
+
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found!"));
+
+        if (userRole.equalsIgnoreCase("USER") && !order.getUser().getId().equals(userIdInToken)) {
+            throw new AccessDeniedException("Access denied. This order does not belong to you!");
         }
 
-        return toOrderResponse(Objects.requireNonNull(orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order is not found or null!"))));
+        return toOrderResponse(order);
     }
 
     @Override

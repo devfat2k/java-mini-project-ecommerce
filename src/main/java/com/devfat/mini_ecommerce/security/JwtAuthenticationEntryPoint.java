@@ -1,5 +1,7 @@
 package com.devfat.mini_ecommerce.security;
 
+import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,6 +43,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
+    private final ObjectMapper objectMapper;
     /**
      * Phương thức commence() được Spring Security tự động triệu gọi khi phát hiện hành vi
      * truy cập trái phép từ người dùng chưa được xác định danh tính.
@@ -49,6 +52,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
      * @param response      Đối tượng HttpServletResponse dùng để cấu trúc phản hồi gửi về Client.
      * @param authException Chi tiết ngoại lệ xác thực cụ thể bị bắt giữ (chứa thông điệp lỗi hệ thống).
      */
+
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
@@ -67,11 +71,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         // BƯỚC 3: Tạo chuỗi JSON định dạng lỗi tùy biến.
         // Bạn có thể thiết lập cấu trúc JSON này đồng bộ với định dạng phản hồi lỗi (Error Response) của dự án e-commerce.
         // Trong đó, thông điệp lỗi cụ thể của hệ thống sẽ được tiêm động thông qua "authException.getMessage()".
-        String jsonResponse = String.format(
-                "{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"%s\"}",
-                authException.getMessage()
-        );
+//        {"success": false, "message": "...", "data": null, "timestamp": "..."}
+//        String jsonResponse = String.format(
+//                "{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"%s\"}",
+//                authException.getMessage()
+//        );
+        ApiResponse<?> apiResponse = ApiResponse.error("Unauthorized: " + authException.getMessage());
 
+        String jsonResponse = objectMapper.writeValueAsString(apiResponse);
         // BƯỚC 4: Xuất dữ liệu JSON trực tiếp vào luồng ghi phản hồi (Response Writer).
         // Thao tác này ghi dữ liệu xuống mạng để phản hồi ngay lập tức cho Client, chặn đứng yêu cầu tại đây
         // và không cho phép yêu cầu HTTP tiếp tục đi sâu vào các Controller nghiệp vụ phía sau.

@@ -54,6 +54,7 @@ app:
   jwt:
     secret-key: p7u+RsHIDcCzWpazxlEjiTF3NTaF65vI2LdWGcYN148=
     expiration: 3600000
+    refresh-expiration-days: 7
 
 # springdoc là namespace độc lập, ngang hàng với "spring:" — không phải "spring.springdoc.*"
 springdoc:
@@ -61,6 +62,8 @@ springdoc:
     path: /v1/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
 
 # logging cũng là namespace độc lập, ngang hàng với "spring:"
 logging:

@@ -5,15 +5,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+@Builder
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Builder
-public class AuthResponseDto {
+public class RefreshTokenResponseDto {
     private String accessToken;
-    private String refreshToken;
-    private String tokenType =  "Bearer";
-    private long expiresIn;
 }

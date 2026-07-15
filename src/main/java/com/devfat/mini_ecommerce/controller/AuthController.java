@@ -2,8 +2,10 @@ package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
 import com.devfat.mini_ecommerce.dto.request.LoginRequestDto;
+import com.devfat.mini_ecommerce.dto.request.RefreshTokenRequestDto;
 import com.devfat.mini_ecommerce.dto.request.RegisterRequestDto;
 import com.devfat.mini_ecommerce.dto.response.AuthResponseDto;
+import com.devfat.mini_ecommerce.dto.response.RefreshTokenResponseDto;
 import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
 import com.devfat.mini_ecommerce.service.AuthService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -45,5 +47,23 @@ public class AuthController {
                 response,
                 "Login Successfully!"
         ));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<RefreshTokenResponseDto>>  refreshToken(
+            @Valid @RequestBody RefreshTokenRequestDto refreshTokenRequestDto
+    ) {
+       RefreshTokenResponseDto responseDto = authService.refreshToken(refreshTokenRequestDto);
+        return ResponseEntity.ok().body(ApiResponse.success(
+                responseDto,
+                "Refresh Token Successfully!"
+        ));
+    }
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody RefreshTokenRequestDto request) {
+        authService.logout(request);
+        return ResponseEntity.ok().body(ApiResponse.success(null, "Logout Successfully!"));
     }
 }

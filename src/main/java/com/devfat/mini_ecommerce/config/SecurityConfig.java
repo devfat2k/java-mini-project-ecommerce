@@ -33,11 +33,13 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {
             "/api/v1/auth/register",
-            "/api/v1/auth/login"
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh-token",
+            "/api/v1/auth/logout",
     };
     private static final String[] PUBLIC_GET_URLS = {
             "/api/v1/products",
-//            "/api/v1/products/{id}",
+            "/api/v1/products/{id}",
             "/api/v1/categories",
             "/api/v1/categories/{id}"
     };

@@ -39,6 +39,8 @@ public class ProductServiceImpl implements ProductService {
        return ProductResponseDto.builder()
                .id(productEntity.getId())
                .name(productEntity.getName())
+               .description(productEntity.getDescription())
+               .active(productEntity.isActive())
                .price(productEntity.getPrice())
                .stock(productEntity.getStock())
                .category(categoryDto) .build();
@@ -97,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
         return toResponse(productRepository.save(product));
     }
 
-
+    @Override
     @Transactional
     public ProductResponseDto decreaseStock(Long id, int quantity) {
         ProductEntity product = productRepository.findById(id)

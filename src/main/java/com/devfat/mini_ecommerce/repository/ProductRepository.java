@@ -34,7 +34,15 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Page<ProductEntity> findByStockGreaterThan(int stock, Pageable pageable);
 
     // Pageable - "Lấy sản phẩm có phân trang, có search theo tên sản phầm"
-    Page<ProductEntity> findByNameContainsIgnoreCase(String search, Pageable pageable);
+    @Query(
+            value = "SELECT p FROM ProductEntity p JOIN FETCH p.category WHERE p.isActive = true AND LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))",
+            countQuery = "SELECT COUNT(p) FROM ProductEntity p WHERE p.isActive = true AND LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))"
+    )
+    Page<ProductEntity> findByNameContainsIgnoreCase(@Param("search") String search, Pageable pageable);
+
+
+//    @EntityGraph(attributePaths = {"category"}) // Hoạt động y hệt JOIN FETCH
+//    Page<ProductEntity> findByIsActiveTrueAndNameContainsIgnoreCase(String search, Pageable pageable);
 
     interface TopProductView {
         String getName();

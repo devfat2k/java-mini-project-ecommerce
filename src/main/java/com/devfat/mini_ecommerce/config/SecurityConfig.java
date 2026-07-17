@@ -1,6 +1,5 @@
 package com.devfat.mini_ecommerce.config;
 
-
 import com.devfat.mini_ecommerce.security.JwtAuthenticationFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +35,7 @@ public class SecurityConfig {
             "/api/v1/auth/login",
             "/api/v1/auth/refresh-token",
             "/api/v1/auth/logout",
+            "/api/v1/health"
     };
     private static final String[] PUBLIC_GET_URLS = {
             "/api/v1/products",

@@ -14,11 +14,10 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     //tìm orders theo userId
-    Optional<OrderEntity> findAllByUserId(Long userId);
+    List<OrderEntity> findAllByUserId(Long userId);
     //tìm orders theo status
     List<OrderEntity> findAllByStatus(OrderEntity.OrderStatus status);
 
-    Optional<OrderEntity> findByUserIdAndUserId(Long orderId, Long userId);
     //Tìm orders theo userId VÀ status
     //@Query JPQL: lấy orders kèm user và items (JOIN FETCH cả 2), lọc theo userId
     @Query("SELECT o from OrderEntity o JOIN FETCH o.user where o.user.id = :userId AND o.status = :status")

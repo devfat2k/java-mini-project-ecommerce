@@ -3,7 +3,6 @@ package com.devfat.mini_ecommerce.service;
 import com.devfat.mini_ecommerce.dto.request.CreateOrderRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateOrderStatusRequestDto;
 import com.devfat.mini_ecommerce.dto.response.OrderResponseDto;
-import com.devfat.mini_ecommerce.entity.UserEntity;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;

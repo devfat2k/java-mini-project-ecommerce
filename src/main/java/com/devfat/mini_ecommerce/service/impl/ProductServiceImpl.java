@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -79,18 +79,16 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequest) {
         ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
 
-        if(updateProductRequest.name() != null) {
-            product.setName(updateProductRequest.name());
+        if(updateProductRequest.name() != null) product.setName(updateProductRequest.name());
+        if(updateProductRequest.description() != null)  product.setDescription(updateProductRequest.description());
+        if(updateProductRequest.stock() != null) product.setStock(updateProductRequest.stock());
+        if (updateProductRequest.isActive() != null) product.setActive(updateProductRequest.isActive());
+
+        if(updateProductRequest.price() != null) {
+            if(updateProductRequest.price().equals(BigDecimal.ZERO)) throw new ResourceNotFoundException("Price must be greater than 0");
+            product.setPrice(updateProductRequest.price());
         }
-        if(updateProductRequest.description() != null) {
-            product.setDescription(updateProductRequest.description());
-        }
-        if(updateProductRequest.stock() != null) {
-            product.setStock(updateProductRequest.stock());
-        }
-        if (updateProductRequest.isActive() != null) {
-            product.setActive(updateProductRequest.isActive());
-        }
+
         if(updateProductRequest.categoryId() != null) {
             CategoryEntity category = categoryRepository.findById(updateProductRequest.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
             product.setCategory(category);

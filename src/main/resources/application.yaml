@@ -5,9 +5,9 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/mini_shop
-    username: postgres
-    password: 123456
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -18,7 +18,7 @@ spring:
     show-sql: true
     open-in-view: false   # tắt đi, tránh query không kiểm soát trong view layer
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate # update
     properties:
       hibernate:
         format_sql: true
@@ -36,8 +36,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: phathn2688@gmail.com
-    password: "ierm ghfr vrgp ojae"
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     default-encoding: UTF-8
     properties:
       mail:
@@ -52,7 +52,7 @@ spring:
 # Cấu hình riêng của ứng dụng — KHÔNG lồng vào "spring:", tránh trùng namespace của framework
 app:
   jwt:
-    secret-key: p7u+RsHIDcCzWpazxlEjiTF3NTaF65vI2LdWGcYN148=
+    secret-key: ${JWT_SECRET_KEY}
     expiration: 3600000
     refresh-expiration-days: 7
 
@@ -71,11 +71,3 @@ logging:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG          # thêm để thấy SQL rõ hơn
     org.hibernate.type: TRACE
-
-#    ============ My SQL ======================
-#    datasource:
-#    url: jdbc:mysql://localhost:33336/shopdevgo
-#    username: root
-#    password: root1234
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    ============== PostgressSql ===============

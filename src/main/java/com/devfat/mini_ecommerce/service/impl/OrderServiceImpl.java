@@ -104,7 +104,7 @@ public class OrderServiceImpl implements OrderService {
             throw new AccessDeniedException("User ID is invalid or does not belong to you!");
         }
 
-//        //nếu KHÔNG phải ADMIN thì phải đúng userId -> cùng đơn hàng user đang có mới xem được -> Bắt trường hợp xem orderId của người khác
+//        nếu KHÔNG phải ADMIN thì phải đúng userId -> cùng đơn hàng user đang có mới xem được -> Bắt trường hợp xem orderId của người khác
 //        if(!(userRole.equalsIgnoreCase("ADMIN"))) {
 //            orderRepository.findAllByUserId(userIdInToken).orElseThrow(() -> new AccessDeniedException("Access denied! Order ID is invalid or does not belong to you!"));
 //        }
@@ -143,13 +143,13 @@ public class OrderServiceImpl implements OrderService {
                 throw new InsufficientStockException("Not enough product: " + product.getName());
             }
            product.setStock(product.getStock() - requestItem.quantity());
-            OrderItemEntity orderItem = OrderItemEntity.builder()
+           OrderItemEntity orderItem = OrderItemEntity.builder()
                     .order(order)
                     .product(product)
                     .quantity(requestItem.quantity())
                     .unitPrice(product.getPrice())
                     .build();
-            order.getItems().add(orderItem);
+           order.getItems().add(orderItem);
         });
         // Tính total amount
         BigDecimal totalMoney = order.getItems().stream()
@@ -159,8 +159,13 @@ public class OrderServiceImpl implements OrderService {
         return toOrderResponse(orderRepository.save(order));
     }
 
-    @Transactional
+    // TODO (Optimize later): Xử lý Race Condition khi có nhiều request cùng update stock
+    // Keywords để nâng cấp sau:
+    // 1. JPA Optimistic Locking (Thêm annotation @Version vào entity Product)
+    // 2. JPA Pessimistic Locking (Dùng @Lock(LockModeType.PESSIMISTIC_WRITE) ở Repository)
+    // 3. Native DB Update (Tối ưu nhất: Viết @Modifying @Query("UPDATE Product p SET p.stock = p.stock + :qty WHERE p.id = :id"))
     @Override
+    @Transactional
     public OrderResponseDto changeStatus(Long id, UpdateOrderStatusRequestDto updateOrderStatusRequestDto) {
         OrderEntity order = orderRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found!"));
 
@@ -168,6 +173,14 @@ public class OrderServiceImpl implements OrderService {
         if (allowedNext == null || !allowedNext.contains(updateOrderStatusRequestDto.orderStatus())) {
             throw new InvalidStatusTransitionException("Do not change from " + order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
         }
+
+        if(updateOrderStatusRequestDto.orderStatus().equals(CANCELLED)) {
+            order.getItems().forEach(item -> {
+                int quantityInOrderCancel =  item.getQuantity();
+                item.getProduct().setStock(item.getProduct().getStock() + quantityInOrderCancel);
+            });
+        }
+
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
         return toOrderResponse(orderRepository.save(order));
     }

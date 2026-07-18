@@ -53,6 +53,8 @@ public class OrderEntity {
     @Builder.Default
     private List<OrderItemEntity> items = new ArrayList<>();
 
+
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

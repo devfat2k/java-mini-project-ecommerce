@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "users")
 public class UserEntity {
+
     public enum Role {
-        USER,
-        ADMIN
+        USER, ADMIN
     }
 
     @Id

@@ -6,6 +6,7 @@ import com.devfat.mini_ecommerce.dto.response.CategoryResponseDto;
 import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
 import com.devfat.mini_ecommerce.entity.CategoryEntity;
 import com.devfat.mini_ecommerce.entity.ProductEntity;
+import com.devfat.mini_ecommerce.exception.BadRequestException;
 import com.devfat.mini_ecommerce.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.CategoryRepository;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,8 +107,10 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found id = " + id));
 
-        if(quantity <= 0) throw new InsufficientStockException("Quantity must than 0");
-        if(product.getStock() < quantity) throw new InsufficientStockException("Quantity must less than 0");
+        // TODO: must add retry tại đây, để xử lý khi có lỗi hoặc đồng thời cao để tương tác sau đó ném lỗi ~ 3 lần retry
+
+        if(quantity <= 0) throw new BadRequestException("Quantity must be greater than 0");
+        if(product.getStock() < quantity) throw new IllegalArgumentException("The product is unavailable. Please try again or choose another product.");
 
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);

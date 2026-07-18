@@ -38,6 +38,7 @@ public class ProductEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
+    @Builder.Default
     @Column(nullable = false)
     private Integer stock = 0;
 
@@ -45,8 +46,9 @@ public class ProductEntity {
     @JoinColumn(name = "category_id")
     private CategoryEntity category;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    private boolean isActive = true;
 
     @OneToMany(mappedBy = "product")
     private List<OrderItemEntity> orderItems;
@@ -59,4 +61,7 @@ public class ProductEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+
+    @Version
+    private Integer version;
 }

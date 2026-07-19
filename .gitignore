@@ -1,17 +1,3 @@
-# ==========================================
-# ENV & APPLICATION CONFIGURATIONS (SENSITIVE)
-# ==========================================
-.env
-.env.*
-!.env.example
-
-# Bỏ qua tất cả các file cấu hình application để tránh lộ key (nếu bạn không dùng biến môi trường thay thế)
-application.yaml
-application.yml
-application.properties
-application-*.yaml
-application-*.yml
-application-*.properties
 
 # ==========================================
 # MAVEN & BUILD DIRECTORIES

@@ -11,7 +11,7 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
-      connection-timeout: 3600000
+      connection-timeout: 30000
 
   jpa:
     database: postgresql   #mysql
@@ -55,6 +55,16 @@ app:
     secret-key: ${JWT_SECRET_KEY}
     expiration: 3600000
     refresh-expiration-days: 7
+
+  # ============================================================
+  # VNPAY Configuration
+  # ============================================================
+vnpay:
+  pay-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  tmn-code: ${VNPAY_TMN_CODE}
+  secret-key: ${VNPAY_SECRET_KEY}
+  return-url: ${VNPAY_RETURN_URL}
+  ipn-url: ${VNPAY_IPN_URL}
 
 # springdoc là namespace độc lập, ngang hàng với "spring:" — không phải "spring.springdoc.*"
 springdoc:

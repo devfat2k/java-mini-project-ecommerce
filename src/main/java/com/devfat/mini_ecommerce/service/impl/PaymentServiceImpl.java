@@ -6,32 +6,55 @@ import com.devfat.mini_ecommerce.dto.response.CreatePaymentResponseDto;
 import com.devfat.mini_ecommerce.entity.OrderEntity;
 import com.devfat.mini_ecommerce.entity.PaymentEntity;
 import com.devfat.mini_ecommerce.exception.BadRequestException;
+import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.OrderRepository;
 import com.devfat.mini_ecommerce.repository.PaymentRepository;
-import com.devfat.mini_ecommerce.repository.UserRepository;
 import com.devfat.mini_ecommerce.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import java.time.LocalDateTime;
+import java.util.*;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
 
     private final VNPayConfig vnPayConfig;
+
+
+    @Scheduled(fixedRate = 120000)
+    @Transactional
+    public void expiredPayment() {
+        // Bước A: tính mốc thời gian "15 phút trước tính từ bây giờ"
+        LocalDateTime expireThreshold = LocalDateTime.now().minusMinutes(15);
+
+        // Bước B: tìm TẤT CẢ Payment còn PENDING mà được tạo TRƯỚC mốc đó
+        // (nghĩa là: đã tạo hơn 15 phút rồi mà vẫn chưa ai thanh toán)
+        List<PaymentEntity> expiredPayments = paymentRepository
+                .findAllByPaymentStatusAndCreatedAtBefore(
+                        PaymentEntity.PaymentStatus.PENDING, expireThreshold);
+
+        for (PaymentEntity payment : expiredPayments) {
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.EXPIRED);
+            paymentRepository.save(payment);
+
+            OrderEntity order = payment.getOrder();
+            order.setStatus(OrderEntity.OrderStatus.CANCELLED);
+            orderRepository.save(order);
+        }
+    }
 
 
     @Override
@@ -88,4 +111,46 @@ public class PaymentServiceImpl implements PaymentService {
 
         return new CreatePaymentResponseDto(paymentUrl);
     }
+
+    @Override
+    @Transactional
+    public void handleVnpayIpn(Map<String, String> params) {
+        // Bước 1: Verify chữ ký
+        boolean isValidSignature = VNPayUtil.verifySignature(params, vnPayConfig.getSecretKey());
+        if (!isValidSignature) {
+            throw new BadRequestException("Invalid signature - possible fraud attempt");
+        }
+
+        // Bước 2: Chữ ký hợp lệ rồi mới tin tham số, lấy paymentId (đã lưu ở vnp_TxnRef từ P3)
+        Long paymentId = Long.parseLong(params.get("vnp_TxnRef"));
+        PaymentEntity payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment Not Found"));
+
+        // Bước 3: Chống xử lý trùng — nếu ĐÃ SUCCESS rồi thì dừng lại, không làm gì thêm
+        if (payment.getPaymentStatus().equals(PaymentEntity.PaymentStatus.SUCCESS)) {
+            return; // webhook gọi lại lần 2, coi như đã xử lý xong, không báo lỗi
+        }
+
+        // Bước 4: Đọc vnp_ResponseCode để biết giao dịch thành công hay thất bại
+        String responseCode = params.get("vnp_ResponseCode");
+        if ("00".equals(responseCode)) {
+            // Thanh toán thành công
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
+            payment.setPaidAt(LocalDateTime.now());
+            payment.setProviderTransactionId(params.get("vnp_TransactionNo"));
+            paymentRepository.save(payment);
+
+            // Đây là nơi DUY NHẤT trong toàn bộ hệ thống Order được chuyển sang CONFIRMED
+            OrderEntity order = payment.getOrder();
+            order.setStatus(OrderEntity.OrderStatus.CONFIRMED);
+            orderRepository.save(order);
+
+        } else {
+            // Thanh toán thất bại
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+        }
+
+    }
+
 }

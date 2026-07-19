@@ -68,4 +68,41 @@ public class VNPayUtil {
         result.put("secureHash", secureHash);
         return result;
     }
+
+    public static boolean verifySignature(Map<String, String> params, String secretKey) {
+        String vnp_SecureHash = params.get("vnp_SecureHash");
+        if (vnp_SecureHash == null) {
+            return false; // Nếu request không có chữ ký, chắc chắn là không hợp lệ
+        }
+
+        Map<String, String> cleanParams = new HashMap<>(params);
+        cleanParams.remove("vnp_SecureHash");
+        cleanParams.remove("vnp_SecureHashType");
+
+        List<String> fieldNames = new ArrayList<>(cleanParams.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+
+
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = cleanParams.get(fieldName);
+
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                hashData.append(fieldName).append('=')
+                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+
+                // Nếu chưa phải tham số cuối cùng thì thêm dấu &
+                if (itr.hasNext()) {
+                    hashData.append('&');
+                }
+            }
+        }
+
+        String mySecureHash = hmacSHA512(secretKey, hashData.toString());
+
+        return mySecureHash.equals(vnp_SecureHash);
+    }
 }

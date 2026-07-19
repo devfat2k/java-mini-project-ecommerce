@@ -1,0 +1,3 @@
+# Test profile configuration
+server:
+  port: 8082

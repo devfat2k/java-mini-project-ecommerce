@@ -1,0 +1,4 @@
+# Development profile configuration
+server:
+  port: 8085
+

@@ -38,3 +38,8 @@ build/
 
 ### VS Code ###
 .vscode/
+# ==========================================
+# SECRETS & LOCAL CONFIG
+# ==========================================
+.env
+src/main/resources/application.yaml

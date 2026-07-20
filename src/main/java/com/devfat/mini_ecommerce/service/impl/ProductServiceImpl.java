@@ -140,20 +140,24 @@ public class ProductServiceImpl implements ProductService {
         product.setActive(false);
         productRepository.save(product);
 
+
         return true;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductRepository.TopProductView> getTopProducts(int limit) {
         return productRepository.getTopViewProduct(PageRequest.of(0, limit));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable) {
         return productRepository.getCategoryRevenue(pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue() {
         return productRepository.getMonthlyRevenue();
     }

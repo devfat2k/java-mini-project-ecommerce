@@ -56,8 +56,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll(pageable)
                 .map(this::toResponseDto);
     }
-
-
+    
 
     @Override
     @Transactional

@@ -7,5 +7,5 @@ import java.util.Map;
 
 public interface PaymentService {
     CreatePaymentResponseDto createPayment(Long userId, Long orderId, HttpServletRequest request);
-    void handleVnpayIpn(Map<String, String> params);
+    void handleVnPayIpn(Map<String, String> params);
 }

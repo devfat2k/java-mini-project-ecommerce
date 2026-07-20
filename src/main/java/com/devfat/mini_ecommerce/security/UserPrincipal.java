@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +32,10 @@ public class UserPrincipal implements UserDetails {
         return userEntity.getPassword();
     }
 
+    /**
+     * mặc định sẽ có ROLE_ nên khi tạo db không chỉ cần ADMIN/USER/GUEST là được
+     * @return
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(

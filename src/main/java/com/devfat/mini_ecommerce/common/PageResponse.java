@@ -14,12 +14,12 @@ import java.util.List;
 @AllArgsConstructor
 public class PageResponse<T> {
 
-    private List<T> content;        // Danh sách dữ liệu của trang hiện tại
-    private int page;               // Trang hiện tại (0-indexed hoặc tùy chỉnh)
-    private int size;               // Kích thước trang (số bản ghi tối đa trên trang)
-    private long totalElements;     // Tổng số bản ghi trong database
-    private int totalPages;         // Tổng số trang
-    private boolean last;           // Đây có phải là trang cuối cùng không?
+    private List<T> content;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
+    private boolean last;
 
     public static <T> PageResponse<T> of(Page<T> page) {
         return PageResponse.<T>builder()

@@ -19,7 +19,6 @@ public class FileValidationUtil {
     public static final byte[] PNG_SIGNATURE  = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     // 2 hằng số này quay lại static final: không phụ thuộc config,
     // giữ static cho đúng convention "constant" trong Java
-// GIF có 2 phiên bản phổ biến
     public static final byte[] GIF87A_SIGNATURE = {(byte) 0x47, (byte) 0x49, (byte) 0x46, (byte) 0x38, (byte) 0x37, (byte) 0x61};
     public static final byte[] GIF89A_SIGNATURE = {(byte) 0x47, (byte) 0x49, (byte) 0x46, (byte) 0x38, (byte) 0x39, (byte) 0x61};
 
@@ -71,11 +70,7 @@ public class FileValidationUtil {
         try {
             fileBytes = file.getBytes();
         } catch (IOException e) {
-            // Giữ nguyên RuntimeException (không đổi sang BadRequestException) —
-            // vì đây là lỗi đọc file tạm hỏng ở tầng hạ tầng, không phải lỗi
-            // do client nhập sai. RuntimeException → rơi vào catch-all Exception
-            // → 500, đúng semantic đã thống nhất ở bước trước.
-            throw new RuntimeException("Not read format file!", e);
+            throw new RuntimeException("Format is invalid! Only JPEG, PNG, GIF, and WebP are allowed.", e);
         }
         return fileBytes;
     }

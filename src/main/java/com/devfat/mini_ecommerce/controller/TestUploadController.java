@@ -2,6 +2,7 @@ package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
 import com.devfat.mini_ecommerce.service.StorageService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/test")
 @RequiredArgsConstructor
+@Tag(name = "TEST", description = "Test any api")
 public class TestUploadController {
 
     private final StorageService storageService;

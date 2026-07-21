@@ -34,6 +34,9 @@ public class UserEntity {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(name = "phone_number",nullable = false, unique = true, length = 15)
     private String phoneNumber;
 

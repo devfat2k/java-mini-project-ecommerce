@@ -12,13 +12,14 @@ import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.CategoryRepository;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
+import com.devfat.mini_ecommerce.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,6 +32,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+    private final StorageService storageService;
+
     private ProductResponseDto toResponse(ProductEntity productEntity) {
         CategoryResponseDto categoryDto = productEntity.getCategory() != null
                 ? CategoryResponseDto.builder()
@@ -41,6 +44,7 @@ public class ProductServiceImpl implements ProductService {
        return ProductResponseDto.builder()
                .id(productEntity.getId())
                .name(productEntity.getName())
+               .imageUrl(productEntity.getImageUrl())
                .description(productEntity.getDescription())
                .active(productEntity.isActive())
                .price(productEntity.getPrice())
@@ -140,7 +144,6 @@ public class ProductServiceImpl implements ProductService {
         product.setActive(false);
         productRepository.save(product);
 
-
         return true;
     }
 
@@ -160,5 +163,16 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue() {
         return productRepository.getMonthlyRevenue();
+    }
+
+    @Override
+    public ProductResponseDto uploadProductImage(Long id, MultipartFile file) {
+       ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+
+        String url = storageService.uploadFile(file,"productImage", true);
+        product.setImageUrl(url);
+        productRepository.save(product);
+
+        return toResponse(product);
     }
 }

@@ -5,6 +5,7 @@ import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,4 +20,6 @@ public interface ProductService {
     List<ProductRepository.TopProductView> getTopProducts(int limit);
     List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable);
     List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue();
+
+    ProductResponseDto uploadProductImage(Long id, MultipartFile file);
 }

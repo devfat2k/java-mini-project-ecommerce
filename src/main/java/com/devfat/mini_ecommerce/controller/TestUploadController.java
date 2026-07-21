@@ -18,7 +18,7 @@ public class TestUploadController {
     public ResponseEntity<ApiResponse<String>> testUpload(
             @RequestParam("file") MultipartFile file
     ) {
-        String url = storageService.uploadFile(file, "test");
+        String url = storageService.uploadFile(file, "test", true);
         return ResponseEntity.ok().body(
                 ApiResponse.success(
                         url,

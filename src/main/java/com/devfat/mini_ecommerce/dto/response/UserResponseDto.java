@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class UserResponseDto {
     private Long userId;
     private String fullName;
+    private String avatarUrl;
     private String email;
     private String phoneNumber;
     private UserEntity.Role role;

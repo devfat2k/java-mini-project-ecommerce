@@ -14,6 +14,8 @@ import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
 import com.devfat.mini_ecommerce.service.StorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -68,6 +70,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "categories",
+            key = "#search + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     @Transactional(readOnly = true)
     public Page<ProductResponseDto> getProductsWithSearch(String search, Pageable pageable) {
         return productRepository.findByNameContainsIgnoreCase(search, pageable)
@@ -75,6 +79,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products", key = "#id")
     @Transactional(readOnly = true)
     public ProductResponseDto findById(Long id) {
         return productRepository.findById(id)
@@ -83,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", key = "#id")
     @Transactional
     public ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequest) {
         ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
@@ -106,6 +112,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", key = "#id")
     @Transactional
     public ProductResponseDto decreaseStock(Long id, int quantity) {
         ProductEntity product = productRepository.findById(id)
@@ -123,6 +130,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", key = "#id")
     @Transactional
     public ProductResponseDto increaseStock(Long id, int quantity) {
         ProductEntity product = productRepository.findById(id)
@@ -136,6 +144,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", key = "#id")
     @Transactional
     public Boolean softDelete(Long id) {
         ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
@@ -148,24 +157,28 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "analytics", key = "'top-products'")
     @Transactional(readOnly = true)
     public List<ProductRepository.TopProductView> getTopProducts(int limit) {
         return productRepository.getTopViewProduct(PageRequest.of(0, limit));
     }
 
     @Override
+    @Cacheable(value = "analytics", key = "'category-revenue'")
     @Transactional(readOnly = true)
     public List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable) {
         return productRepository.getCategoryRevenue(pageable);
     }
 
     @Override
+    @Cacheable(value = "analytics", key = "'monthly-revenue'")
     @Transactional(readOnly = true)
     public List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue() {
         return productRepository.getMonthlyRevenue();
     }
 
     @Override
+    @CacheEvict(value = "products", key = "#id")
     public ProductResponseDto uploadProductImage(Long id, MultipartFile file) {
        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
 

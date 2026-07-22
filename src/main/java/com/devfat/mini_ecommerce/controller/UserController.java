@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/api/v1/users")
 @RestController
@@ -90,5 +91,19 @@ public class UserController {
         Long idInToken = userPrincipal.getUserId();
         userService.updateStatusUser(userId, idInToken, isActive);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value="/me/avatar", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<UserResponseDto>> uploadAvatar(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam("file") MultipartFile file
+    ){
+        long userId = userPrincipal.getUserId();
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        userService.uploadUserImage(userId, file),
+                        "Upload User Successfully!"
+                )
+        );
     }
 }

@@ -9,6 +9,7 @@ import com.devfat.mini_ecommerce.exception.BadRequestException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.RefreshTokenRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
+import com.devfat.mini_ecommerce.service.StorageService;
 import com.devfat.mini_ecommerce.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -30,11 +32,14 @@ public class UserServiceImpl implements UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final StorageService storageService;
+
     public UserResponseDto toResponseDto(UserEntity userEntity) {
         return UserResponseDto.builder()
                 .userId(userEntity.getId())
                 .email(userEntity.getEmail())
                 .fullName(userEntity.getFullName())
+                .avatarUrl(userEntity.getAvatarUrl())
                 .phoneNumber(userEntity.getPhoneNumber())
                 .role(userEntity.getRole())
                 .isActive(userEntity.isActive())
@@ -56,8 +61,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll(pageable)
                 .map(this::toResponseDto);
     }
-
-
+    
 
     @Override
     @Transactional
@@ -111,5 +115,15 @@ public class UserServiceImpl implements UserService {
         }
         user.setActive(isActive);
         userRepository.save(user);
+    }
+
+    @Override
+    public UserResponseDto uploadUserImage(Long id, MultipartFile file) {
+        UserEntity user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+        String url = storageService.uploadFile(file, "UserImage", true);
+        user.setAvatarUrl(url);
+        userRepository.save(user);
+        return toResponseDto(user);
     }
 }

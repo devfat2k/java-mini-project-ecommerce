@@ -62,11 +62,13 @@ public class PaymentServiceImpl implements PaymentService {
     public CreatePaymentResponseDto createPayment(Long userId, Long orderId, HttpServletRequest request) {
         OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new BadRequestException("Order Not Found!"));
 
-        if(!order.getUser().getId().equals(userId)) throw new BadRequestException("Order Not Found!");
+        if (!order.getUser().getId().equals(userId)) throw new BadRequestException("Order Not Found!");
 
-        if(!(order.getStatus().equals(OrderEntity.OrderStatus.PENDING))) throw new BadRequestException("Order Not Pending!");
+        if (!(order.getStatus().equals(OrderEntity.OrderStatus.PENDING)))
+            throw new BadRequestException("Order Not Pending!");
 
-        if(paymentRepository.existsByOrderIdAndPaymentStatus(order.getId(), PaymentEntity.PaymentStatus.SUCCESS)) throw new BadRequestException("Payment already success, cannot create new payment");
+        if (paymentRepository.existsByOrderIdAndPaymentStatus(order.getId(), PaymentEntity.PaymentStatus.SUCCESS))
+            throw new BadRequestException("Payment already success, cannot create new payment");
 
         PaymentEntity payment = new PaymentEntity();
         payment.setAmount(order.getTotalAmount());
@@ -114,7 +116,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public void handleVnpayIpn(Map<String, String> params) {
+    public void handleVnPayIpn(Map<String, String> params) {
         // Bước 1: Verify chữ ký
         boolean isValidSignature = VNPayUtil.verifySignature(params, vnPayConfig.getSecretKey());
         if (!isValidSignature) {
@@ -150,7 +152,6 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setPaymentStatus(PaymentEntity.PaymentStatus.FAILED);
             paymentRepository.save(payment);
         }
-
     }
-
 }
+

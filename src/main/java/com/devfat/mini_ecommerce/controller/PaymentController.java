@@ -65,7 +65,7 @@ public class PaymentController {
     @GetMapping("/vnpay-ipn")
     public ResponseEntity<Map<String, String>> vnpayIpn(@RequestParam Map<String, String> allParams) {
         try {
-            paymentService.handleVnpayIpn(allParams);
+            paymentService.handleVnPayIpn(allParams);
             // VNPay yêu cầu response đúng định dạng này để biết webhook đã nhận thành công
             return ResponseEntity.ok(Map.of("RspCode", "00", "Message", "Confirm Success"));
         } catch (Exception e) {

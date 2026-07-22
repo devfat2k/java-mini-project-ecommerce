@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -186,5 +187,18 @@ public class ProductController {
                         productService.getMonthlyRevenue(),
                         "Get Monthly Revenue Success!"
                 ));
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value="/{id}/image", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> uploadProductImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return  ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.uploadProductImage(id, file),
+                "Upload Image Product Successfully!"
+        ));
     }
 }

@@ -17,6 +17,7 @@ public class ProductResponseDto {
     private BigDecimal price;
     private Integer stock;
     private String description;
+    private String imageUrl;
     private boolean active;
     private CategoryResponseDto category;
 }

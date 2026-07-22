@@ -2,7 +2,7 @@
 
 > **Mục đích tài liệu:** Đây là tài liệu **CHÍNH XÁC NHẤT** phản ánh trạng thái codebase thực tế tính đến ngày cập nhật. Bất kỳ AI Agent hay Developer nào khi bắt đầu hoặc tiếp tục công việc trên project này đều phải đọc file này **ĐẦU TIÊN**.
 >
-> **Cập nhật lần cuối:** 2026-07-21
+> **Cập nhật lần cuối:** 2026-07-22
 >
 > **Supersedes:** PROJECT_OVERVIEW_V2.md, PROJECT_OVERVIEW_V3.md, PROJECT_OVERVIEW_V4.md (các bản cũ đã bị xoá)
 
@@ -30,6 +30,7 @@
 18. [Coding Conventions & Patterns](#18-coding-conventions--patterns)
 19. [Trạng thái phát triển & TODO](#19-trạng-thái-phát-triển--todo)
 20. [Góp ý tối ưu & Kiến thức cần bổ sung](#20-góp-ý-tối-ưu--kiến-thức-cần-bổ-sung)
+21. [Tổng hợp Kiến thức & Kỹ thuật chức năng cốt lõi](#21-tổng-hợp-kiến-thức--kỹ-thuật-chức-năng-cốt-lõi)
 
 ---
 
@@ -1106,6 +1107,39 @@ public class PageResponse<T> {
 | 6 | **API Documentation nâng cao** | `@Schema`, `@ApiResponse` annotations cho Swagger đẹp hơn | Springdoc docs |
 | 7 | **Integration Testing** | `@SpringBootTest` + Testcontainers (PostgreSQL) | Testcontainers.org |
 | 8 | **Monitoring** | Spring Actuator + Prometheus + Grafana | Baeldung Actuator |
+
+---
+
+## 21. Tổng hợp Kiến thức & Kỹ thuật chức năng cốt lõi
+
+### 21.1. DevOps, Containerization & CI/CD
+- **Multi-stage Docker Build:** Tách giai đoạn `builder` (Maven 3.9 + JDK 21) và `runtime` (`eclipse-temurin:21-jre-alpine`) giúp giảm thiểu kích thước image sản phẩm, tối ưu layer caching và tăng tính an toàn bảo mật.
+- **Docker Compose Healthcheck:** Service `app` liên kết với `db` qua `condition: service_healthy`, chỉ khởi chạy Spring Boot application sau khi PostgreSQL kiểm tra `pg_isready` thành công.
+- **GitHub Actions Integration:** Automation workflow `ci.yml` tự động verify, compile và test khi có sự kiện Push/PR vào branch `main`.
+
+### 21.2. Object Storage & File Security (MinIO)
+- **S3-Compatible Object Storage:** Tích hợp MinIO SDK (`MinioClient`) quản lý lưu trữ tài nguyên đa phương tiện độc lập với application server.
+- **Magic Bytes Validation:** `FileValidationUtil` kiểm tra trực tiếp mảng byte đầu (header signature) để xác nhận định dạng ảnh (JPEG, PNG, GIF, WebP), loại bỏ triệt để nguy cơ bypass qua MIME-type/File extension giả mạo.
+- **Image Optimization:** Sử dụng `Thumbnailator` tự động nén & resize kích thước ảnh về chuẩn `800x800` (quality 0.85) trước khi upload.
+
+### 21.3. Security & Stateless Authentication
+- **Dual-Token Strategy:** Access Token ngắn hạn (1h) kết hợp với Refresh Token dài hạn (7 ngày, Opaque random 64-byte).
+- **Token Hashing & Invalidation:** Mã hóa SHA-256 đối với Refresh Token khi lưu trữ DB, hỗ trợ thu hồi (revoke) tức thì khi Logout hoặc vô hiệu hóa tài khoản.
+- **Security Context Integration:** Custom `JwtAuthenticationFilter` tích hợp sâu với Spring Security Context; xử lý ngoại lệ phản hồi chuẩn JSON qua `JwtAuthenticationEntryPoint` (401) và `JwtAccessDeniedHandler` (403).
+
+### 21.4. Thanh toán VNPay & Asynchronous Background Tasks
+- **HMAC-SHA512 Signature:** Tích hợp trực tiếp chuẩn chữ ký số của VNPay mà không qua SDK bên ngoài, kiểm tra tính toàn vẹn dữ liệu cho IPN Webhook.
+- **State Machine & Idempotency:** Quản lý vòng đời đơn hàng khép kín (`PENDING` ➔ `CONFIRMED` ➔ `SHIPPED` ➔ `DONE` / `CANCELLED`) đảm bảo không bị xử lý trùng lặp.
+- **Scheduled Task:** Tự động hủy các đơn hàng thanh toán quá hạn (quá 15 phút) thông qua `@Scheduled(fixedRate = 120000)`.
+
+### 21.5. Performance & Dynamic Querying
+- **Optimistic Locking (`@Version`):** Ngăn chặn xung đột đồng thời (Race condition) trên `ProductEntity` và `OrderEntity` khi có nhiều thao tác đặt hàng/trừ kho cùng lúc.
+- **Tránh Lỗi N+1 Query:** Sử dụng `JOIN FETCH` trong JPQL queries nâng cao để nạp trước các quan hệ liên quan trong 1 query duy nhất.
+- **JPA Projections:** Sử dụng Interface-based Projections phục vụ các API báo cáo thống kê doanh thu (`TopProductView`, `CategoryRevenueView`, `MonthlyRevenueView`) tối ưu tốc độ truy xuất.
+
+### 21.6. Response Standard & Exception Management
+- **Generic Wrapper:** Chuẩn hóa cấu trúc phản hồi API thông qua `ApiResponse<T>` và `PageResponse<T>` (dành riêng cho kết quả phân trang).
+- **Global Exception Handler:** Sử dụng `@RestControllerAdvice` quản lý 14 loại ngoại lệ với HTTP status code phù hợp chuẩn RESTful specifications.
 
 ---
 

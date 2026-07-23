@@ -5,6 +5,8 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -39,10 +41,14 @@ public class EmailSenderUtil {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            Resource resource = new ClassPathResource("templates/email/SendEmailTemplate.html");
+            String htmlContent = new String(resource.getInputStream().readAllBytes());
+
             helper.setFrom(emailHost);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(content, true);
+            helper.setText(htmlContent, true);
             javaMailSender.send(message);
             log.info("Gửi email HTML thành công tới {}", to);
         } catch (Exception e) {

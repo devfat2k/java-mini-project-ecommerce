@@ -1,6 +1,6 @@
 package com.devfat.mini_ecommerce.service.impl;
 
-import com.devfat.mini_ecommerce.entity.EmailEntity;
+import com.devfat.mini_ecommerce.dto.request.EmailRequestDto;
 import com.devfat.mini_ecommerce.service.EmailService;
 import com.devfat.mini_ecommerce.util.EmailSenderUtil;
 import lombok.RequiredArgsConstructor;
@@ -16,19 +16,33 @@ public class EmailServiceImpl implements EmailService {
     private final EmailSenderUtil emailSenderUtil;
 
     @Override
-    public String sendTextEmail(EmailEntity email) {
-        return "";
+    @Async("emailTaskExecutor")
+    public void sendTextEmail(EmailRequestDto request) {
+        log.info("Gửi text email tới {}, thread: {}", request.getTo(), Thread.currentThread().getName());
+        try {
+            emailSenderUtil.sendTextEmail(request.getTo(), request.getSubject(), request.getMessageBody());
+        } catch (Exception e) {
+            log.error("Gửi text email thất bại tới {}: {}", request.getTo(), e.getMessage());
+        }
     }
 
     @Override
-    public String sendHtmlEmail(EmailEntity email) {
-        return "";
+    @Async("emailTaskExecutor")
+    public void sendHtmlEmail(EmailRequestDto request) {
+        log.info("Gửi HTML email tới {}, thread: {}", request.getTo(), Thread.currentThread().getName());
+        try {
+            emailSenderUtil.sendHtmlEmail(request.getTo(), request.getSubject(), request.getMessageBody());
+        } catch (Exception e) {
+            log.error("Gửi HTML email thất bại tới {}: {}", request.getTo(), e.getMessage());
+        }
     }
 
     @Override
-    public String sendAttachmentEmail(EmailEntity email) {
-        return "";
+    @Async("emailTaskExecutor")
+    public void sendAttachmentEmail(EmailRequestDto request) {
+        throw new UnsupportedOperationException("sendAttachmentEmail chưa được triển khai");
     }
+
 
     @Override
     @Async("emailTaskExecutor")

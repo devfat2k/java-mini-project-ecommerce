@@ -1,4 +1,4 @@
-package com.devfat.mini_ecommerce.entity;
+package com.devfat.mini_ecommerce.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmailEntity {
+public class EmailRequestDto {
     private String to;
     private String subject;
     private String messageBody;

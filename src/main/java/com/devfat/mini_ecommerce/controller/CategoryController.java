@@ -1,6 +1,7 @@
 package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.common.PageResponse;
 import com.devfat.mini_ecommerce.dto.request.CreateCategoryRequestDto;
 import com.devfat.mini_ecommerce.dto.response.CategoryResponseDto;
 import com.devfat.mini_ecommerce.service.CategoryService;
@@ -38,23 +39,17 @@ public class CategoryController {
     }
 
 
-    @GetMapping()
-    public ResponseEntity<ApiResponse<Page<CategoryResponseDto>>> getCategories(
-            @RequestParam int page,
-            @RequestParam int size,
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<CategoryResponseDto>>> getCategories(
             @RequestParam(required = false, defaultValue = "") String search,
-            @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "asc") String direction
-            ) {
-        Sort.Direction sortDirection = direction.contains("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sortBy = Sort.by(sortDirection, sort);
-        Pageable pageable = PageRequest.of(page, size, sortBy);
-        return ResponseEntity.ok().body(
-                ApiResponse.success(
-                        categoryService.findByNameContainingIgnoreCase(search, pageable),
-                        "Get Category Successfully!"
-                )
-        );
+            Pageable pageable) {
+
+        Page<CategoryResponseDto> categoryResponse = categoryService.findByNameContainingIgnoreCase(search, pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(
+               PageResponse.of(categoryResponse),
+                "Get Category Successfully!"
+        ));
     }
 
     @GetMapping("/{id}")

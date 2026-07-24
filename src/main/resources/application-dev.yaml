@@ -1,4 +1,4 @@
 # Development profile configuration
 server:
-  port: 8085
+  port: ${PORT:8085}
 

@@ -9,6 +9,7 @@ import com.devfat.mini_ecommerce.exception.BadRequestException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.OrderRepository;
 import com.devfat.mini_ecommerce.repository.PaymentRepository;
+import com.devfat.mini_ecommerce.service.EmailService;
 import com.devfat.mini_ecommerce.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -32,6 +33,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
 
     private final VNPayConfig vnPayConfig;
+    private final EmailService emailService;
 
 
     @Scheduled(fixedRate = 120000)
@@ -146,7 +148,7 @@ public class PaymentServiceImpl implements PaymentService {
             OrderEntity order = payment.getOrder();
             order.setStatus(OrderEntity.OrderStatus.CONFIRMED);
             orderRepository.save(order);
-
+            emailService.sendPaymentSuccessEmail(order.getUser().getEmail(), order.getId());
         } else {
             // Thanh toán thất bại
             payment.setPaymentStatus(PaymentEntity.PaymentStatus.FAILED);

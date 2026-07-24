@@ -14,6 +14,7 @@ import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.OrderRepository;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
+import com.devfat.mini_ecommerce.service.EmailService;
 import com.devfat.mini_ecommerce.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
 
 
 
@@ -156,6 +158,9 @@ public class OrderServiceImpl implements OrderService {
                 .map(itemPrice -> itemPrice.getUnitPrice().multiply(BigDecimal.valueOf(itemPrice.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(totalMoney);
+
+        emailService.sendPaymentSuccessEmail(order.getUser().getEmail(), order.getId());
+
         return toOrderResponse(orderRepository.save(order));
     }
 

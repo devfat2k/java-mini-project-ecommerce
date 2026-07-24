@@ -1,6 +1,7 @@
 package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.common.PageResponse;
 import com.devfat.mini_ecommerce.dto.request.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateProductRequestDto;
 import com.devfat.mini_ecommerce.dto.response.ProductResponseDto;
@@ -14,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,22 +55,16 @@ public class ProductController {
     )
     @SecurityRequirements({})
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProductResponseDto>>> getAll(
-            @RequestParam int page,
-            @RequestParam(defaultValue = "10") int size,
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponseDto>>> getAll(
             @RequestParam(required = false, defaultValue = "") String search,
-            @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "asc") String direction
-    ) {
-        Sort.Direction sortDirection = direction.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort sortBy = Sort.by(sortDirection, sort);
-        Pageable pageable = PageRequest.of(page, size, sortBy);
+            Pageable pageable) {
 
-        return ResponseEntity.ok().body(ApiResponse.success(
-                productService.getProductsWithSearch(search, pageable),
+        Page<ProductResponseDto> productPage = productService.getProductsWithSearch(search, pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                PageResponse.of(productPage),
                 "Get product successfully"
         ));
-
     }
 
 

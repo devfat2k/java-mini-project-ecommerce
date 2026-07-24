@@ -2,6 +2,7 @@ package com.devfat.mini_ecommerce.controller;
 
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.common.PageResponse;
 import com.devfat.mini_ecommerce.dto.request.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateProfileRequestDto;
 import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
@@ -63,19 +64,13 @@ public class UserController {
 
     @GetMapping()
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllUsers(
-            @RequestParam int page,
-            @RequestParam int size,
-            @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "asc") String direction
+    public ResponseEntity<ApiResponse<PageResponse<UserResponseDto>>> getAllUsers(
+            Pageable pageable
     ) {
-        Sort.Direction sortDirection = direction.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sortBy = Sort.by(sortDirection, sort);
-        Pageable pageable = PageRequest.of(page, size, sortBy);
-
+        Page<UserResponseDto> userResponse = userService.getAllUsers(pageable);
         return ResponseEntity.ok().body(
                 ApiResponse.success(
-                        userService.getAllUsers(pageable),
+                        PageResponse.of(userResponse),
                         "Get All User Successfully!"
                 )
         );

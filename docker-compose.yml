@@ -1,73 +1,70 @@
-#services:
-#  db:
-#    image: postgres:16
-#    container_name: mini-ecommerce-db
-#    environment:
-#      POSTGRES_DB: mini_shop
-#      POSTGRES_USER: ${DB_USERNAME}
-#      POSTGRES_PASSWORD: ${DB_PASSWORD}
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - pgdata:/var/lib/postgresql/data
-#
-#  app:
-#    build: .
-#    container_name: mini-ecommerce-app
-#    depends_on:
-#      - db
-#    env_file:
-#      - .env
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mini_shop
-#      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-#      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-#    ports:
-#      - "8085:8085"
-#
-#volumes:
-#  pgdata:
-
-
 services:
+  app:
+    build: .
+    container_name: mini-ecommerce-app
+    ports:
+      - "8085:8085"
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/mini_shop
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MINIO_ENDPOINT=http://minio:9000
+      - MIN_IO_ACCESS_KEY=${MIN_IO_ACCESS_KEY}
+      - MIN_IO_SECRET_KEY=${MIN_IO_SECRET_KEY}
+      - MIN_IO_BUCKET=${MIN_IO_BUCKET}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - VNPAY_TMN_CODE=${VNPAY_TMN_CODE}
+      - VNPAY_SECRET_KEY=${VNPAY_SECRET_KEY}
+      - VNPAY_PAY_URL=${VNPAY_PAY_URL}
+      - VNPAY_RETURN_URL=${VNPAY_RETURN_URL}
+      - VNPAY_IPN_URL=${VNPAY_IPN_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+
   db:
     image: postgres:16
     container_name: mini-ecommerce-db
     environment:
-      POSTGRES_DB: mini_shop
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_DB=mini_shop
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d mini_shop"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 5s
-      timeout: 5s
       retries: 5
-      start_period: 10s
 
-  app:
-    build: .
-    container_name: mini-ecommerce-app
-    depends_on:
-      db:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mini_shop
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+  redis:
+    image: redis:latest
+    container_name: mini-ecommerce-redis
     ports:
-      - "8085:8085"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/api/v1/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      - "6379:6379"
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: mini-ecommerce-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MIN_IO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MIN_IO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - miniodata:/data
 
 volumes:
   pgdata:
+  miniodata:

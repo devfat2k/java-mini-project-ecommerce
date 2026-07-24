@@ -5,6 +5,7 @@ import com.devfat.mini_ecommerce.service.StorageService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ public class TestUploadController {
 
     private final StorageService storageService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<String>> testUpload(
             @RequestParam("file") MultipartFile file

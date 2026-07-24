@@ -2,6 +2,7 @@ package com.devfat.mini_ecommerce.config;
 
 import com.devfat.mini_ecommerce.security.JwtAuthenticationFilter;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -54,6 +55,11 @@ public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+
+
+    @Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         // Khởi tạo BCryptPasswordEncoder mặc định (strength = 10)
@@ -91,8 +97,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // TODO: Nhớ đổi sau khi đã deploy chính thức không phải đang chạy local
-        configuration.setAllowedOrigins(List.of("http://localhost:8085")); // set cho url nào
+//        configuration.setAllowedOrigins(List.of("http://localhost:8085")); // set cho url nào
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE")); // các phương thức nào
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // header
 

@@ -2,7 +2,7 @@ spring:
   application:
     name: mini-ecommerce
   profiles:
-    active: dev
+    active: prod
 
   servlet:
     multipart:
@@ -41,7 +41,6 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-#    default-schema: public
     default-schema: public
 
   mail:

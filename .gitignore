@@ -42,4 +42,3 @@ build/
 # SECRETS & LOCAL CONFIG
 # ==========================================
 .env
-src/main/resources/application.yaml

@@ -13,8 +13,8 @@ DROP TABLE IF EXISTS categories     CASCADE;
 DROP TABLE IF EXISTS refresh_tokens CASCADE;
 DROP TABLE IF EXISTS users          CASCADE;
 
-CREATE SCHEMA IF NOT EXISTS public;
-SET search_path TO public;
+-- CREATE SCHEMA IF NOT EXISTS public;
+-- SET search_path TO public;
 
 -- ============================================================
 -- 1. USERS

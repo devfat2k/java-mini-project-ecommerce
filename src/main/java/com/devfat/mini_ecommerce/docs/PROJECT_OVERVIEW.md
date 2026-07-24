@@ -2,7 +2,7 @@
 
 > **Mục đích tài liệu:** Đây là tài liệu **CHÍNH XÁC NHẤT** phản ánh trạng thái codebase thực tế tính đến ngày cập nhật. Bất kỳ AI Agent hay Developer nào khi bắt đầu hoặc tiếp tục công việc trên project này đều phải đọc file này **ĐẦU TIÊN**.
 >
-> **Cập nhật lần cuối:** 2026-07-22
+> **Cập nhật lần cuối:** 2026-07-24
 >
 > **Supersedes:** PROJECT_OVERVIEW_V2.md, PROJECT_OVERVIEW_V3.md, PROJECT_OVERVIEW_V4.md (các bản cũ đã bị xoá)
 
@@ -38,35 +38,45 @@
 
 | Thuộc tính | Giá trị |
 |---|---|
-| **Tên dự án** | Mini Ecommerce |
+| **Tên dự án** | Mini Ecommerce — Bán Hải Sản Tươi Sống & Chế Biến (Seafood) |
 | **Group ID** | `com.devfat` |
 | **Artifact ID** | `mini-ecommerce` |
 | **Version** | `0.0.1-SNAPSHOT` |
 | **Main class** | `MiniEcommerceApplication` |
 | **Base package** | `com.devfat.mini_ecommerce` |
+| **Miền nghiệp vụ (Domain)** | **E-commerce Bán Hải Sản (Seafood)** — Tươi sống, phile, chế biến sẵn & gia vị |
 | **Mục tiêu** | Side project cá nhân — rèn luyện Java Backend, áp dụng best practices thực tế, làm portfolio cho vị trí Java Backend Developer |
 | **Kiến trúc** | Layered Architecture (Controller → Service → Repository → Entity) |
 | **API Style** | RESTful JSON API, Stateless (JWT, không session) |
-| **Plan giai đoạn** | Hiện tại đến **Giai đoạn 4** (theo `plan_tong_hop.md`) |
+| **Plan giai đoạn** | Hiện tại đang triển khai các hạng mục nâng cao thuộc **Giai đoạn 5 & 6** (Caching Redis & Async Email) |
 
-### 1.1. Điểm thay đổi so với V4 (những gì đã thêm mới trong V5)
+### 1.1. Điểm thay đổi & bổ sung mới nhất (Tính đến 2026-07-24)
 
-| Module | Trạng thái V4 | Trạng thái V5 (Hiện tại) |
+| Module / Tính năng | Trạng thái trước | Trạng thái Hiện tại |
 |---|---|---|
-| **Docker & Docker Compose** | ❌ Chưa có hoặc comment | ✅ **HOÀN CHỈNH** — Multi-stage build, healthcheck, service_healthy |
-| **GitHub Actions CI** | ❌ Chưa có | ✅ **MỚI** — `ci.yml` build + test on push/PR to main |
-| **MinIO Object Storage** | ❌ Chưa có | ✅ **MỚI** — `MinioConfig`, `StorageService`, `StorageServiceImpl` |
-| **File Upload & Validation** | ❌ Chưa có | ✅ **MỚI** — `FileValidationUtil` (magic bytes), `Thumbnailator` resize |
-| **Image URL columns** | ❌ Chưa có | ✅ **MỚI** — `products.image_url`, `users.avatar_url` (V7 migration) |
-| **Upload APIs** | ❌ Chưa có | ✅ **MỚI** — `POST /products/{id}/image`, `POST /users/me/avatar`, `POST /test/upload` |
-| **PageResponse wrapper** | ❌ Chưa có | ✅ **MỚI** — `PageResponse<T>` cho pagination chuẩn hoá |
-| **BasePageRequest** | ❌ Chưa có | ✅ **MỚI** — DTO base cho pagination request |
-| **V6 Migration** | ❌ Chưa có | ✅ **MỚI** — Fix tất cả ID columns sang BIGINT |
-| **V7 Migration** | ❌ Chưa có | ✅ **MỚI** — Thêm `image_url` cho products, `avatar_url` cho users |
-| **JPA ddl-auto** | `update` | ✅ **Đổi sang `validate`** — an toàn production |
-| **spring-dotenv** | ❌ | ✅ **MỚI** — Load `.env` tự động |
-| **TestUploadController** | ❌ | ✅ **MỚI** — Test endpoint upload file |
-| **base/ package** | Dự kiến BaseEntity | **XOÁ** — không còn trong codebase |
+| **Seafood Domain Model** | ⚠️ Sản phẩm chung chung | ✅ **Bổ sung miền Hải sản** — Quản lý 9 danh mục sản phẩm hải sản đặc thù (Cá biển, Tôm, Mực/Bạch tuộc, Cua/Ghẹ, Ốc/Sò, Set văn phòng, Set nhậu BBQ, Hải sản khô, Nước mắm/Gia vị). |
+| **Redis Distributed Caching** | ❌ Chưa có | ✅ **MỚI** — Tích hợp `spring-boot-starter-data-redis` & `@EnableCaching`. Config `RedisCacheConfig` thiết lập TTL riêng cho products (30m), categories (30m) và analytics (5m). Áp dụng `@Cacheable` & `@CacheEvict` ở `ProductServiceImpl` và `CategoryServiceImpl`. |
+| **Async Email System (`@Async`)** | ❌ Chưa có | ✅ **MỚI** — Cấu hình `AsyncConfig` (`ThreadPoolTaskExecutor` tên `emailTaskExecutor`), `EmailService`, `EmailServiceImpl`, `EmailSenderUtil` gửi Mail Text & HTML Template (`SendEmailTemplate.html` via Thymeleaf) bất đồng bộ khi Đặt hàng / Thanh toán thành công. |
+| **PageResponse & Custom Resolver** | ⚠️ Tạo wrapper nhưng chưa dùng | ✅ **MỚI** — Tạo `CustomPageableArgumentResolver` kết hợp `WebConfig` xử lý query params (`page`, `size`, `sort`, `direction`). Đồng bộ tất cả Controllers (`CategoryController`, `ProductController`, `UserController`) trả về `ApiResponse<PageResponse<T>>`. |
+| **Flyway V8 Seed Migration** | ❌ Chưa có | ✅ **MỚI** — Script `V8__seed_seafood_categories_and_products.sql` thêm 9 danh mục hải sản & 36 sản phẩm mẫu phong phú. |
+| **Hoàn Stock khi Cancel Order** | ⚠️ Chưa xử lý hoàn stock | ✅ **MỚI** — `OrderServiceImpl.changeStatus()` tự động cộng bù stock sản phẩm về kho khi đơn hàng chuyển sang trạng thái `CANCELLED`. |
+| **Docker & Docker Compose** | Multi-stage build | ✅ **HOÀN CHỈNH** — Multi-stage build, healthcheck, service_healthy |
+| **GitHub Actions CI** | `ci.yml` | ✅ **HOÀN CHỈNH** — Build + test tự động on push/PR main |
+| **MinIO Object Storage** | `MinioConfig`, `StorageService` | ✅ **HOÀN CHỈNH** — File upload validation magic bytes + Thumbnailator image resize |
+
+### 1.2. Miền nghiệp vụ & Mô hình Sản phẩm Hải Sản (Seafood E-commerce Domain Model)
+
+Dự án **Mini Ecommerce** được định hình là một hệ thống **Thương mại Điện tử chuyên doanh Hải Sản Tươi Sống & Chế Biến (Seafood E-commerce System)**. Hệ thống phục vụ đa dạng phân khúc khách hàng từ hộ gia đình, dân văn phòng đến các buổi tiệc nhậu/BBQ cuối tuần với 9 nhóm danh mục cốt lõi (theo migration `V8__seed_seafood_categories_and_products.sql`):
+
+1. 🐟 **Cá biển tươi & Phile:** Cá thu tươi 1kg, Cá bớp phile không xương, Cá hồi Nauy phile tươi cut, Cá chẽm tươi nguyên con.
+2. 🦐 **Tôm tươi sống & Cao cấp:** Tôm sú biển size lớn (20-30 con/kg), Tôm thẻ chân trắng, Tôm càng xanh loại 1, Tôm hùm baby Alaska nhập khẩu.
+3. 🦑 **Mực & Bạch tuộc tươi:** Mực ống loại 1 thân dày, Mực lá thịt giòn ngọt, Mực trứng non, Bạch tuộc tươi làm sạch sẵn.
+4. 🦀 **Cua & Ghẹ chắc thịt:** Cua biển gạch son Cà Mau, Ghẹ xanh Phú Quốc tự nhiên, Cua thịt chắc, Ghẹ ba chấm size lớn.
+5. 🐚 **Ốc & Nghêu Sò đầm phá:** Ốc hương tươi giòn thơm, Nghêu trắng, Sò huyết đầm phá thịt đỏ, Cồi sò điệp Nhật nhập khẩu.
+6. 🍱 **Set hải sản văn phòng tiện lợi:** Set hải sản 1 người ăn hấp sẵn, Set cơm văn phòng hải sản, Set salad eat-clean, Set lẩu hải sản mini 1-2 người.
+7. 🍻 **Set hải sản nhậu & Tiệc gia đình:** Set nhậu 4-6 người, Set nướng hải sản BBQ kèm sốt, Set hải sản hấp sả bia, Combo 8 món tiệc cuối tuần.
+8. 🦑 **Hải sản khô & Một nắng:** Tôm khô loại 1 màu đỏ tự nhiên, Mực khô nguyên con phơi nắng, Cá cơm khô, Cá thu một nắng.
+9. 🧂 **Nước mắm & Gia vị chấm chuyên dụng:** Nước mắm nhĩ Phú Quốc 40 độ đạm, Nước mắm cá cơm Phan Thiết, Muối tiêu chanh chấm hải sản hấp, Sốt me chua ngọt chấm nướng.
 
 ---
 
@@ -80,7 +90,8 @@
 | **Spring Boot** | 3.5.16 | Framework core |
 | **Maven** | (wrapper mvnw) | Build tool |
 | **Docker** | Multi-stage | Containerization |
-| **PostgreSQL** | 16 (Docker image) | Database |
+| **PostgreSQL** | 16 (Docker image) | Database chính |
+| **Redis** | (Docker / Local) | In-memory Data Store cho Caching |
 
 ### 2.2. Dependencies (pom.xml) — Đầy đủ
 
@@ -90,21 +101,24 @@
 | `spring-boot-starter-data-jpa` | (managed) | ORM (Hibernate), JpaRepository | compile |
 | `spring-boot-starter-validation` | (managed) | Bean Validation (`@NotNull`, `@Size`...) | compile |
 | `spring-boot-starter-security` | (managed) | Spring Security framework | compile |
+| `spring-boot-starter-mail` | (managed) | **MỚI** — Gửi Email (JavaMailSender) | compile |
+| `spring-boot-starter-cache` | (managed) | **MỚI** — Spring Cache Abstraction | compile |
+| `spring-boot-starter-data-redis` | (managed) | **MỚI** — Spring Data Redis Connector & Serializers | compile |
 | `spring-boot-devtools` | (managed) | Hot reload khi dev | runtime, optional |
 | `postgresql` | (managed) | PostgreSQL JDBC driver | runtime |
 | `flyway-core` | (managed) | Database migration versioning | compile |
 | `flyway-database-postgresql` | (managed) | Flyway PostgreSQL adapter | compile |
-| `springdoc-openapi-starter-webmvc-ui` | **2.7.0** | Swagger UI + OpenAPI 3 docs | compile |
+| `springdoc-openapi-starter-webmvc-ui` | **2.8.17** | Swagger UI + OpenAPI 3 docs (Cập nhật mới) | compile |
 | `jjwt-api` | **0.12.6** | JWT API | compile |
 | `jjwt-impl` | **0.12.6** | JWT implementation | runtime |
 | `jjwt-jackson` | **0.12.6** | JWT JSON serialization | runtime |
 | `lombok` | (managed) | Giảm boilerplate | compile, optional |
 | `spring-dotenv` | **4.0.0** | Tự động load file `.env` vào Spring properties | compile |
-| `minio` | **8.5.17** | **MỚI** — MinIO Java SDK (S3-compatible object storage) | compile |
-| `thumbnailator` | **0.4.20** | **MỚI** — Resize/compress ảnh trước khi upload | compile |
+| `minio` | **8.5.17** | MinIO Java SDK (S3-compatible object storage) | compile |
+| `thumbnailator` | **0.4.20** | Resize/compress ảnh trước khi upload | compile |
 | `spring-boot-starter-test` | (managed) | Unit/Integration testing | test |
 
-> **Lưu ý:** Dự án **KHÔNG** có VNPay SDK dependency. VNPay được tích hợp thủ công bằng HMAC-SHA512 (`javax.crypto.Mac`).
+> **Lưu ý:** Dự án **KHÔNG** dùng VNPay SDK bên thứ 3. VNPay được tích hợp trực tiếp bằng thuật toán HMAC-SHA512 (`javax.crypto.Mac`).
 
 ### 2.3. Build Plugins
 
@@ -173,13 +187,8 @@ jobs:
 
 ### 3.5. .env & .env.example
 
-- `.env` — chứa secrets thực (DB, JWT, Mail, MinIO, VNPay) → **KHÔNG commit**
-- `.env.example` — template để developer khác setup:
-  ```
-  DB_URL, DB_USERNAME, DB_PASSWORD
-  MAIL_USERNAME, MAIL_PASSWORD
-  JWT_SECRET_KEY
-  ```
+- `.env` — chứa secrets thực (DB, JWT, Mail, MinIO, Redis, VNPay) → **KHÔNG commit**
+- `.env.example` — template để developer khác setup.
 
 ---
 
@@ -198,14 +207,21 @@ jobs:
 | | `spring.datasource.hikari.connection-timeout` | `30000` |
 | **JPA** | `spring.jpa.show-sql` | `true` |
 | | `spring.jpa.open-in-view` | `false` |
-| | **`spring.jpa.hibernate.ddl-auto`** | **`validate`** ← Đổi từ `update` (an toàn hơn) |
+| | `spring.jpa.hibernate.ddl-auto` | `validate` (An toàn production) |
 | | `spring.jpa.properties.hibernate.format_sql` | `true` |
 | | `spring.jpa.properties.hibernate.use_sql_comments` | `true` |
 | **Flyway** | `spring.flyway.enabled` | `true` |
 | | `spring.flyway.locations` | `classpath:db/migration` |
 | | `spring.flyway.baseline-on-migrate` | `true` |
 | | `spring.flyway.schemas` | `public` |
-| **Mail** | `spring.mail.*` | Gmail SMTP (587, TLS) — cấu hình sẵn, chưa dùng |
+| **Mail** | `spring.mail.host` | `smtp.gmail.com` |
+| | `spring.mail.port` | `587` |
+| | `spring.mail.username` | `${MAIL_USERNAME}` |
+| | `spring.mail.password` | `${MAIL_PASSWORD}` |
+| | `spring.mail.properties.mail.smtp.auth` | `true` |
+| | `spring.mail.properties.mail.smtp.starttls.enable` | `true` |
+| **Redis** | `spring.data.redis.host` | `localhost` |
+| | `spring.data.redis.port` | `6379` |
 | **JWT** | `app.jwt.secret-key` | `${JWT_SECRET_KEY}` |
 | | `app.jwt.expiration` | `3600000` (1 giờ, ms) |
 | | `app.jwt.refresh-expiration-days` | `7` (7 ngày) |
@@ -221,9 +237,6 @@ jobs:
 | | `vnpay.ipn-url` | `${VNPAY_IPN_URL}` |
 | **Swagger** | `springdoc.api-docs.path` | `/v1/api-docs` |
 | | `springdoc.swagger-ui.path` | `/swagger-ui.html` |
-| **Logging** | `logging.level.org.springframework.web` | `DEBUG` |
-| | `logging.level.org.hibernate.SQL` | `DEBUG` |
-| | `logging.level.org.hibernate.type` | `TRACE` |
 
 ### 4.2. Profile-specific files
 
@@ -233,14 +246,17 @@ jobs:
 | `application-test.yaml` | `8082` |
 | `application-prod.yaml` | `8083` |
 
-### 4.3. Configuration Beans
+### 4.3. Configuration Beans (7 Beans)
 
 | Bean Class | Annotation | Vai trò |
 |---|---|---|
 | `SecurityConfig` | `@Configuration @EnableWebSecurity @EnableMethodSecurity` | Filter chain, CORS, BCrypt, AuthenticationManager |
 | `OpenApiConfig` | `@Configuration` | Swagger/OpenAPI + Bearer Auth scheme |
 | `VNPayConfig` | `@Configuration @ConfigurationProperties(prefix="vnpay")` | VNPay settings + helper methods |
-| `MinioConfig` | `@Configuration` | **MỚI** — Tạo `MinioClient` bean từ endpoint/access-key/secret-key |
+| `MinioConfig` | `@Configuration` | Tạo `MinioClient` bean từ endpoint/access-key/secret-key |
+| **`AsyncConfig`** | **`@Configuration @EnableAsync`** | **★ MỚI** — Cấu hình `ThreadPoolTaskExecutor` (`emailTaskExecutor` core=3, max=10, queue=50) |
+| **`RedisCacheConfig`** | **`@Configuration @EnableCaching`** | **★ MỚI** — Khởi tạo `RedisCacheManager` với TTL riêng (products/categories: 30m, analytics: 5m) |
+| **`WebConfig`** | **`@Configuration`** | **★ MỚI** — Đăng ký `CustomPageableArgumentResolver` tự động parse tham số phân trang |
 
 ---
 
@@ -248,7 +264,7 @@ jobs:
 
 ```
 mini-ecommerce/
-├── pom.xml                                        # Maven build config
+├── pom.xml                                        # Maven build config (+ Redis, Mail, OpenApi 2.8.17)
 ├── mvnw / mvnw.cmd                                # Maven wrapper
 ├── Dockerfile                                     # Multi-stage build (builder → JRE-alpine)
 ├── docker-compose.yml                             # db (postgres:16) + app services
@@ -257,7 +273,7 @@ mini-ecommerce/
 ├── .dockerignore                                  # Ignore target, .git, .idea, .env
 ├── .gitignore                                     # Ignore .env, application.yaml, IDE
 ├── .gitattributes                                 # Git line-ending config
-├── README.md                                      # Project readme (minimal)
+├── README.md                                      # Project readme
 ├── HELP.md                                        # Spring Boot generated help
 ├── .github/
 │   └── workflows/
@@ -270,64 +286,68 @@ mini-ecommerce/
 │   │   │   │
 │   │   │   ├── common/                            # Shared response wrappers
 │   │   │   │   ├── ApiResponse.java               # Generic API response <T> + success/error factories
-│   │   │   │   └── PageResponse.java              # ★ MỚI — Pagination wrapper (content, page, size, totalElements, totalPages, last)
+│   │   │   │   └── PageResponse.java              # Standardized pagination response (content, page, size, totalElements, totalPages, last)
 │   │   │   │
-│   │   │   ├── config/                            # Spring Configuration beans (5 files)
+│   │   │   ├── config/                            # Spring Configuration beans (7 files)
 │   │   │   │   ├── SecurityConfig.java            # Security filter chain, CORS, BCrypt, AuthenticationManager
 │   │   │   │   ├── OpenApiConfig.java             # Swagger/OpenAPI + Bearer Auth scheme
 │   │   │   │   ├── VNPayConfig.java               # @ConfigurationProperties(prefix="vnpay")
 │   │   │   │   ├── VNPayUtil.java                 # HMAC-SHA512, buildQueryAndHash, verifySignature
-│   │   │   │   └── MinioConfig.java               # ★ MỚI — MinioClient bean
+│   │   │   │   ├── MinioConfig.java               # MinioClient bean
+│   │   │   │   ├── AsyncConfig.java               # ★ MỚI — @EnableAsync + emailTaskExecutor ThreadPool
+│   │   │   │   ├── RedisCacheConfig.java          # ★ MỚI — @EnableCaching + RedisCacheManager custom TTLs
+│   │   │   │   └── WebConfig.java                 # ★ MỚI — Register CustomPageableArgumentResolver
 │   │   │   │
-│   │   │   ├── controller/                        # REST Controllers (8 files ← tăng từ 7)
+│   │   │   ├── controller/                        # REST Controllers (8 files)
 │   │   │   │   ├── AuthController.java            # /api/v1/auth/** (4 endpoints)
-│   │   │   │   ├── CategoryController.java        # /api/v1/categories/** (5 endpoints)
-│   │   │   │   ├── ProductController.java         # /api/v1/products/** (10+1 endpoints) ← thêm upload image
+│   │   │   │   ├── CategoryController.java        # /api/v1/categories/** (5 endpoints) — Trả PageResponse
+│   │   │   │   ├── ProductController.java         # /api/v1/products/** (11 endpoints) — Trả PageResponse
 │   │   │   │   ├── OrderController.java           # /api/v1/orders/** (4 endpoints)
-│   │   │   │   ├── UserController.java            # /api/v1/users/** (5+1 endpoints) ← thêm upload avatar
+│   │   │   │   ├── UserController.java            # /api/v1/users/** (6 endpoints) — Trả PageResponse
 │   │   │   │   ├── PaymentController.java         # /api/v1/payments/** (3 endpoints)
 │   │   │   │   ├── PingController.java            # /api/v1/health (1 endpoint)
-│   │   │   │   └── TestUploadController.java      # ★ MỚI — /api/v1/test/upload (test MinIO)
+│   │   │   │   └── TestUploadController.java      # /api/v1/test/upload (test MinIO)
 │   │   │   │
 │   │   │   ├── docs/                              # Tài liệu dự án (markdown)
-│   │   │   │   ├── PROJECT_OVERVIEW.md            # ★ BẢN NÀY V5 (hiện tại)
+│   │   │   │   ├── PROJECT_OVERVIEW.md            # ★ TÀI LIỆU NÀY
 │   │   │   │   ├── plan_tong_hop.md               # Kế hoạch tổng hợp các phase
 │   │   │   │   ├── plan_uu_tien_hoc_tap.md        # Roadmap học tập ưu tiên
-│   │   │   │   └── auth_security_jwt_plan.md      # Plan JWT chi tiết (5 giai đoạn, A-E)
+│   │   │   │   └── auth_security_jwt_plan.md      # Plan JWT chi tiết
 │   │   │   │
 │   │   │   ├── dto/
-│   │   │   │   ├── request/                       # 12 request DTOs (tăng từ 11)
-│   │   │   │   │   ├── BasePageRequest.java       # ★ MỚI — Base class cho pagination params
+│   │   │   │   ├── request/                       # 13 request DTOs
+│   │   │   │   │   ├── BasePageRequest.java       # Base class cho pagination params
 │   │   │   │   │   ├── RegisterRequestDto.java    # (record) Đăng ký user
 │   │   │   │   │   ├── LoginRequestDto.java       # (record) Đăng nhập
 │   │   │   │   │   ├── RefreshTokenRequestDto.java # (record) Refresh token
 │   │   │   │   │   ├── CreateProductRequestDto.java # (record) Tạo sản phẩm
-│   │   │   │   │   ├── UpdateProductRequestDto.java # (record) Cập nhật sản phẩm (partial)
+│   │   │   │   │   ├── UpdateProductRequestDto.java # (record) Cập nhật sản phẩm
 │   │   │   │   │   ├── CreateCategoryRequestDto.java # (record) Tạo danh mục
 │   │   │   │   │   ├── CreateOrderRequestDto.java  # (record) Tạo đơn hàng
 │   │   │   │   │   ├── OrderItemRequestDto.java    # (record) Item trong đơn hàng
 │   │   │   │   │   ├── UpdateOrderStatusRequestDto.java # (record) Cập nhật status đơn
 │   │   │   │   │   ├── ChangePasswordRequestDto.java # (record) Đổi mật khẩu
-│   │   │   │   │   └── UpdateProfileRequestDto.java # (record) Cập nhật profile
+│   │   │   │   │   ├── UpdateProfileRequestDto.java # (record) Cập nhật profile
+│   │   │   │   │   └── EmailRequestDto.java       # ★ MỚI — Request DTO cho gửi Email
 │   │   │   │   │
 │   │   │   │   └── response/                      # 8 response DTOs
-│   │   │   │       ├── AuthResponseDto.java       # Login response (accessToken, refreshToken, tokenType, expiresIn)
-│   │   │   │       ├── UserResponseDto.java       # User info (+ avatarUrl mới)
+│   │   │   │       ├── AuthResponseDto.java       # Login response
+│   │   │   │       ├── UserResponseDto.java       # User info (+ avatarUrl)
 │   │   │   │       ├── CategoryResponseDto.java   # Category info
-│   │   │   │       ├── ProductResponseDto.java    # Product info (+ imageUrl, active mới)
+│   │   │   │       ├── ProductResponseDto.java    # Product info (+ imageUrl, active)
 │   │   │   │       ├── OrderResponseDto.java      # Order info
 │   │   │   │       ├── OrderItemResponseDto.java  # Order item info
 │   │   │   │       ├── RefreshTokenResponseDto.java # Refresh response
-│   │   │   │       └── CreatePaymentResponseDto.java # Payment URL (record)
+│   │   │   │       └── CreatePaymentResponseDto.java # Payment URL
 │   │   │   │
 │   │   │   ├── entity/                            # JPA Entities (7 entities)
-│   │   │   │   ├── UserEntity.java                # + avatarUrl field (V7)
+│   │   │   │   ├── UserEntity.java
 │   │   │   │   ├── CategoryEntity.java
-│   │   │   │   ├── ProductEntity.java             # + imageUrl field (V7), @Version
-│   │   │   │   ├── OrderEntity.java               # @Version
+│   │   │   │   ├── ProductEntity.java             # @Version (Optimistic Lock)
+│   │   │   │   ├── OrderEntity.java               # @Version (Optimistic Lock)
 │   │   │   │   ├── OrderItemEntity.java
 │   │   │   │   ├── RefreshTokenEntity.java
-│   │   │   │   └── PaymentEntity.java             # 3 inline enums
+│   │   │   │   └── PaymentEntity.java
 │   │   │   │
 │   │   │   ├── enums/                             # (RỖNG) — Enums inline trong Entity
 │   │   │   │
@@ -344,55 +364,53 @@ mini-ecommerce/
 │   │   │   ├── repository/                        # 6 repositories
 │   │   │   │   ├── UserRepository.java
 │   │   │   │   ├── CategoryRepository.java
-│   │   │   │   ├── ProductRepository.java         # Phức tạp nhất: JPQL, Projections
+│   │   │   │   ├── ProductRepository.java         # JPQL + Projections
 │   │   │   │   ├── OrderRepository.java
 │   │   │   │   ├── RefreshTokenRepository.java
 │   │   │   │   └── PaymentRepository.java
 │   │   │   │
 │   │   │   ├── security/                          # JWT Security module (7 files)
-│   │   │   │   ├── JwtProvider.java               # generate, validate, extract claims
-│   │   │   │   ├── JwtAuthenticationFilter.java   # OncePerRequestFilter — gắn Authentication vào SecurityContext
-│   │   │   │   ├── JwtAuthenticationEntryPoint.java # JSON 401 response
-│   │   │   │   ├── JwtAccessDeniedHandler.java    # JSON 403 response
-│   │   │   │   ├── CustomUserDetailsService.java  # Load user bằng email → UserPrincipal
-│   │   │   │   ├── UserPrincipal.java             # UserDetails impl (getUserId, getRole, isEnabled)
-│   │   │   │   └── RefreshTokenGenerator.java     # SecureRandom 64 bytes → Base64
+│   │   │   │   ├── JwtProvider.java
+│   │   │   │   ├── JwtAuthenticationFilter.java
+│   │   │   │   ├── JwtAuthenticationEntryPoint.java
+│   │   │   │   ├── JwtAccessDeniedHandler.java
+│   │   │   │   ├── CustomUserDetailsService.java
+│   │   │   │   ├── UserPrincipal.java
+│   │   │   │   └── RefreshTokenGenerator.java
 │   │   │   │
-│   │   │   ├── service/                           # Service interfaces (7 files) + impl/ (7 files)
-│   │   │   │   ├── AuthService.java               # register, login, refreshToken, logout
-│   │   │   │   ├── CategoryService.java           # CRUD + search
-│   │   │   │   ├── ProductService.java            # CRUD + stock + analytics + uploadImage
-│   │   │   │   ├── OrderService.java              # CRUD + status machine
-│   │   │   │   ├── UserService.java               # getMe, changePassword, updateProfile, getAllUsers, updateStatus, uploadAvatar
-│   │   │   │   ├── PaymentService.java            # createPayment, handleVnPayIpn
-│   │   │   │   ├── StorageService.java            # ★ MỚI — interface: uploadFile(file, folder, resize)
-│   │   │   │   └── impl/
-│   │   │   │       ├── AuthServiceImpl.java       # 4 methods + hashRefreshToken helper
-│   │   │   │       ├── CategoryServiceImpl.java   # 5 methods
-│   │   │   │       ├── ProductServiceImpl.java    # 11 methods (+ uploadProductImage)
-│   │   │   │       ├── OrderServiceImpl.java      # 4 methods + state machine
-│   │   │   │       ├── UserServiceImpl.java       # 6 methods (+ uploadUserImage)
-│   │   │   │       ├── PaymentServiceImpl.java    # 3 methods (+ @Scheduled expiredPayment)
-│   │   │   │       └── StorageServiceImpl.java    # ★ MỚI — MinIO upload + Thumbnailator resize
+│   │   │   ├── service/                           # Service interfaces (8 files) + impl/ (8 files)
+│   │   │   │   ├── AuthService.java / AuthServiceImpl.java
+│   │   │   │   ├── CategoryService.java / CategoryServiceImpl.java — CacheEvict
+│   │   │   │   ├── ProductService.java / ProductServiceImpl.java — Cacheable & CacheEvict
+│   │   │   │   ├── OrderService.java / OrderServiceImpl.java — Auto restore stock + Async Email
+│   │   │   │   ├── UserService.java / UserServiceImpl.java
+│   │   │   │   ├── PaymentService.java / PaymentServiceImpl.java — Async Email IPN
+│   │   │   │   ├── StorageService.java / StorageServiceImpl.java — MinIO + Thumbnailator
+│   │   │   │   └── EmailService.java / EmailServiceImpl.java — ★ MỚI: @Async Email Service
 │   │   │   │
-│   │   │   └── util/                              # Utility classes
-│   │   │       └── FileValidationUtil.java        # ★ MỚI — Magic bytes validation (JPEG, PNG, GIF, WebP)
+│   │   │   └── util/                              # Utility classes (3 files)
+│   │   │       ├── FileValidationUtil.java        # Magic bytes validation
+│   │   │       ├── EmailSenderUtil.java           # ★ MỚI: JavaMailSender helper (Text/HTML)
+│   │   │       └── CustomPageableArgumentResolver.java # ★ MỚI: Pageable Argument Resolver
 │   │   │
 │   │   └── resources/
-│   │       ├── application.yaml                   # Config chính (⚠️ gitignored vì chứa env refs)
+│   │       ├── application.yaml                   # Config chính (gitignored)
 │   │       ├── application-dev.yaml               # Port 8085
 │   │       ├── application-test.yaml              # Port 8082
 │   │       ├── application-prod.yaml              # Port 8083
 │   │       ├── db/migration/
-│   │       │   ├── V1__init_mini_shop.sql         # 6 bảng core + indexes
-│   │       │   ├── V2__add_version_to_products.sql # Optimistic Lock: products.version
-│   │       │   ├── V3__create_payments_table.sql  # Bảng payments + indexes
-│   │       │   ├── V4__fix_payments_order_id_type.sql # Fix BIGINT cho order_id
-│   │       │   ├── V5__add_version_to_orders.sql  # Optimistic Lock: orders.version
-│   │       │   ├── V6__fix_id_columns_to_bigint.sql # ★ MỚI — Fix ALL ID columns → BIGINT
-│   │       │   └── V7__add_image_url_columns.sql  # ★ MỚI — products.image_url + users.avatar_url
-│   │       ├── static/                            # (RỖNG)
-│   │       └── templates/                         # (RỖNG)
+│   │       │   ├── V1__init_mini_shop.sql
+│   │       │   ├── V2__add_version_to_products.sql
+│   │       │   ├── V3__create_payments_table.sql
+│   │       │   ├── V4__fix_payments_order_id_type.sql
+│   │       │   ├── V5__add_version_to_orders.sql
+│   │       │   ├── V6__fix_id_columns_to_bigint.sql
+│   │       │   ├── V7__add_image_url_columns.sql
+│   │       │   └── V8__seed_seafood_categories_and_products.sql # ★ MỚI — Data seed 9 categories & 36 hải sản
+│   │       ├── templates/
+│   │       │   └── email/
+│   │       │       └── SendEmailTemplate.html    # ★ MỚI — HTML Email Template
+│   │       └── static/                            # (RỖNG)
 │   │
 │   └── test/java/                                 # (Chưa có test code)
 ```
@@ -401,7 +419,7 @@ mini-ecommerce/
 
 ## 6. Database Schema & Migrations
 
-### 6.1. Lịch sử Flyway Migrations (7 migrations)
+### 6.1. Lịch sử Flyway Migrations (8 migrations)
 
 | File | Nội dung |
 |---|---|
@@ -410,47 +428,9 @@ mini-ecommerce/
 | `V3__create_payments_table.sql` | Tạo bảng `payments` + 2 indexes |
 | `V4__fix_payments_order_id_type.sql` | `ALTER TABLE payments ALTER COLUMN order_id TYPE BIGINT` |
 | `V5__add_version_to_orders.sql` | `ALTER TABLE orders ADD COLUMN version INTEGER NOT NULL DEFAULT 0` |
-| `V6__fix_id_columns_to_bigint.sql` | ★ **MỚI** — Fix ALL `id`, FK columns sang `BIGINT` (users, categories, products, orders, order_items, refresh_tokens, payments) |
-| `V7__add_image_url_columns.sql` | ★ **MỚI** — `products ADD image_url VARCHAR(500)`, `users ADD avatar_url VARCHAR(500)` |
-
-### 6.2. Database Schema (7 bảng)
-
-**Bổ sung so với V4:**
-- `products.image_url VARCHAR(500)` — URL ảnh sản phẩm (MinIO)
-- `users.avatar_url VARCHAR(500)` — URL avatar user (MinIO)
-- Tất cả ID và FK columns đã chuẩn hoá sang `BIGINT`
-
-**Bảng payments (không đổi):**
-
-```sql
-CREATE TABLE payments (
-    id                      BIGSERIAL PRIMARY KEY,
-    order_id                BIGINT NOT NULL REFERENCES orders(id),
-    amount                  NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
-    provider                VARCHAR(20) NOT NULL CHECK (provider IN ('VNPAY','MOMO','ZALOPAY','ACB','VCB')),
-    payment_method          VARCHAR(20) NOT NULL CHECK (payment_method IN ('BANK','WALLET','CASH')),
-    status                  VARCHAR(20) NOT NULL DEFAULT 'PENDING'
-                            CHECK (status IN ('PENDING','SUCCESS','FAILED','EXPIRED')),
-    provider_transaction_id VARCHAR(100) UNIQUE,
-    paid_at                 TIMESTAMP,
-    created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at              TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
-### 6.3. Tổng hợp Indexes (9 indexes)
-
-| Index | Bảng | Column |
-|---|---|---|
-| `idx_products_category` | products | category_id |
-| `idx_orders_user` | orders | user_id |
-| `idx_orders_status` | orders | status |
-| `idx_order_items_order` | order_items | order_id |
-| `idx_order_items_product` | order_items | product_id |
-| `idx_refresh_tokens_user_id` | refresh_tokens | user_id |
-| `idx_refresh_tokens_token_hash` | refresh_tokens | token_hash |
-| `idx_payments_order` | payments | order_id |
-| `idx_payments_status` | payments | status |
+| `V6__fix_id_columns_to_bigint.sql` | Fix ALL `id`, FK columns sang `BIGINT` |
+| `V7__add_image_url_columns.sql` | `products ADD image_url VARCHAR(500)`, `users ADD avatar_url VARCHAR(500)` |
+| `V8__seed_seafood_categories_and_products.sql` | ★ **MỚI** — Seed dữ liệu 9 danh mục hải sản & 36 sản phẩm mẫu kèm mô tả, giá thực tế, stock và version |
 
 ---
 
@@ -465,7 +445,7 @@ CREATE TABLE payments (
 | `id` | `Long` | `@Id @GeneratedValue(IDENTITY)` | PK |
 | `fullName` | `String` | `@Column(name="full_name", length=150)` | |
 | `email` | `String` | `@Column(unique=true, length=150)` | Username đăng nhập |
-| **`avatarUrl`** | **`String`** | **`@Column(name="avatar_url", length=500)`** | **★ MỚI — URL avatar (MinIO)** |
+| `avatarUrl` | `String` | `@Column(name="avatar_url", length=500)` | URL avatar (MinIO) |
 | `phoneNumber` | `String` | `@Column(name="phone_number", unique=true, length=15)` | |
 | `password` | `String` | `@Column(nullable=false)` | BCrypt hash |
 | `role` | `Role` enum | `@Enumerated(STRING)` | Inline enum: `USER`, `ADMIN` |
@@ -473,7 +453,7 @@ CREATE TABLE payments (
 | `createdAt` | `LocalDateTime` | `@CreationTimestamp` | |
 | `updatedAt` | `LocalDateTime` | `@UpdateTimestamp` | |
 
-### 7.2. CategoryEntity (`categories`) — Không đổi
+### 7.2. CategoryEntity (`categories`)
 
 | Field | Type | Ghi chú |
 |---|---|---|
@@ -488,7 +468,7 @@ CREATE TABLE payments (
 |---|---|---|
 | `id` | `Long` | PK |
 | `name` | `String` | NOT NULL |
-| **`imageUrl`** | **`String`** | **★ MỚI — `@Column(name="image_url", length=500)` — URL ảnh (MinIO)** |
+| `imageUrl` | `String` | `@Column(name="image_url", length=500)` — URL ảnh (MinIO) |
 | `description` | `String` | `@Column(columnDefinition="TEXT")` |
 | `price` | `BigDecimal` | precision=12, scale=2 |
 | `stock` | `Integer` | `@Builder.Default = 0` |
@@ -498,7 +478,7 @@ CREATE TABLE payments (
 | `createdAt` / `updatedAt` | `LocalDateTime` | |
 | `version` | `Integer` | `@Version` — Optimistic Locking |
 
-### 7.4. OrderEntity (`orders`) — Optimistic Lock — Không đổi
+### 7.4. OrderEntity (`orders`) — Optimistic Lock
 
 | Field | Type | Ghi chú |
 |---|---|---|
@@ -511,46 +491,25 @@ CREATE TABLE payments (
 | `createdAt` / `updatedAt` | `LocalDateTime` | |
 | `version` | `Integer` | `@Version` |
 
-### 7.5. OrderItemEntity (`order_items`) — Không đổi
-
-### 7.6. RefreshTokenEntity (`refresh_tokens`) — Không đổi
-
-### 7.7. PaymentEntity (`payments`) — Không đổi
-
-> **3 inline enums trong PaymentEntity:**
-> - `PaymentStatus`: `{PENDING, SUCCESS, FAILED, EXPIRED}`
-> - `PaymentMethod`: `{CASH, BANK, WALLET}`
-> - `PaymentProvider`: `{VNPAY, MOMO, ZALOPAY, ACB, VCB}`
-
 ---
 
 ## 8. Repository Layer — Data Access
 
-### 8.1. UserRepository — Không đổi
+### 8.1. UserRepository
 
 | Method | Mô tả |
 |---|---|
 | `findByEmail(String)` | Tìm user bằng email |
 | `findByPhoneNumber(String)` | Tìm user bằng SĐT |
 
-### 8.2. CategoryRepository — Không đổi
+### 8.2. CategoryRepository
 
 | Method | Mô tả |
 |---|---|
 | `findByNameContainingIgnoreCase(String, Pageable)` | Search + phân trang |
 | `existsByNameIgnoreCase(String)` | Check tên đã tồn tại |
 
-### 8.3. ProductRepository — Phức tạp nhất
-
-**Derived queries:**
-
-| Method | Mô tả |
-|---|---|
-| `findByStockGreaterThan(int)` | SP còn hàng |
-| `findByCategoryIdAndStockGreaterThan(Long, int)` | SP theo category còn hàng |
-| `findByStockGreaterThan(int, Pageable)` | Phân trang |
-
-**JPQL custom queries:**
+### 8.3. ProductRepository
 
 | Method | Mô tả |
 |---|---|
@@ -558,396 +517,148 @@ CREATE TABLE payments (
 | `findByMinPriceWithCategory(BigDecimal)` | `JOIN FETCH p.category WHERE p.price >= :minPrice` |
 | `findByNameContainsIgnoreCase(String, Pageable)` | **JOIN FETCH + isActive=true + LIKE search** — có countQuery riêng |
 
-**Projection Interfaces:**
-
-| Interface | Fields | Mục đích |
-|---|---|---|
-| `TopProductView` | `name`, `price`, `mostBuy` | Top sản phẩm bán chạy |
-| `CategoryRevenueView` | `name`, `revenue` | Doanh thu theo category |
-| `MonthlyRevenueView` | `month`, `revenue` | Doanh thu theo tháng |
-
-### 8.4. OrderRepository
-
-| Method | Mô tả |
-|---|---|
-| `findAllByUserId(Long)` | Orders theo userId |
-| `findByUserId(Long)` | Single order theo userId |
-| `findAllByStatus(OrderStatus)` | Orders theo status |
-| `findAllByUserIdAndStatus(Long, OrderStatus)` | JPQL JOIN FETCH user |
-| `findByUserIdWithDetails(Long)` | JPQL: JOIN FETCH user + LEFT JOIN FETCH items |
-
-### 8.5. RefreshTokenRepository — Không đổi
-
-### 8.6. PaymentRepository — Không đổi
+**Projections:** `TopProductView`, `CategoryRevenueView`, `MonthlyRevenueView`.
 
 ---
 
 ## 9. DTO Layer — Request & Response
 
-### 9.1. Request DTOs
+### 9.1. Request DTOs (13 DTOs)
 
-| DTO | Type | Fields | Validation | Ghi chú |
-|---|---|---|---|---|
-| **BasePageRequest** | **Class** | `page, size, sortBy, direction` | — | **★ MỚI** — Base cho pagination, có `toPageable()` method |
-| **RegisterRequestDto** | Record | `fullName, email, phoneNumber, password` | `@NotNull @NotBlank @Email @Size @Pattern(10-11 digits)` | |
-| **LoginRequestDto** | Record | `email, password` | `@NotNull @NotBlank @Email @Size` | |
-| **RefreshTokenRequestDto** | Record | `refreshToken` | `@NotNull @NotBlank` | |
-| **CreateProductRequestDto** | Record | `name, description, price, stock, categoryId, isActive` | `@NotNull @NotBlank @DecimalMin @Min(1)` | |
-| **UpdateProductRequestDto** | Record | `name, description, price, stock, isActive, categoryId` | Tất cả nullable (partial update) | |
-| **CreateCategoryRequestDto** | Record | `name` | `@NotNull @NotBlank` | |
-| **CreateOrderRequestDto** | Record | `items: List<OrderItemRequestDto>` | `@NotEmpty @Valid` | |
-| **OrderItemRequestDto** | Record | `productId, quantity` | `@NotNull, @Min(1)` | |
-| **UpdateOrderStatusRequestDto** | Record | `orderStatus` | `@NotNull` | |
-| **ChangePasswordRequestDto** | Record | `oldPassword, newPassword` | `@NotNull @NotBlank @Size(8-100)` | |
-| **UpdateProfileRequestDto** | Record | `fullName, phoneNumber` | `@NotBlank @Pattern(10-11 digits)` | |
+| DTO | Type | Fields | Validation / Ghi chú |
+|---|---|---|---|
+| **BasePageRequest** | Class | `page, size, sortBy, direction` | Base class cho pagination params |
+| **RegisterRequestDto** | Record | `fullName, email, phoneNumber, password` | `@NotNull @NotBlank @Email @Size @Pattern` |
+| **LoginRequestDto** | Record | `email, password` | `@NotNull @NotBlank @Email @Size` |
+| **RefreshTokenRequestDto** | Record | `refreshToken` | `@NotNull @NotBlank` |
+| **CreateProductRequestDto** | Record | `name, description, price, stock, categoryId, isActive` | `@NotNull @NotBlank @DecimalMin @Min(1)` |
+| **UpdateProductRequestDto** | Record | `name, description, price, stock, isActive, categoryId` | Partial update (nullable) |
+| **CreateCategoryRequestDto** | Record | `name` | `@NotNull @NotBlank` |
+| **CreateOrderRequestDto** | Record | `items: List<OrderItemRequestDto>` | `@NotEmpty @Valid` |
+| **OrderItemRequestDto** | Record | `productId, quantity` | `@NotNull, @Min(1)` |
+| **UpdateOrderStatusRequestDto** | Record | `orderStatus` | `@NotNull` |
+| **ChangePasswordRequestDto** | Record | `oldPassword, newPassword` | `@NotNull @NotBlank @Size(8-100)` |
+| **UpdateProfileRequestDto** | Record | `fullName, phoneNumber` | `@NotBlank @Pattern(10-11 digits)` |
+| **EmailRequestDto** | **Class** | `to, subject, messageBody, attachmentPath` | **★ MỚI** — DTO truyền dữ liệu gửi Email |
 
 ### 9.2. Response DTOs
 
-| DTO | Fields | Ghi chú |
-|---|---|---|
-| **UserResponseDto** | `userId, fullName, **avatarUrl**, email, phoneNumber, role, isActive, createdAt` | **★ Thêm `avatarUrl`** |
-| **AuthResponseDto** | `accessToken, refreshToken, tokenType("Bearer"), expiresIn` | |
-| **RefreshTokenResponseDto** | `accessToken` | |
-| **CategoryResponseDto** | `id, categoryName` | |
-| **ProductResponseDto** | `id, name, price, stock, description, **imageUrl**, **active**, category(CategoryResponseDto)` | **★ Thêm `imageUrl`, `active`** |
-| **OrderResponseDto** | `id, status, totalAmount, createdAt, orderItems(List)` | |
-| **OrderItemResponseDto** | `productName, quantity, unitPrice` | |
-| **CreatePaymentResponseDto** | `paymentUrl` | Record |
-
-### 9.3. Shared Response Wrapper
-
-| Class | Mô tả |
+| DTO | Fields |
 |---|---|
-| **ApiResponse\<T\>** | `success, message, data, timestamp` — `@JsonInclude(NON_NULL)` |
-| **PageResponse\<T\>** | **★ MỚI** — `content, page, size, totalElements, totalPages, last` — factory `PageResponse.of(Page<T>)` |
+| **UserResponseDto** | `userId, fullName, avatarUrl, email, phoneNumber, role, isActive, createdAt` |
+| **AuthResponseDto** | `accessToken, refreshToken, tokenType("Bearer"), expiresIn` |
+| **RefreshTokenResponseDto** | `accessToken` |
+| **CategoryResponseDto** | `id, categoryName` |
+| **ProductResponseDto** | `id, name, price, stock, description, imageUrl, active, category` |
+| **OrderResponseDto** | `id, status, totalAmount, createdAt, orderItems` |
+| **OrderItemResponseDto** | `productName, quantity, unitPrice` |
+| **CreatePaymentResponseDto** | `paymentUrl` |
 
 ---
 
 ## 10. Service Layer — Business Logic
 
-### 10.1. AuthService / AuthServiceImpl — Không đổi
+### 10.1. ProductService / ProductServiceImpl — Caching & Storage
 
-| Method | Logic |
-|---|---|
-| **register** | Trim+lowercase email → check trùng → BCrypt hash → save → UserResponseDto |
-| **login** | AuthManager.authenticate() → JWT accessToken → clean expired tokens → sinh refresh token → save → AuthResponseDto |
-| **refreshToken** | SHA-256 hash → tìm entity → check revoked+expiry → sinh accessToken mới |
-| **logout** | SHA-256 hash → set revoked=true. Idempotent. |
+- **`findById(Long id)`**: `@Cacheable(value = "products", key = "#id")` — Cache thông tin sản phẩm vào Redis (TTL 30 min).
+- **`update()`, `softDelete()`, `increaseStock()`, `decreaseStock()`, `uploadProductImage()`**: `@CacheEvict(value = "products", key = "#id")` — Xoá cache sản phẩm khi có dữ liệu thay đổi.
+- **Analytics APIs (`getTopProducts`, `getCategoryRevenue`, `getMonthlyRevenue`)**: `@Cacheable(value = "analytics", key = "'top-products'")` v.v. — Cache thống kê với TTL 5 min.
 
-### 10.2. CategoryService / CategoryServiceImpl — Không đổi (5 methods)
+### 10.2. CategoryService / CategoryServiceImpl — Caching
 
-### 10.3. ProductService / ProductServiceImpl — Thêm upload
+- **`create()`, `update()`, `deleteById()`**: `@CacheEvict(value = "categories", allEntries = true)` — Xoá sạch cache danh mục khi admin thêm/sửa/xoá.
 
-| Method | Logic |
-|---|---|
-| **create** | Tìm category → tạo Product → save |
-| **getProductsWithSearch** | JPQL search + JOIN FETCH category + pagination |
-| **findById** | findById → map → orElseThrow |
-| **update** | Partial update (chỉ set fields != null) |
-| **softDelete** | Check isActive → set false |
-| **decreaseStock** | validate > 0 + check stock >= qty → trừ stock |
-| **increaseStock** | validate > 0 → cộng stock |
-| **getTopProducts** | Projection query |
-| **getCategoryRevenue** | Projection query |
-| **getMonthlyRevenue** | Projection query |
-| **uploadProductImage** | **★ MỚI** — findById → `storageService.uploadFile(file, "productImage", true)` → set imageUrl → save |
+### 10.3. OrderService / OrderServiceImpl — Async Email & Stock Restoration
 
-### 10.4. OrderService / OrderServiceImpl — Không đổi (4 methods)
+- **`create()`**: Trừ stock theo số lượng đặt hàng. Khi tạo đơn hàng thành công, kích hoạt gửi mail xác nhận bất đồng bộ `emailService.sendOrderConfirmation(...)`.
+- **`changeStatus()`**: Kiểm tra chuyển trạng thái hợp lệ. **Đặc biệt:** Khi đơn hàng bị huỷ (`CANCELLED`), hệ thống tự động hoàn lại stock tương ứng vào kho cho từng sản phẩm (`item.getProduct().setStock(...)`).
 
-**Order Status State Machine:**
-```
-PENDING ──→ CONFIRMED ──→ SHIPPED ──→ DONE
-   │             │
-   └──→ CANCELLED└──→ CANCELLED
-```
+### 10.4. PaymentService / PaymentServiceImpl — Async Email IPN
 
-> **VNPay rule:** `PENDING → CONFIRMED` **CHỈ** từ `PaymentServiceImpl.handleVnpayIpn()` khi `vnp_ResponseCode = "00"`.
+- **`handleVnPayIpn()`**: Kiểm tra chữ ký HMAC-SHA512. Khi VNPay báo `00` (Thành công), chuyển Order sang `CONFIRMED` và gọi bất đồng bộ `emailService.sendPaymentSuccessEmail(...)`.
 
-### 10.5. UserService / UserServiceImpl — Thêm upload
+### 10.5. EmailService / EmailServiceImpl — ★ MỚI
 
-| Method | Logic |
-|---|---|
-| **getMe(Long id)** | findById → toResponseDto |
-| **getAllUsers(Pageable)** | findAll → map. ADMIN only. |
-| **changePassword** | Verify old password → encode new → save |
-| **updateProfile** | Set phone/fullName nếu != null → save |
-| **updateStatusUser** | Check không tự disable → revoke tokens nếu disable → save |
-| **uploadUserImage** | **★ MỚI** — findById → `storageService.uploadFile(file, "UserImage", true)` → set avatarUrl → save |
-
-### 10.6. PaymentService / PaymentServiceImpl — Không đổi (3 methods)
-
-| Method | Logic |
-|---|---|
-| **createPayment** | Validate → tạo PaymentEntity → build VNPay URL → trả paymentUrl |
-| **handleVnpayIpn** | Verify signature → idempotency check → SUCCESS/FAILED → update order |
-| **expiredPayment** | `@Scheduled(fixedRate=120000)` — PENDING > 15min → EXPIRED + CANCELLED |
-
-### 10.7. StorageService / StorageServiceImpl — ★ MỚI
-
-| Method | Logic |
-|---|---|
-| **uploadFile(MultipartFile, String folder, boolean resizeImage)** | 1. `fileValidationUtil.validateImageFile(file)` — check magic bytes. 2. Generate UUID filename. 3. Nếu resize: `Thumbnailator.size(800,800).outputQuality(0.85)`. 4. `minioClient.putObject()`. 5. Return URL: `endpoint/bucket/folder/uuid.ext` |
+- **`sendTextEmail(EmailRequestDto request)`**: `@Async("emailTaskExecutor")` — Gửi mail plain text qua `EmailSenderUtil`.
+- **`sendHtmlEmail(EmailRequestDto request)`**: `@Async("emailTaskExecutor")` — Gửi mail HTML dựa trên template Thymeleaf `SendEmailTemplate.html`.
+- **`sendOrderConfirmation(toEmail, orderId)` & `sendPaymentSuccessEmail(toEmail, orderId)`**: `@Async("emailTaskExecutor")` — Các helper method chuyên biệt phục vụ luồng nghiệp vụ đơn hàng & thanh toán.
 
 ---
 
 ## 11. Controller Layer — API Endpoints
 
-### 11.1. AuthController (`/api/v1/auth`) — 4 endpoints
+> **Thay đổi nổi bật:** Tất cả endpoints trả về danh sách phân trang (`GET /categories`, `GET /products`, `GET /users`) đã chuyển sang trả về `ApiResponse<PageResponse<T>>`, kết hợp `CustomPageableArgumentResolver` tự động xử lý `Pageable`.
 
-| HTTP | Path | Auth | Request | Response |
+### 11.1. CategoryController (`/api/v1/categories`) — 5 endpoints
+
+| HTTP | Path | Auth | Request Params / Body | Response Wrapper |
 |---|---|---|---|---|
-| POST | `/register` | Public | RegisterRequestDto | 201 + UserResponseDto |
-| POST | `/login` | Public | LoginRequestDto | 200 + AuthResponseDto |
-| POST | `/refresh-token` | Public | RefreshTokenRequestDto | 200 + RefreshTokenResponseDto |
-| POST | `/logout` | Public | RefreshTokenRequestDto | 200 + null |
+| POST | `/` | ADMIN | CreateCategoryRequestDto | `ApiResponse<CategoryResponseDto>` |
+| GET | `/` | Public | `search`, `page`, `size`, `sort`, `direction` | `ApiResponse<PageResponse<CategoryResponseDto>>` |
+| GET | `/{id}` | Public | Path: id | `ApiResponse<CategoryResponseDto>` |
+| PUT | `/{id}` | ADMIN | CreateCategoryRequestDto | `ApiResponse<CategoryResponseDto>` |
+| DELETE | `/{id}` | ADMIN | Path: id | `ApiResponse<Boolean>` |
 
-### 11.2. CategoryController (`/api/v1/categories`) — 5 endpoints
+### 11.2. ProductController (`/api/v1/products`) — 11 endpoints
 
-| HTTP | Path | Auth | Request | Response |
+| HTTP | Path | Auth | Request Params / Body | Response Wrapper |
 |---|---|---|---|---|
-| POST | `/` | ADMIN | CreateCategoryRequestDto | 201 + CategoryResponseDto |
-| GET | `/` | Public | `?page&size&search&sort&direction` | 200 + Page |
-| GET | `/{id}` | Public | Path: id | 200 + CategoryResponseDto |
-| PUT | `/{id}` | ADMIN | CreateCategoryRequestDto | 200 + CategoryResponseDto |
-| DELETE | `/{id}` | ADMIN | Path: id | 200 + Boolean |
+| POST | `/` | ADMIN | CreateProductRequestDto | `ApiResponse<ProductResponseDto>` |
+| GET | `/` | Public `@SecurityRequirements({})` | `search`, `page`, `size`, `sort`, `direction` | `ApiResponse<PageResponse<ProductResponseDto>>` |
+| GET | `/{id}` | Authenticated | Path: id | `ApiResponse<ProductResponseDto>` |
+| PATCH | `/{id}` | ADMIN | UpdateProductRequestDto | `ApiResponse<ProductResponseDto>` |
+| DELETE | `/{id}` | ADMIN | Path: id | `ApiResponse<Boolean>` |
+| PATCH | `/increase/{id}` | ADMIN | `quantity` | `ApiResponse<ProductResponseDto>` |
+| PATCH | `/decrease/{id}` | ADMIN | `quantity` | `ApiResponse<ProductResponseDto>` |
+| GET | `/top-buy` | ADMIN | `limit` (default 10) | `ApiResponse<List<TopProductView>>` |
+| GET | `/revenue-by-category` | ADMIN | — | `ApiResponse<List<CategoryRevenueView>>` |
+| GET | `/revenue-in-month` | ADMIN | — | `ApiResponse<List<MonthlyRevenueView>>` |
+| POST | `/{id}/image` | ADMIN | multipart/form-data `file` | `ApiResponse<ProductResponseDto>` |
 
-### 11.3. ProductController (`/api/v1/products`) — 11 endpoints
+### 11.3. UserController (`/api/v1/users`) — 6 endpoints
 
-| HTTP | Path | Auth | Request | Response |
+| HTTP | Path | Auth | Request Params / Body | Response Wrapper |
 |---|---|---|---|---|
-| POST | `/` | ADMIN | CreateProductRequestDto | 201 + ProductResponseDto |
-| GET | `/` | Public `@SecurityRequirements({})` | `?page&size&search&sort&direction` | 200 + Page |
-| GET | `/{id}` | Authenticated | Path: id | 200 + ProductResponseDto |
-| PATCH | `/{id}` | ADMIN | UpdateProductRequestDto | 200 + ProductResponseDto |
-| DELETE | `/{id}` | ADMIN | Path: id | 200 + Boolean (soft delete) |
-| PATCH | `/increase/{id}` | ADMIN | `?quantity=` | 200 + ProductResponseDto |
-| PATCH | `/decrease/{id}` | ADMIN | `?quantity=` | 200 + ProductResponseDto |
-| GET | `/top-buy` | ADMIN | `?limit=10` | 200 + List TopProductView |
-| GET | `/revenue-by-category` | ADMIN | — | 200 + List CategoryRevenueView |
-| GET | `/revenue-in-month` | ADMIN | — | 200 + List MonthlyRevenueView |
-| **POST** | **`/{id}/image`** | **ADMIN** | **multipart/form-data `file`** | **200 + ProductResponseDto** ★ MỚI |
-
-### 11.4. OrderController (`/api/v1/orders`) — 4 endpoints
-
-| HTTP | Path | Auth | Request | Response |
-|---|---|---|---|---|
-| GET | `/user/{userId}` | Authenticated | Path: userId + @AuthPrincipal | 200 + List OrderResponseDto |
-| GET | `/{id}` | Authenticated | Path: orderId + @AuthPrincipal | 200 + OrderResponseDto |
-| POST | `/` | Authenticated | CreateOrderRequestDto | 201 + OrderResponseDto |
-| PATCH | `/{id}/status` | ADMIN | UpdateOrderStatusRequestDto | 200 + OrderResponseDto |
-
-### 11.5. UserController (`/api/v1/users`) — 6 endpoints
-
-| HTTP | Path | Auth | Request | Response |
-|---|---|---|---|---|
-| GET | `/me` | Authenticated | @AuthPrincipal | 200 + UserResponseDto |
+| GET | `/me` | Authenticated | @AuthenticationPrincipal | `ApiResponse<UserResponseDto>` |
 | PATCH | `/password` | Authenticated | ChangePasswordRequestDto | 204 No Content |
 | PATCH | `/me/update` | Authenticated | UpdateProfileRequestDto | 204 No Content |
-| GET | `/` | ADMIN `@PreAuthorize` | `?page&size&sort&direction` | 200 + Page UserResponseDto |
-| PATCH | `/{userId}/status` | ADMIN `@PreAuthorize` | `?isActive=` | 204 No Content |
-| **POST** | **`/me/avatar`** | **Authenticated** | **multipart/form-data `file`** | **200 + UserResponseDto** ★ MỚI |
-
-### 11.6. PaymentController (`/api/v1/payments`) — 3 endpoints — Không đổi
-
-### 11.7. PingController (`/api/v1/health`) — 1 endpoint — Không đổi
-
-### 11.8. TestUploadController (`/api/v1/test`) — ★ MỚI
-
-| HTTP | Path | Auth | Request | Response |
-|---|---|---|---|---|
-| **POST** | **`/upload`** | **Authenticated** | **multipart/form-data `file`** | **200 + String (URL)** |
-
-> **Lưu ý:** Đây là endpoint test MinIO upload, không nên expose ở production.
-
-### 11.9. Tổng hợp tất cả API Endpoints
-
-| Module | Tổng endpoints | Public | Authenticated | ADMIN only |
-|---|---|---|---|---|
-| Auth | 4 | 4 | 0 | 0 |
-| Category | 5 | 2 (GET) | 0 | 3 |
-| Product | 11 | 1 (GET list) | 1 (GET by id) | 9 |
-| Order | 4 | 0 | 2 | 2 |
-| User | 6 | 0 | 4 | 2 |
-| Payment | 3 | 2 (vnpay-return, vnpay-ipn) | 1 | 0 |
-| Health | 1 | 1 | 0 | 0 |
-| Test Upload | 1 | 0 | 1 | 0 |
-| **TỔNG** | **35** | **10** | **9** | **16** |
+| GET | `/` | ADMIN | `page`, `size`, `sort`, `direction` | `ApiResponse<PageResponse<UserResponseDto>>` |
+| PATCH | `/{userId}/status` | ADMIN | `isActive` | 204 No Content |
+| POST | `/me/avatar` | Authenticated | multipart/form-data `file` | `ApiResponse<UserResponseDto>` |
 
 ---
 
 ## 12. Security & Authentication (JWT)
 
-### 12.1. Security Filter Chain
-
-```
-Client Request
-    │
-    ▼
-JwtAuthenticationFilter (OncePerRequestFilter)
-    ├─ Đọc "Authorization: Bearer <token>"
-    ├─ jwtProvider.validateToken(token)
-    ├─ Nếu valid: getEmailFromToken() → loadUserByUsername() → set SecurityContext
-    └─ LUÔN gọi filterChain.doFilter()
-    │
-    ▼
-Authorization Check
-    ├─ PUBLIC_URLS: /auth/**, /health, /payments/vnpay-return, /payments/vnpay-ipn
-    ├─ PUBLIC_GET: GET /products, GET /products/{id}, GET /categories, GET /categories/{id}
-    ├─ SWAGGER: /swagger-ui/**, /v1/api-docs/**
-    └─ .anyRequest().authenticated()
-    │
-    ├──────────────────────┐
-    ▼                      ▼
-Chưa xác thực         Thiếu quyền
-→ JSON 401             → JSON 403
-(EntryPoint)           (AccessDeniedHandler)
-```
-
-### 12.2. JWT Token Structure
-
-```json
-{
-  "userId": 1,
-  "role": "USER",
-  "sub": "user@example.com",
-  "iat": 1720000000,
-  "exp": 1720003600
-}
-```
-
-- **Access Token expiry:** 1 giờ (3600000 ms)
-- **Refresh Token:** Opaque (SecureRandom 64 bytes + Base64 without padding), lưu SHA-256 hash, expiry 7 ngày.
-
-### 12.3. CORS Configuration
-
-```java
-allowedOrigins: ["http://localhost:8085"]  // TODO: đổi khi deploy
-allowedMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
-allowedHeaders: ["Authorization", "Content-Type"]
-```
-
-### 12.4. Security Classes — 7 files (Không đổi)
-
-| Class | Responsibility |
-|---|---|
-| `JwtProvider` | Tạo JWT, validate, extract claims (email, userId, role) |
-| `JwtAuthenticationFilter` | Intercept request, set Authentication vào SecurityContext |
-| `JwtAuthenticationEntryPoint` | Trả JSON 401 (dùng `ObjectMapper` + `ApiResponse.error()`) |
-| `JwtAccessDeniedHandler` | Trả JSON 403 (dùng `ObjectMapper` + `ApiResponse.error()`) |
-| `CustomUserDetailsService` | Load user từ DB bằng email, wrap thành `UserPrincipal` |
-| `UserPrincipal` | `UserDetails` impl. Authority = `ROLE_` + role. `isEnabled()` = `isActive`. |
-| `RefreshTokenGenerator` | SecureRandom 64 bytes → Base64 (without padding) |
+- **Access Token:** JWT Expiration 1h (3600000ms).
+- **Refresh Token:** Opaque Random 64 bytes → SHA-256 Hash stored in DB, Expiration 7 days.
+- **Security Chain:** `JwtAuthenticationFilter` intercepts, validates token, sets `SecurityContext`.
 
 ---
 
-## 13. File Upload & Storage (MinIO) — ★ MỚI HOÀN TOÀN
+## 13. File Upload & Storage (MinIO)
 
-### 13.1. Kiến trúc Upload
-
-```
-Client (multipart/form-data)
-    │
-    ▼
-Controller (ProductController / UserController / TestUploadController)
-    │
-    ▼
-StorageService.uploadFile(file, folder, resize)
-    ├─ FileValidationUtil.validateImageFile(file)
-    │   ├─ Check null/empty
-    │   ├─ Check file size <= 5MB (from config)
-    │   └─ Check magic bytes (JPEG/PNG/GIF/WebP)
-    ├─ Generate UUID filename: folder/UUID.ext
-    ├─ (Optional) Thumbnailator.resize(800x800, quality=0.85)
-    └─ MinioClient.putObject(bucket, objectName, stream)
-    │
-    ▼
-Return URL: {endpoint}/{bucket}/{folder}/{uuid}.{ext}
-```
-
-### 13.2. FileValidationUtil
-
-| Method | Mô tả |
-|---|---|
-| `validateImageFile(MultipartFile)` | Check null, size, magic bytes |
-| `matchesSignature(byte[], byte[])` | So sánh magic bytes header |
-| `isWebp(byte[])` | Check RIFF + WEBP markers |
-
-**Supported formats:** JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), GIF87a, GIF89a, WebP (`RIFF...WEBP`)
-
-### 13.3. Config
-
-| Key | Value |
-|---|---|
-| `app.upload.max-image-size` | `5MB` (inject vào `FileValidationUtil`) |
-| `spring.servlet.multipart.max-file-size` | `5MB` |
-| `spring.servlet.multipart.max-request-size` | `5MB` |
+- **Magic Bytes Validation:** `FileValidationUtil` kiểm tra trực tiếp byte header (JPEG, PNG, GIF, WebP) loại bỏ nguy cơ mạo danh định dạng file.
+- **Image Resizing:** `Thumbnailator` tự động nén & chuẩn hoá ảnh về kích thước `800x800` (quality 0.85).
 
 ---
 
-## 14. Payment Integration — VNPay — Không đổi
+## 14. Payment Integration — VNPay
 
-### 14.1. Luồng thanh toán
-
-```
-1. POST /orders          → Order.status = PENDING (stock bị trừ ngay)
-2. POST /payments/create → Nhận paymentUrl → redirect VNPay
-3. User thanh toán trên VNPay
-4. VNPay IPN callback    → Payment SUCCESS → Order CONFIRMED
-                          hoặc Payment FAILED → Order vẫn PENDING
-5. Scheduler (2 phút)   → PENDING payments > 15 phút → EXPIRED + Order CANCELLED
-```
-
-### 14.2. VNPayUtil (Static Utility)
-
-| Method | Mô tả |
-|---|---|
-| `hmacSHA512(key, data)` | Sinh chữ ký HMAC-SHA512 |
-| `getIpAddress(request)` | Lấy IP thật qua `X-FORWARDED-FOR` |
-| `buildQueryAndHash(params, secretKey)` | Sort → build query + hash |
-| `verifySignature(params, secretKey)` | Verify IPN signature |
+- **Flow:** `POST /orders` (PENDING) ➔ `POST /payments/create` ➔ VNPay Sandbox ➔ `handleVnPayIpn()` ➔ Order CONFIRMED + Async Email sent.
+- **Scheduler:** Auto-expire pending payments > 15 phút (chuyển Order sang CANCELLED và giải phóng stock).
 
 ---
 
 ## 15. Exception Handling
 
-### 15.1. GlobalExceptionHandler (`@RestControllerAdvice`) — 14 handlers
-
-| Exception | HTTP Status | Khi nào |
-|---|---|---|
-| `BadRequestException` | 400 | Vi phạm business rule |
-| `ResourceNotFoundException` | 404 | Entity không tồn tại |
-| `InsufficientStockException` | 409 | Không đủ stock |
-| `InvalidStatusTransitionException` | 409 | Chuyển trạng thái order không hợp lệ |
-| `CategoryHasProductsException` | 409 | Xoá category còn sản phẩm |
-| `DuplicateResourceException` | 409 | Trùng email/phone |
-| `ObjectOptimisticLockingFailureException` | 409 | Race condition (@Version) |
-| **`MaxUploadSizeExceededException`** | **400** | **★ MỚI — File vượt giới hạn upload** |
-| `MethodArgumentNotValidException` | 400 | Validation lỗi → `Map<field, message>` |
-| `DataIntegrityViolationException` | 409 | DB unique constraint |
-| `BadCredentialsException` | 401 | Sai email/password |
-| `DisabledException` | 403 | Account bị disable |
-| `AccessDeniedException` | 403 | Thiếu quyền (role) |
-| `InvalidRefreshTokenException` | 401 | Refresh token không hợp lệ |
-| `Exception` (catch-all) | 500 | Lỗi không dự kiến |
+- **GlobalExceptionHandler (`@RestControllerAdvice`)**: Xử lý 14 loại exceptions (`BadRequestException`, `ResourceNotFoundException`, `InsufficientStockException`, `MaxUploadSizeExceededException`, `ObjectOptimisticLockingFailureException`, v.v.).
 
 ---
 
 ## 16. Common — API Response Format
 
-### ApiResponse\<T\>
-
-```java
-@Getter @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponse<T> {
-    private boolean success;
-    private String message;
-    private T data;
-    private LocalDateTime timestamp;
-}
-```
-
-### PageResponse\<T\> — ★ MỚI
+### PageResponse\<T\> — Chuẩn hoá Phân Trang
 
 ```java
 @Getter @Builder @NoArgsConstructor @AllArgsConstructor
@@ -959,62 +670,61 @@ public class PageResponse<T> {
     private int totalPages;
     private boolean last;
 
-    public static <T> PageResponse<T> of(Page<T> page) { ... }
+    public static <T> PageResponse<T> of(Page<T> page) {
+        return PageResponse.<T>builder()
+                .content(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
+    }
 }
 ```
 
-> **Lưu ý:** `PageResponse` đã được tạo nhưng **chưa được dùng** trong controllers — controllers vẫn return `Page<T>` trực tiếp. Nên migrate sang `PageResponse` để response format thống nhất.
+> **Trạng thái:** Tất cả REST controllers trong hệ thống đã được đồng bộ sử dụng `PageResponse<T>` làm format phản hồi chuẩn duy nhất cho pagination.
 
 ---
 
 ## 17. Business Flows (Luồng nghiệp vụ)
 
-### 17.1. Order + Payment Flow — Không đổi
-
-### 17.2. File Upload Flow — ★ MỚI
+### 17.1. Async Email Notification Flow — ★ MỚI
 
 ```
-1. Client gửi multipart/form-data
-2. Controller nhận file → gọi Service
-3. Service gọi StorageService.uploadFile()
-4. FileValidationUtil validate (null, size, magic bytes)
-5. Thumbnailator resize (800x800, 0.85 quality)
-6. MinioClient upload lên bucket
-7. Trả về URL → set vào entity (imageUrl/avatarUrl) → save DB
+1. Client gửi request Đặt hàng / Thanh toán thành công (VNPay IPN)
+2. Service xử lý xong DB Transaction (Save Order / Update Status)
+3. Service gọi EmailService.sendOrderConfirmation(...) / sendPaymentSuccessEmail(...)
+4. Spring AOP Proxy bắt lời gọi → Đẩy task sang ThreadPoolTaskExecutor ("emailTaskExecutor")
+5. Main Thread trả HTTP Response lập tức cho Client (Không bị block bởi SMTP delay)
+6. Worker Thread trong ThreadPool thực hiện gửi mail qua JavaMailSender (EmailSenderUtil)
 ```
 
-### 17.3. Disable Account Flow — Không đổi
+### 17.2. Redis Caching Flow — ★ MỚI
+
+```
+1. Client request GET /api/v1/products/{id}
+2. Spring Cache Interceptor kiểm tra key "products::{id}" trong Redis:
+   - HIT  ➔ Trả kết quả JSON từ Redis lập tức (Bỏ qua DB & Service logic)
+   - MISS ➔ Gọi method ProductServiceImpl.findById() truy vấn DB ➔ Lưu kết quả vào Redis ➔ Trả kết quả cho Client
+3. Khi Admin gọi PATCH/DELETE /products/{id}:
+   - Executing DB update
+   - Interceptor thực thi @CacheEvict(value = "products", key = "#id") ➔ Xoá key tương ứng trong Redis để đảm bảo không bị Stale Data.
+```
 
 ---
 
 ## 18. Coding Conventions & Patterns
 
-### 18.1. Quy ước đặt tên — Không đổi
-
-| Loại | Quy ước | Ví dụ |
-|---|---|---|
-| Package | lowercase, underscore | `mini_ecommerce` |
-| Class | PascalCase | `StorageServiceImpl` |
-| Method | camelCase | `uploadProductImage` |
-| Enum constant | UPPER_CASE | `PENDING`, `SUCCESS` |
-| URL path | kebab-case | `/vnpay-return`, `/me/avatar` |
-| DB column | snake_case | `image_url`, `avatar_url` |
-
-### 18.2. Patterns áp dụng
-
 | Pattern | Áp dụng ở đâu |
 |---|---|
 | **Layered Architecture** | Controller → Service → Repository → Entity |
-| **Builder** | Tất cả Entities + Response DTOs (Lombok `@Builder`) |
-| **Record** | Request DTOs — immutable |
-| **Service Interface + Impl** | Mọi Service đều có interface + impl |
-| **Repository Projection** | `ProductRepository` — interface-based projections |
-| **Optimistic Locking** | `@Version` trên `ProductEntity` + `OrderEntity` |
-| **Scheduled Task** | `@Scheduled(fixedRate)` — auto-expire payments |
-| **IDOR Prevention** | Order + Payment verify `order.user.id == tokenUserId` |
-| **Multi-stage Docker Build** | ★ MỚI — Tách build & runtime |
-| **Magic Bytes Validation** | ★ MỚI — Check file header thay vì tin Content-Type |
-| **Object Storage (S3-compatible)** | ★ MỚI — MinIO cho file upload |
+| **Distributed Caching** | ★ **MỚI** — Redis + Spring `@Cacheable` / `@CacheEvict` với TTL linh hoạt |
+| **Async Task Execution** | ★ **MỚI** — `@Async` + `ThreadPoolTaskExecutor` tách biệt xử lý Email khỏi HTTP Worker Thread |
+| **Custom Argument Resolver** | ★ **MỚI** — `CustomPageableArgumentResolver` tự động bind query params vào Spring `Pageable` |
+| **Optimistic Locking** | `@Version` trên `ProductEntity` + `OrderEntity` chống Race Condition |
+| **Magic Bytes Validation** | `FileValidationUtil` kiểm tra byte header file upload |
+| **Object Storage (S3-compatible)** | MinIO SDK lưu trữ media tách biệt |
 
 ---
 
@@ -1026,121 +736,64 @@ public class PageResponse<T> {
 - [x] CRUD đầy đủ: Category, Product, Order, User
 - [x] JWT Authentication + Refresh Token (stateless)
 - [x] Role-based Authorization (USER/ADMIN)
-- [x] VNPay Payment Integration (sandbox)
-- [x] Optimistic Locking (Product + Order)
-- [x] Scheduled Job (auto-expire payments)
-- [x] Flyway Database Migrations (7 migrations)
-- [x] Swagger/OpenAPI documentation
-- [x] Docker + Docker Compose
-- [x] GitHub Actions CI
-- [x] MinIO file upload + image resize
-- [x] File validation (magic bytes)
-- [x] Global Exception Handling (14 handlers)
-- [x] Analytics APIs (top products, revenue by category, monthly revenue)
-- [x] CORS configuration
-- [x] PageResponse wrapper (created)
+- [x] VNPay Payment Integration (sandbox) + Auto Expire Scheduled Job
+- [x] Optimistic Locking (`@Version` trên Product & Order)
+- [x] Flyway Database Migrations (8 migrations — bao gồm seed 36 hải sản ở V8)
+- [x] Docker Multi-stage + Docker Compose Healthcheck + GitHub Actions CI
+- [x] MinIO file upload + magic bytes validation + Thumbnailator image resize
+- [x] **Redis Distributed Caching** (`@Cacheable`, `@CacheEvict` cho Products, Categories, Analytics)
+- [x] **Async Email Processing** (`@Async`, `ThreadPoolTaskExecutor`, JavaMailSender, Thymeleaf HTML)
+- [x] **Chuẩn hoá Pagination** (`PageResponse<T>` & `CustomPageableArgumentResolver` hoạt động 100% trên Controllers)
+- [x] **Hoàn Stock khi Cancel Order** (Tự động cộng bù kho khi huỷ đơn)
 
 ### 19.2. Chưa làm / Cần cải thiện ⚠️
 
-- [ ] **Unit Tests** — Chưa có bất kỳ test nào
-- [ ] **PageResponse chưa được sử dụng** — Controllers vẫn return `Page<T>`
-- [ ] **BasePageRequest chưa được sử dụng** — Controllers vẫn nhận params riêng lẻ
-- [ ] **TestUploadController** — Nên xoá hoặc protect khi deploy production
-- [ ] **CORS** — Hardcode `localhost:8085`, cần config cho FE domain thực
-- [ ] **.env.example thiếu** MinIO và VNPay vars
-- [ ] **Cart (Giỏ hàng)** — Chưa có
-- [ ] **Email notifications** — Config mail sẵn nhưng chưa dùng
-- [ ] **Search nâng cao** — Chưa có filter theo price range, category
-- [ ] **Pagination cho Order** — Hiện trả List, chưa có Page
-- [ ] **Audit trail / Logging** — Chưa có structured logging
+- [ ] **Unit Tests** — Viết JUnit 5 + Mockito cho Service Layer
+- [ ] **CORS Configuration** — Cấu hình domain Frontend linh hoạt qua `.env` thay vì hardcode localhost:8085
+- [ ] **Cart (Giỏ hàng)** — Module quản lý giỏ hàng lưu trữ Database / Redis
+- [ ] **Search nâng cao** — Filter sản phẩm theo khoảng giá (`minPrice`, `maxPrice`) và danh mục
+- [ ] **TestUploadController** — Ẩn hoặc phân quyền ADMIN trước khi deploy Production
 
 ---
 
-## 20. Góp ý tối ưu & Kiến thức cần bổ sung
+## 20. Góp ý tối ưu & Bảng theo dõi cải tiến
 
-### 20.1. 🔴 Ưu tiên CAO — Cần sửa trước khi lên FE
-
-| # | Vấn đề | Giải pháp | Kiến thức cần học |
+| # | Vấn đề ban đầu | Trạng thái | Giải pháp đã áp dụng |
 |---|---|---|---|
-| 1 | **CORS chỉ allow localhost:8085** | Thêm FE domain (vd: `http://localhost:3000`) vào `allowedOrigins` hoặc dùng config từ `.env` | Spring CORS |
-| 2 | **PageResponse đã tạo nhưng chưa dùng** | Migrate tất cả controller trả `Page<T>` sang `PageResponse<T>` → FE nhận format thống nhất | — |
-| 3 | **BasePageRequest chưa dùng** | Refactor controllers dùng `BasePageRequest` thay vì 4 `@RequestParam` riêng lẻ | — |
-| 4 | **GET /products/{id} yêu cầu Auth** | Nên public để guest xem chi tiết sản phẩm — hiện `PUBLIC_GET_URLS` đã có nhưng controller không có `@SecurityRequirements({})` | — |
-| 5 | **TestUploadController public** | Thêm `@PreAuthorize("hasRole('ADMIN')")` hoặc xoá trước production | — |
-
-### 20.2. 🟡 Ưu tiên TRUNG BÌNH — Nâng chất lượng code
-
-| # | Vấn đề | Giải pháp | Kiến thức cần học |
-|---|---|---|---|
-| 6 | **Chưa có Unit Test** | Viết test cho Service layer (JUnit 5 + Mockito) | JUnit 5, Mockito, `@WebMvcTest`, `@DataJpaTest` |
-| 7 | **Manual mapping DTO ↔ Entity** | Dùng MapStruct để auto-generate mapper | MapStruct |
-| 8 | **Không có validation trùng phone khi updateProfile** | Check phone unique trước khi save | — |
-| 9 | **Order cancelled nhưng stock chưa hoàn (qua scheduled job)** | Khi `expiredPayment()` cancel order → cần restore stock cho từng item | — |
-| 10 | **`decreaseStock` throws `IllegalArgumentException`** | Đổi sang `BadRequestException` cho consistent | — |
-| 11 | **`CategoryServiceImpl.create` throws `ResourceNotFoundException` khi trùng tên** | Nên throw `DuplicateResourceException` | — |
-| 12 | **Retry cho Optimistic Locking** | Thêm `@Retryable` (Spring Retry) khi gặp `ObjectOptimisticLockingFailureException` | Spring Retry |
-
-### 20.3. 🟢 Ưu tiên THẤP — Nâng cấp sau
-
-| # | Vấn đề | Giải pháp | Kiến thức cần học |
-|---|---|---|---|
-| 13 | **Chưa có Cart** | Thiết kế `CartEntity` + `CartItemEntity` hoặc dùng Redis session | Redis, Cart design |
-| 14 | **Chưa có Email notification** | Dùng `JavaMailSender` đã config → gửi mail khi register, order confirmed | Spring Mail, Thymeleaf template |
-| 15 | **Enums inline trong Entity** | Tách ra package `enums/` để reuse và clean code | — |
-| 16 | **Chưa có Caching** | Thêm Redis cache cho product list, category list | Spring Cache, Redis |
-| 17 | **Chưa có Rate Limiting** | Thêm Bucket4j hoặc Resilience4j để chống spam API | Rate Limiting |
-| 18 | **Logging chưa structured** | Dùng MDC + JSON formatter cho log → dễ parse khi deploy | SLF4J MDC, Logback JSON |
-| 19 | **Chưa có API Versioning strategy** | Hiện dùng `/api/v1/` — cần plan khi có breaking changes | API Versioning |
-| 20 | **Chưa có Soft Delete cho Order** | Hiện chỉ có CANCELLED status, không có deleted_at | Soft Delete pattern |
-| 21 | **uploadProductImage/uploadUserImage chưa xoá ảnh cũ** | Khi upload ảnh mới, ảnh cũ trên MinIO vẫn tồn tại → cần delete | MinIO `removeObject()` |
-| 22 | **`BasePageRequest.toPageable()` dùng `sortBy` thay vì `direction`** | Bug: `"desc".equalsIgnoreCase(sortBy)` → phải là `direction` | — |
-
-### 20.4. 📚 Kiến thức kỹ năng nên học thêm (theo thứ tự ưu tiên)
-
-| # | Chủ đề | Lý do | Tài liệu gợi ý |
-|---|---|---|---|
-| 1 | **JUnit 5 + Mockito** | Bắt buộc cho portfolio — nhà tuyển dụng sẽ hỏi | Baeldung JUnit 5 series |
-| 2 | **MapStruct** | Giảm boilerplate mapping code đáng kể | mapstruct.org |
-| 3 | **Spring Cache + Redis** | Performance optimization phổ biến nhất | Baeldung Spring Cache |
-| 4 | **Docker Compose cho dev stack đầy đủ** | Thêm MinIO, Redis vào compose | Docker docs |
-| 5 | **Spring Retry** | Xử lý transient failures (optimistic lock, network) | Spring Retry guide |
-| 6 | **API Documentation nâng cao** | `@Schema`, `@ApiResponse` annotations cho Swagger đẹp hơn | Springdoc docs |
-| 7 | **Integration Testing** | `@SpringBootTest` + Testcontainers (PostgreSQL) | Testcontainers.org |
-| 8 | **Monitoring** | Spring Actuator + Prometheus + Grafana | Baeldung Actuator |
+| 1 | **PageResponse chưa được sử dụng** | ✅ **ĐÃ XỬ LÝ** | Áp dụng `PageResponse.of(Page<T>)` cho tất cả GET Controllers có phân trang. |
+| 2 | **Pagination parameters rời rạc** | ✅ **ĐÃ XỬ LÝ** | Xây dựng `CustomPageableArgumentResolver` & `WebConfig` parse tự động các params `page`, `size`, `sort`, `direction`. |
+| 3 | **Order cancelled chưa hoàn stock** | ✅ **ĐÃ XỬ LÝ** | Thêm logic tự động hoàn stock sản phẩm trong `OrderServiceImpl.changeStatus()`. |
+| 4 | **Email thông báo bị chậm HTTP Request** | ✅ **ĐÃ XỬ LÝ** | Tách luồng gửi mail sang `@Async` với `emailTaskExecutor` Thread Pool riêng. |
+| 5 | **TRUY VẤN DB lặp lại nhiều lần với Data ít thay đổi** | ✅ **ĐÃ XỬ LÝ** | Tích hợp Redis Caching cho Product detail, Category list và Analytics reports. |
+| 6 | **Thiếu Unit Test** | 🟡 **CẦN LÀM** | Chuẩn bị viết test coverage cho Service & Controller layers bằng JUnit 5 + Mockito. |
+| 7 | **CORS Hardcoded** | 🟡 **CẦN LÀM** | Chuyển CORS configuration sang đọc từ file `.env`. |
 
 ---
 
 ## 21. Tổng hợp Kiến thức & Kỹ thuật chức năng cốt lõi
 
 ### 21.1. DevOps, Containerization & CI/CD
-- **Multi-stage Docker Build:** Tách giai đoạn `builder` (Maven 3.9 + JDK 21) và `runtime` (`eclipse-temurin:21-jre-alpine`) giúp giảm thiểu kích thước image sản phẩm, tối ưu layer caching và tăng tính an toàn bảo mật.
-- **Docker Compose Healthcheck:** Service `app` liên kết với `db` qua `condition: service_healthy`, chỉ khởi chạy Spring Boot application sau khi PostgreSQL kiểm tra `pg_isready` thành công.
-- **GitHub Actions Integration:** Automation workflow `ci.yml` tự động verify, compile và test khi có sự kiện Push/PR vào branch `main`.
+- **Multi-stage Docker Build:** Tách giai đoạn `builder` (Maven 3.9 + JDK 21) và `runtime` (`eclipse-temurin:21-jre-alpine`) giảm dung lượng image, tối ưu layer cache.
+- **Docker Compose Healthcheck:** Khởi chạy Spring Boot (`app`) chỉ khi PostgreSQL (`db`) đạt trạng thái `service_healthy`.
+- **GitHub Actions CI:** Automate workflow verify, clean compile và test khi Push/PR branch `main`.
 
-### 21.2. Object Storage & File Security (MinIO)
-- **S3-Compatible Object Storage:** Tích hợp MinIO SDK (`MinioClient`) quản lý lưu trữ tài nguyên đa phương tiện độc lập với application server.
-- **Magic Bytes Validation:** `FileValidationUtil` kiểm tra trực tiếp mảng byte đầu (header signature) để xác nhận định dạng ảnh (JPEG, PNG, GIF, WebP), loại bỏ triệt để nguy cơ bypass qua MIME-type/File extension giả mạo.
-- **Image Optimization:** Sử dụng `Thumbnailator` tự động nén & resize kích thước ảnh về chuẩn `800x800` (quality 0.85) trước khi upload.
+### 21.2. Redis Distributed Caching Strategy
+- **Cache Abstraction:** Sử dụng `@Cacheable` và `@CacheEvict` decouple logic ứng dụng khỏi cache provider.
+- **Granular TTLs:** `RedisCacheManager` định cấu hình thời gian sống khác nhau cho từng cache region (Products: 30m, Categories: 30m, Analytics: 5m).
+- **Cache Invalidation:** Xoá sạch hoặc xoá theo key chính xác khi có thao tác Mutation (Cập nhật, xoá, upload ảnh, đổi kho) để tránh hiện tượng Stale Data.
 
-### 21.3. Security & Stateless Authentication
-- **Dual-Token Strategy:** Access Token ngắn hạn (1h) kết hợp với Refresh Token dài hạn (7 ngày, Opaque random 64-byte).
-- **Token Hashing & Invalidation:** Mã hóa SHA-256 đối với Refresh Token khi lưu trữ DB, hỗ trợ thu hồi (revoke) tức thì khi Logout hoặc vô hiệu hóa tài khoản.
-- **Security Context Integration:** Custom `JwtAuthenticationFilter` tích hợp sâu với Spring Security Context; xử lý ngoại lệ phản hồi chuẩn JSON qua `JwtAuthenticationEntryPoint` (401) và `JwtAccessDeniedHandler` (403).
+### 21.3. Async Task Processing & Thread Pool Isolation
+- **Non-blocking Execution:** Áp dụng `@Async` giúp giải phóng worker thread đảm nhận request HTTP ngay lập tức.
+- **ThreadPool Task Executor:** Cấu hình `emailTaskExecutor` tùy chỉnh (`corePoolSize=3`, `maxPoolSize=10`, `queueCapacity=50`, `threadNamePrefix="EmailAsync-"`) ngăn ngừa tình trạng cạn kiệt tài nguyên hệ thống do tạo thread vô hạn.
 
-### 21.4. Thanh toán VNPay & Asynchronous Background Tasks
-- **HMAC-SHA512 Signature:** Tích hợp trực tiếp chuẩn chữ ký số của VNPay mà không qua SDK bên ngoài, kiểm tra tính toàn vẹn dữ liệu cho IPN Webhook.
-- **State Machine & Idempotency:** Quản lý vòng đời đơn hàng khép kín (`PENDING` ➔ `CONFIRMED` ➔ `SHIPPED` ➔ `DONE` / `CANCELLED`) đảm bảo không bị xử lý trùng lặp.
-- **Scheduled Task:** Tự động hủy các đơn hàng thanh toán quá hạn (quá 15 phút) thông qua `@Scheduled(fixedRate = 120000)`.
+### 21.4. Object Storage & File Security (MinIO)
+- **Magic Bytes Validation:** `FileValidationUtil` kiểm tra trực tiếp byte header (JPEG, PNG, GIF, WebP) loại bỏ nguy cơ fake extension.
+- **Image Optimization:** Sử dụng `Thumbnailator` nén & resize về kích thước `800x800` (quality 0.85).
 
-### 21.5. Performance & Dynamic Querying
-- **Optimistic Locking (`@Version`):** Ngăn chặn xung đột đồng thời (Race condition) trên `ProductEntity` và `OrderEntity` khi có nhiều thao tác đặt hàng/trừ kho cùng lúc.
-- **Tránh Lỗi N+1 Query:** Sử dụng `JOIN FETCH` trong JPQL queries nâng cao để nạp trước các quan hệ liên quan trong 1 query duy nhất.
-- **JPA Projections:** Sử dụng Interface-based Projections phục vụ các API báo cáo thống kê doanh thu (`TopProductView`, `CategoryRevenueView`, `MonthlyRevenueView`) tối ưu tốc độ truy xuất.
-
-### 21.6. Response Standard & Exception Management
-- **Generic Wrapper:** Chuẩn hóa cấu trúc phản hồi API thông qua `ApiResponse<T>` và `PageResponse<T>` (dành riêng cho kết quả phân trang).
-- **Global Exception Handler:** Sử dụng `@RestControllerAdvice` quản lý 14 loại ngoại lệ với HTTP status code phù hợp chuẩn RESTful specifications.
+### 21.5. Security & Stateless Authentication
+- **Dual-Token Strategy:** Access Token JWT (1h) + Opaque Refresh Token (7 ngày, SHA-256 hashed in DB).
+- **Custom Security EntryPoints:** Phản hồi chuẩn format JSON cho 401 Unauthorized và 403 Access Denied.
 
 ---
 
-> **🎯 Kết luận:** Project Mini Ecommerce đã có nền tảng backend vững chắc với **35 API endpoints**, **7 bảng database**, **7 Flyway migrations**, JWT auth đầy đủ, VNPay payment, MinIO file upload, Docker containerization, và CI pipeline. Giai đoạn tiếp theo nên tập trung vào: **(1)** Fix CORS cho FE, **(2)** Thống nhất response format (PageResponse), **(3)** Viết Unit Tests, và **(4)** Bắt đầu lên FE.
+> **🎯 Kết luận:** Dự án Mini Ecommerce đã được nâng cấp toàn diện với **35 API Endpoints**, **8 Flyway Migrations**, **Redis Distributed Caching**, **Async Email Processing**, **MinIO Storage**, **VNPay Sandbox Integration**, và **Custom Pageable Resolution**. Các bước tiếp theo sẽ tập trung vào **Unit Testing (JUnit 5 + Mockito)** và xây dựng **Frontend UI**.

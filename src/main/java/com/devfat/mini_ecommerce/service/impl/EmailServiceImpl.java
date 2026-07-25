@@ -2,9 +2,7 @@ package com.devfat.mini_ecommerce.service.impl;
 
 import com.devfat.mini_ecommerce.dto.request.EmailRequestDto;
 import com.devfat.mini_ecommerce.service.EmailService;
-import com.devfat.mini_ecommerce.util.EmailSenderUtil;
 import com.devfat.mini_ecommerce.util.MailTransport;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

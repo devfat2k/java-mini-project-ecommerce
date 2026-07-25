@@ -1,4 +1,23 @@
-# Development profile configuration
-server:
-  port: ${PORT:8085}
+spring:
+  jpa:
+    show-sql: true
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+          required: true
+        ssl:
+          enable: false
 
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type: TRACE

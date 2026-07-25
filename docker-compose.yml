@@ -12,7 +12,10 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ENDPOINT=http://localhost:9001
+      - MIN_IO_ACCESS_KEY=admin
+      - MIN_IO_SECRET_KEY=admin12345
+      - MIN_IO_BUCKET=mini-ecommerce
       - MIN_IO_ACCESS_KEY=${MIN_IO_ACCESS_KEY}
       - MIN_IO_SECRET_KEY=${MIN_IO_SECRET_KEY}
       - MIN_IO_BUCKET=${MIN_IO_BUCKET}

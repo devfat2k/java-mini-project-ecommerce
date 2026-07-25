@@ -1,3 +1,8 @@
-# Production profile configuration
-server:
-  port: ${PORT:8083}
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN

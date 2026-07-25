@@ -1,13 +1,14 @@
 INSERT INTO categories (name, created_at) VALUES
-                                              ('Cá biển', now()),
-                                              ('Tôm', now()),
-                                              ('Mực & Bạch tuộc', now()),
-                                              ('Cua & Ghẹ', now()),
-                                              ('Ốc & Nghêu Sò', now()),
-                                              ('Set hải sản văn phòng', now()),
-                                              ('Set hải sản nhậu', now()),
-                                              ('Hải sản khô', now()),
-                                              ('Nước mắm & Gia vị', now());
+    ('Cá biển', now()),
+    ('Tôm', now()),
+    ('Mực & Bạch tuộc', now()),
+    ('Cua & Ghẹ', now()),
+    ('Ốc & Nghêu Sò', now()),
+    ('Set hải sản văn phòng', now()),
+    ('Set hải sản nhậu', now()),
+    ('Hải sản khô', now()),
+    ('Nước mắm & Gia vị', now())
+ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO products (name, description, price, stock, category_id, is_active, created_at, updated_at, version) VALUES
 -- Cá biển
@@ -62,4 +63,5 @@ INSERT INTO products (name, description, price, stock, category_id, is_active, c
 ('Nước mắm nhĩ Phú Quốc 40 độ đạm 500ml', 'Nước mắm truyền thống, độ đạm cao', 185000, 60, (SELECT id FROM categories WHERE name = 'Nước mắm & Gia vị'), true, now(), now(), 0),
 ('Nước mắm cá cơm Phan Thiết 500ml', 'Nước mắm cá cơm nguyên chất', 95000, 80, (SELECT id FROM categories WHERE name = 'Nước mắm & Gia vị'), true, now(), now(), 0),
 ('Muối tiêu chanh chấm hải sản 100g', 'Gia vị chấm chuyên dụng cho hải sản hấp', 25000, 100, (SELECT id FROM categories WHERE name = 'Nước mắm & Gia vị'), true, now(), now(), 0),
-('Sốt me chấm hải sản 250g', 'Sốt me chua ngọt, hợp mực/tôm nướng', 45000, 70, (SELECT id FROM categories WHERE name = 'Nước mắm & Gia vị'), true, now(), now(), 0);
+('Sốt me chấm hải sản 250g', 'Sốt me chua ngọt, hợp mực/tôm nướng', 45000, 70, (SELECT id FROM categories WHERE name = 'Nước mắm & Gia vị'), true, now(), now(), 0)
+ON CONFLICT (name) DO NOTHING;

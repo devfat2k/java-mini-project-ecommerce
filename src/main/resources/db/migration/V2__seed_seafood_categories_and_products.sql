@@ -1,5 +1,3 @@
--- V7__seed_seafood_categories_and_products.sql
-
 INSERT INTO categories (name, created_at) VALUES
                                               ('Cá biển', now()),
                                               ('Tôm', now()),

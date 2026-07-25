@@ -21,7 +21,7 @@ public class BrevoMailTransport implements MailTransport {
 
     private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
-    @Value("${app.mail.brevo.api-key}")
+    @Value("${app.mail.brevo.sender-email}")
     private String brevoApiKey;
 
     @Value("${spring.mail.username}") // dùng chung key này làm "sender email" cho gọn, khỏi thêm biến mới

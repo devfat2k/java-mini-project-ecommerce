@@ -57,8 +57,10 @@ app:
     secret-key: ${MIN_IO_SECRET_KEY}
     bucket: ${MIN_IO_BUCKET}
   mail:
-    brevo:
-      api-key: ${BREVO_API_KEY:}
+    mail:
+      brevo:
+        api-key: ${BREVO_API_KEY:}
+        sender-email: ${BREVO_SENDER_EMAIL:}
 
 vnpay:
   pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}

@@ -38,7 +38,8 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     create-schemas: false
-    repair-on-migrate: true   # tự động repair checksum nếu migration đã apply bị sửa đổi
+    # repair-on-migrate KHÔNG phải Spring Boot property — bị bỏ qua hoàn toàn.
+    # Việc repair được xử lý bởi FlywayConfig bean (FlywayMigrationStrategy).
 
 server:
   port: ${PORT:8085}

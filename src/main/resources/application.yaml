@@ -38,6 +38,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     create-schemas: false
+    repair-on-migrate: true   # tự động repair checksum nếu migration đã apply bị sửa đổi
 
 server:
   port: ${PORT:8085}

@@ -1,13 +1,14 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build-and-test:
+  quality-and-test:
+    name: Code Quality & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +20,16 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: maven
+          cache: 'maven'          # tự cache ~/.m2, build lần sau nhanh hơn nhiều
 
-      - name: Build and run tests
-        run: ./mvnw clean verify -B
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw        # lỗi kinh điển đã note ở Giai đoạn 3 — CI cũng cần dòng này
+
+      - name: Code Quality Gate (PMD)
+        run: ./mvnw pmd:check     # fail nhanh, đứng trước test — đúng nguyên tắc "fail fast" đã học ở 4D
+
+      - name: Run tests
+        run: ./mvnw clean test
+
+      - name: Build (compile check)
+        run: ./mvnw clean package -DskipTests

@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
-    private static final String EMAIL_HOST = "phathn2688@gmail.com";
 
-//    private final EmailSenderUtil emailSenderUtil;
     private final MailTransport mailTransport;
 
     @Override

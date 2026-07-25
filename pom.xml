@@ -136,8 +136,7 @@
 				<version>3.26.0</version>
 				<configuration>
 					<rulesets>
-						<ruleset>category/java/bestpractices.xml</ruleset>
-						<ruleset>category/java/codestyle.xml</ruleset>
+						<ruleset>pmd-ruleset.xml</ruleset>   <!-- đổi từ 2 dòng category cũ -->
 					</rulesets>
 					<failOnViolation>true</failOnViolation>
 					<printFailingErrors>true</printFailingErrors>

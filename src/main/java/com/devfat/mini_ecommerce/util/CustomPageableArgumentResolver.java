@@ -14,7 +14,6 @@ public class CustomPageableArgumentResolver implements HandlerMethodArgumentReso
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_SIZE = 10;
     private static final String DEFAULT_SORT = "id";
-    private static final String DEFAULT_DIRECTION = "asc";
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {

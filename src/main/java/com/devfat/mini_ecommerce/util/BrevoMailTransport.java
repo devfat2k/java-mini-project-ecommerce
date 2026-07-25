@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.util;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -11,9 +12,11 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
-@Component
+
 @Profile("prod") // ← chỉ active khi SPRING_PROFILES_ACTIVE=prod
 @Slf4j
+@RequiredArgsConstructor
+@Component
 public class BrevoMailTransport implements MailTransport {
 
     private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";

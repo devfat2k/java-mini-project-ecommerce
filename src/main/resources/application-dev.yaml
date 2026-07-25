@@ -1,6 +1,8 @@
 spring:
   jpa:
     show-sql: true
+  flyway:
+    repair-on-migrate: true  # Tự sửa checksum khi nội dung migration file thay đổi
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}

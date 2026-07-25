@@ -179,6 +179,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @CacheEvict(value = "products", key = "#id")
+    @Transactional  // ← Bắt buộc: giữ session mở cho đến khi toResponse() truy cập category (LAZY)
     public ProductResponseDto uploadProductImage(Long id, MultipartFile file) {
        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
 

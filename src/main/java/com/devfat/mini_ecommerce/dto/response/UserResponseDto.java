@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.dto.response;
 import com.devfat.mini_ecommerce.entity.UserEntity;
+import com.devfat.mini_ecommerce.enums.Role;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ public class UserResponseDto {
     private String avatarUrl;
     private String email;
     private String phoneNumber;
-    private UserEntity.Role role;
+    private Role role;
     private Boolean isActive;
     private LocalDateTime createdAt;
 }

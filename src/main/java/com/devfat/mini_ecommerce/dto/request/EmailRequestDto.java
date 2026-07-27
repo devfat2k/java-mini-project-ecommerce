@@ -13,5 +13,5 @@ public class EmailRequestDto {
     private String to;
     private String subject;
     private String messageBody;
-    private String attachmentPath;
+//    private String attachmentPath;
 }

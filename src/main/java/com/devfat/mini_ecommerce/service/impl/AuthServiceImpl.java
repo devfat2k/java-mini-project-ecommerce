@@ -1,21 +1,19 @@
 package com.devfat.mini_ecommerce.service.impl;
 
-import com.devfat.mini_ecommerce.dto.request.LoginRequestDto;
-import com.devfat.mini_ecommerce.dto.request.RefreshTokenRequestDto;
-import com.devfat.mini_ecommerce.dto.request.RegisterRequestDto;
-import com.devfat.mini_ecommerce.dto.response.AuthResponseDto;
-import com.devfat.mini_ecommerce.dto.response.RefreshTokenResponseDto;
-import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
+import com.devfat.mini_ecommerce.dto.request.*;
+import com.devfat.mini_ecommerce.dto.response.*;
 import com.devfat.mini_ecommerce.entity.RefreshTokenEntity;
 import com.devfat.mini_ecommerce.entity.UserEntity;
-import com.devfat.mini_ecommerce.exception.DuplicateResourceException;
-import com.devfat.mini_ecommerce.exception.InvalidRefreshTokenException;
+import com.devfat.mini_ecommerce.enums.OtpPurpose;
+import com.devfat.mini_ecommerce.enums.Role;
+import com.devfat.mini_ecommerce.exception.*;
 import com.devfat.mini_ecommerce.repository.RefreshTokenRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
 import com.devfat.mini_ecommerce.security.JwtProvider;
 import com.devfat.mini_ecommerce.security.RefreshTokenGenerator;
 import com.devfat.mini_ecommerce.security.UserPrincipal;
 import com.devfat.mini_ecommerce.service.AuthService;
+import com.devfat.mini_ecommerce.service.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Locale;
@@ -46,6 +45,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtProvider jwtProvider;
     private final RefreshTokenGenerator refreshTokenGenerator;
+
+    private final OtpService otpService;
 
     @Value("${app.jwt.refresh-expiration-days}")
     private long refreshTokenExpirationDays;
@@ -92,12 +93,19 @@ public class AuthServiceImpl implements AuthService {
         newUser.setFullName(registerRequestDto.fullName());
         newUser.setEmail(email);
         newUser.setPhoneNumber(phone);
-        newUser.setRole(UserEntity.Role.USER); //Mặc định luồng đăng ký này là user bình thường
+        newUser.setRole(Role.USER); //Mặc định luồng đăng ký này là user bình thường
+        newUser.setEmailVerified(false);
         newUser.setActive(true); // Mặc định tạo sẽ đang hoạt động - Nếu có thay update cờ này về false
         newUser.setPassword(hashedPassword);
 
+        UserEntity savedUser = userRepository.save(newUser);
 
-        return toResponseDto(userRepository.save(newUser));
+        otpService.generateAndSendOtp(
+                savedUser,
+                OtpPurpose.REGISTER_VERIFICATION
+        );
+
+        return toResponseDto(savedUser);
     }
 
     /**
@@ -130,7 +138,17 @@ public class AuthServiceImpl implements AuthService {
         UsernamePasswordAuthenticationToken tokenRequest = new UsernamePasswordAuthenticationToken(email, password);
         Authentication lastestResult = authenticationManager.authenticate(tokenRequest);
         UserPrincipal userPrincipal = (UserPrincipal) lastestResult.getPrincipal();
+
+        if (!userPrincipal.isEmailVerified()) {
+            throw new AccountNotVerifiedException("Account not verified! Please check your email address and try again.");
+        }
+
         String accessToken = jwtProvider.generateToken(userPrincipal);
+
+        if (!userPrincipal.isEmailVerified()) {
+            throw new AccountNotVerifiedException("Account not verified! Please check your email address and try again.");
+        }
+
         refreshTokenRepository.deleteExpiredOrRevokedByUserId(userPrincipal.getUserId(), LocalDateTime.now()); // clear
 
         String refreshToken = refreshTokenGenerator.generateRefreshToken();
@@ -208,5 +226,82 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenEntity.setRevoked(true);
             refreshTokenRepository.save(refreshTokenEntity);
         }
+    }
+
+    @Override
+    @Transactional
+    public VerifyOtpResponseDto verifyOtp(VerifyOtpRequestDto dto) {
+        UserEntity user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        otpService.verifyOtp(user.getId(), dto.purpose(), dto.otpCode());
+
+        return switch (dto.purpose()) {
+            case REGISTER_VERIFICATION -> handleRegisterVerified(user);
+            case RESET_PASSWORD -> handleResetPasswordVerified(user);
+            case CHANGE_PASSWORD_CONFIRMATION -> handleChangePasswordVerified(user);
+        };
+    }
+
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequestDto dto) {
+        userRepository.findByEmail(dto.email())
+                .ifPresent(user -> otpService.generateAndSendOtp(user, OtpPurpose.RESET_PASSWORD));
+    }
+
+
+    @Override
+    public ResendOtpResponseDto resendOtp(ResendOtpRequestDto dto) {
+        UserEntity user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+        if (!otpService.resetOtp(user.getId(), dto.purpose())) {
+            throw new ResendCooldownException("Please try again later!");
+        }
+
+        otpService.generateAndSendOtp(user, dto.purpose());
+
+        return ResendOtpResponseDto.builder()
+                .message("New verification code has been sent!")
+                .build();
+    }
+
+
+
+    private VerifyOtpResponseDto handleRegisterVerified(UserEntity user) {
+        user.setEmailVerified(true);
+        userRepository.save(user);
+
+        UserPrincipal userPrincipal = new UserPrincipal(user);
+        String accessToken = jwtProvider.generateToken(userPrincipal);
+
+        refreshTokenRepository.deleteExpiredOrRevokedByUserId(user.getId(), LocalDateTime.now());
+
+        String refreshToken = refreshTokenGenerator.generateRefreshToken();
+        String tokenHash = hashRefreshToken(refreshToken);
+        LocalDateTime expirationDate = LocalDateTime.now().plusDays(refreshTokenExpirationDays);
+
+        RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+        refreshTokenEntity.setUser(user);
+        refreshTokenEntity.setTokenHash(tokenHash);
+        refreshTokenEntity.setExpireAt(expirationDate);
+        refreshTokenEntity.setRevoked(false);
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        return VerifyOtpResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    private VerifyOtpResponseDto handleResetPasswordVerified(UserEntity user) {
+        String resetTicket = jwtProvider.generateActionToken(user.getId(), "RESET_PASSWORD", Duration.ofMinutes(10));
+        return VerifyOtpResponseDto.builder().actionToken(resetTicket).build();
+    }
+
+    private VerifyOtpResponseDto handleChangePasswordVerified(UserEntity user) {
+        String confirmTicket = jwtProvider.generateActionToken(user.getId(), "CHANGE_PASSWORD", Duration.ofMinutes(10));
+        return VerifyOtpResponseDto.builder().actionToken(confirmTicket).build();
     }
 }

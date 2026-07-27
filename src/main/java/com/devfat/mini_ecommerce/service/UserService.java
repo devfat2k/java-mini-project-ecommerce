@@ -17,4 +17,5 @@ public interface UserService {
     Page<UserResponseDto> getAllUsers(Pageable pageable);
     void updateStatusUser(Long id, Long idInToken, Boolean isActive);
     UserResponseDto uploadUserImage(Long id, MultipartFile file);
+    void requestChangePasswordOtp(Long currentUserId);
 }

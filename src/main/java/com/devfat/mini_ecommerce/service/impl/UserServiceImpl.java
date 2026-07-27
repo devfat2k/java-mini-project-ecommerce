@@ -5,10 +5,12 @@ import com.devfat.mini_ecommerce.dto.request.UpdateProfileRequestDto;
 import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
 import com.devfat.mini_ecommerce.entity.RefreshTokenEntity;
 import com.devfat.mini_ecommerce.entity.UserEntity;
+import com.devfat.mini_ecommerce.enums.OtpPurpose;
 import com.devfat.mini_ecommerce.exception.BadRequestException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.repository.RefreshTokenRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
+import com.devfat.mini_ecommerce.service.OtpService;
 import com.devfat.mini_ecommerce.service.StorageService;
 import com.devfat.mini_ecommerce.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final StorageService storageService;
+    private final OtpService otpService;
+
 
     public UserResponseDto toResponseDto(UserEntity userEntity) {
         return UserResponseDto.builder()
@@ -125,5 +129,12 @@ public class UserServiceImpl implements UserService {
         user.setAvatarUrl(url);
         userRepository.save(user);
         return toResponseDto(user);
+    }
+
+    @Override
+    public void requestChangePasswordOtp(Long currentUserId) {
+        UserEntity user = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+        otpService.generateAndSendOtp(user, OtpPurpose.CHANGE_PASSWORD_CONFIRMATION);
     }
 }

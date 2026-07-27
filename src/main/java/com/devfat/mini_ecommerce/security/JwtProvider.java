@@ -1,6 +1,7 @@
 package com.devfat.mini_ecommerce.security;
 
-import com.devfat.mini_ecommerce.entity.UserEntity;
+import com.devfat.mini_ecommerce.enums.Role;
+import com.devfat.mini_ecommerce.exception.InvalidActionTokenException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -161,14 +163,14 @@ public class JwtProvider {
      * payload.get("role")
      * Sau đó convert String -> Enum Role
      */
-    public UserEntity.Role getRoleFromToken(String token) {
+    public Role getRoleFromToken(String token) {
         Jws<Claims> jws = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token);
         Claims payload = jws.getPayload();
         String role = payload.get("role", String.class);
-        return UserEntity.Role.valueOf(role);
+        return Role.valueOf(role);
     }
     /*
      * Trả về thời gian sống của JWT.
@@ -176,5 +178,35 @@ public class JwtProvider {
      */
     public long getExpirationMs() {
         return jwtExpirationMs;
+    }
+
+
+
+    public String generateActionToken(Long userId, String scope, Duration ttl) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + ttl.toMillis());
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("scope", scope);
+        return Jwts.builder()
+                .claims(claims)
+                .subject(String.valueOf(userId))
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public Long validateActionTokenAndGetUserId(String token, String expectedScope) {
+        Jws<Claims> jws = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token);
+
+        Claims payload = jws.getPayload();
+        String actualScope = payload.get("scope", String.class);
+        if (!expectedScope.equals(actualScope)) {
+            throw new InvalidActionTokenException("Token scope không hợp lệ cho hành động này");
+        }
+        return Long.valueOf(payload.getSubject());
     }
 }

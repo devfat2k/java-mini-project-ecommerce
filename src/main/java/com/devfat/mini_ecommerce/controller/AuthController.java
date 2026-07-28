@@ -1,12 +1,8 @@
 package com.devfat.mini_ecommerce.controller;
 
 import com.devfat.mini_ecommerce.common.ApiResponse;
-import com.devfat.mini_ecommerce.dto.request.LoginRequestDto;
-import com.devfat.mini_ecommerce.dto.request.RefreshTokenRequestDto;
-import com.devfat.mini_ecommerce.dto.request.RegisterRequestDto;
-import com.devfat.mini_ecommerce.dto.response.AuthResponseDto;
-import com.devfat.mini_ecommerce.dto.response.RefreshTokenResponseDto;
-import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
+import com.devfat.mini_ecommerce.dto.request.*;
+import com.devfat.mini_ecommerce.dto.response.*;
 import com.devfat.mini_ecommerce.service.AuthService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth")
 public class AuthController {
     private final AuthService authService;
+
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> register(
@@ -66,4 +63,30 @@ public class AuthController {
         authService.logout(request);
         return ResponseEntity.ok().body(ApiResponse.success(null, "Logout Successfully!"));
     }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<VerifyOtpResponseDto>> verifyOtp(@Valid @RequestBody VerifyOtpRequestDto dto) {
+        return ResponseEntity.ok(ApiResponse.success(
+                authService.verifyOtp(dto),
+                "Verify Otp Successfully!"
+        ));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto dto) {
+        authService.forgotPassword(dto);
+        return ResponseEntity.ok(ApiResponse.success(
+                null,
+                "Forgot Password Successfully!"
+        ));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<ResendOtpResponseDto>> resendOtp(@Valid @RequestBody ResendOtpRequestDto dto) {
+        return ResponseEntity.ok(ApiResponse.success(
+                authService.resendOtp(dto),
+                "Resend Otp Successfully!"
+        ));
+    }
+
 }

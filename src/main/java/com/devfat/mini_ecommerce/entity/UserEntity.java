@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.entity;
 
+import com.devfat.mini_ecommerce.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,19 +10,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 
+@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@DynamicUpdate
 @DynamicInsert
-@Entity
+@DynamicUpdate
 @Builder
 @Table(name = "users")
 public class UserEntity {
-
-    public enum Role {
-        USER, ADMIN
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +46,9 @@ public class UserEntity {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

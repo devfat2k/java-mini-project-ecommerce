@@ -54,6 +54,10 @@ public class UserPrincipal implements UserDetails {
     }
 
 
+    public boolean isEmailVerified() {
+        return userEntity.isEmailVerified();
+    }
+
     /**
      * Tạm thời trả true cho 3 method này là Tài khoản đã hết hạn, Khoá tài khoản, Chứng chỉ tài khoản hết hạn
      * Sẽ mở rộng sau nên tạm thời mặc định sẽ true, Hiện tại hệ thống chỉ cần isActive có hoạt động không là đủ

@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,13 +18,13 @@ public class SmtpMailTransport implements MailTransport {
 
     private final JavaMailSender javaMailSender;
 
-    @Value("${spring.mail.username}")
-    private String emailHost;
+    @Value("${app.mail.brevo.sender-email}")
+    private String senderEmail;
 
     @Override
     public void sendTextEmail(String to, String subject, String content) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(emailHost);
+        message.setFrom(senderEmail);
         message.setTo(to);
         message.setSubject(subject);
         message.setText(content);
@@ -43,15 +41,12 @@ public class SmtpMailTransport implements MailTransport {
     public void sendHtmlEmail(String to, String subject, String content) {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            Resource resource = new ClassPathResource("templates/email/SendEmailTemplate.html");
-            String htmlContent = new String(resource.getInputStream().readAllBytes());
-
-            helper.setFrom(emailHost);
+            helper.setFrom(senderEmail);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(htmlContent, true);
+            helper.setText(content, true);
             javaMailSender.send(message);
             log.info("Gửi email HTML (SMTP) thành công tới {}", to);
         } catch (Exception e) {

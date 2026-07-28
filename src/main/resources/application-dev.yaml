@@ -3,6 +3,7 @@ spring:
     show-sql: true
   flyway:
     repair-on-migrate: true  # Tự sửa checksum khi nội dung migration file thay đổi
+
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -10,13 +11,19 @@ spring:
     password: ${MAIL_PASSWORD}
     default-encoding: UTF-8
     properties:
-      smtp:
-        auth: true
-        starttls:
-          enable: true
-          required: true
-        ssl:
-          enable: false
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: false
+
+app:
+  mail:
+    brevo:
+      sender-email: huuphat263@gmail.com
 
 logging:
   level:

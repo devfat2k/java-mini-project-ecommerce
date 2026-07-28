@@ -38,7 +38,10 @@ public class SecurityConfig {
             "/api/v1/auth/logout",
             "/api/v1/health",
             "/api/v1/payments/vnpay-return",
-            "/api/v1/payments/vnpay-ipn"
+            "/api/v1/payments/vnpay-ipn",
+            "/api/v1/auth/verify-otp",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/resend-otp"
     };
     private static final String[] PUBLIC_GET_URLS = {
             "/api/v1/products",

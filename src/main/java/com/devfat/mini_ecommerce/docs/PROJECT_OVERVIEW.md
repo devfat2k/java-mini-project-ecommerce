@@ -1,10 +1,10 @@
-# 📖 PROJECT OVERVIEW V6 — Mini Ecommerce (Current State Edition)
+# 📖 PROJECT OVERVIEW V7 — Mini Ecommerce (Current State & FE Integration Edition)
 
-> **Mục đích tài liệu:** Đây là tài liệu **CHÍNH XÁC NHẤT** phản ánh trạng thái codebase thực tế tính đến ngày cập nhật. Bất kỳ AI Agent hay Developer nào khi bắt đầu hoặc tiếp tục công việc trên project này đều phải đọc file này **ĐẦU TIÊN**.
+> **Mục đích tài liệu:** Đây là tài liệu **CHÍNH XÁC NHẤT** phản ánh trạng thái codebase thực tế tính đến ngày cập nhật. Bất kỳ AI Agent hay Developer nào (bao gồm Backend, Frontend/Full-stack) khi bắt đầu hoặc tiếp tục công việc trên project này đều phải đọc file này **ĐẦU TIÊN**.
 >
-> **Cập nhật lần cuối:** 2026-07-26
+> **Cập nhật lần cuối:** 2026-07-28
 >
-> **Supersedes:** PROJECT_OVERVIEW_V2.md, PROJECT_OVERVIEW_V3.md, PROJECT_OVERVIEW_V4.md, PROJECT_OVERVIEW_V5.md (các bản cũ đã bị xoá)
+> **Supersedes:** PROJECT_OVERVIEW_V2.md, PROJECT_OVERVIEW_V3.md, PROJECT_OVERVIEW_V4.md, PROJECT_OVERVIEW_V5.md, PROJECT_OVERVIEW_V6.md (các bản cũ đã bị xoá/thay thế)
 
 ---
 
@@ -29,8 +29,9 @@
 17. [Business Flows (Luồng nghiệp vụ)](#17-business-flows-luồng-nghiệp-vụ)
 18. [Coding Conventions & Patterns](#18-coding-conventions--patterns)
 19. [Trạng thái phát triển & TODO](#19-trạng-thái-phát-triển--todo)
-20. [Góp ý tối ưu & Kiến thức cần bổ sung](#20-góp-ý-tối-ưu--kiến-thức-cần-bổ-sung)
+20. [Góp ý tối ưu & Bảng theo dõi cải tiến](#20-góp-ý-tối-ưu--bảng-theo-dõi-cải-tiến)
 21. [Tổng hợp Kiến thức & Kỹ thuật chức năng cốt lõi](#21-tổng-hợp-kiến-thức--kỹ-thuật-chức-năng-cốt-lõi)
+22. [Hướng dẫn & Lưu ý Dành Cho Frontend (FE / Full-stack & AI Reader)](#22-hướng-dẫn--lưu-ý-dành-cho-frontend-fe--full-stack--ai-reader)
 
 ---
 
@@ -45,27 +46,26 @@
 | **Main class** | `MiniEcommerceApplication` |
 | **Base package** | `com.devfat.mini_ecommerce` |
 | **Miền nghiệp vụ (Domain)** | **E-commerce Bán Hải Sản (Seafood)** — Tươi sống, phile, chế biến sẵn & gia vị |
-| **Mục tiêu** | Side project cá nhân — rèn luyện Java Backend, áp dụng best practices thực tế, làm portfolio cho vị trí Java Backend Developer |
+| **Mục tiêu** | Side project cá nhân — rèn luyện Java Backend, áp dụng best practices thực tế, chuẩn bị kết nối Frontend (React/Next.js/Vue) và làm portfolio |
 | **Kiến trúc** | Layered Architecture (Controller → Service → Repository → Entity) |
 | **API Style** | RESTful JSON API, Stateless (JWT, không session) |
-| **Plan giai đoạn** | Đang chuẩn bị **Production Deployment** lên Render + hoàn thiện CI/CD Pipeline |
+| **Trạng thái hiện tại** | Hoàn thiện hệ thống **Xác thực OTP Email**, chuẩn bị **Frontend Integration** & **Production Deployment** lên Render |
 
-### 1.1. Điểm thay đổi & bổ sung mới nhất (V5 → V6, tính đến 2026-07-26)
+### 1.1. Điểm thay đổi & bổ sung mới nhất (V6 → V7, tính đến 2026-07-28)
 
-| Module / Tính năng | Trạng thái V5 (2026-07-24) | Trạng thái V6 Hiện tại (2026-07-26) |
+| Module / Tính năng | Trạng thái V6 (2026-07-26) | Trạng thái V7 Hiện tại (2026-07-28) |
 |---|---|---|
-| **Email Architecture — Strategy Pattern** | ⚠️ `EmailSenderUtil` — class helper duy nhất cho cả dev & prod | ✅ **REFACTORED** — Áp dụng **Strategy Pattern** với `MailTransport` interface + `SmtpMailTransport` (`@Profile("dev")` — JavaMailSender/SMTP) + `BrevoMailTransport` (`@Profile("prod")` — Brevo REST API). `EmailSenderUtil` đã bị **XOÁ**. |
-| **Flyway Migrations — Hợp nhất** | 8 file migration riêng lẻ (V1→V8) | ✅ **CONSOLIDATED** — Gộp V1→V7 thành 1 file `V1__init_mini_shop.sql` (schema hợp nhất). V8 cũ → `V2__seed_seafood_categories_and_products.sql`. Thêm `FlywayConfig` bean (`repair()` trước `migrate()`). |
-| **CORS Configuration** | ❌ Hardcoded `localhost:8085` | ✅ **ĐÃ XỬ LÝ** — Externalized qua `@Value("${app.cors.allowed-origins}")`, đọc từ `.env`. |
-| **PMD Static Analysis** | ❌ Chưa có | ✅ **MỚI** — `maven-pmd-plugin` v3.26.0 + `pmd-ruleset.xml` custom (bắt unused vars/fields/methods, empty catch blocks). Tích hợp vào CI Pipeline. |
-| **Docker Compose** | 2 services (db, app) | ✅ **MỞ RỘNG** — 4 services: `db` (postgres:16), `app`, `redis` (redis:latest), `minio` (quay.io/minio/minio). |
-| **CI Pipeline** | Build + test cơ bản | ✅ **NÂNG CẤP** — 3 steps: PMD Quality Gate → Run Tests → Build Compile Check. Job đổi tên `quality-and-test`. |
-| **Production Deployment** | ❌ Chưa chuẩn bị | ✅ **MỚI** — `.env.production` (Render PostgreSQL, Render Redis, Cloudflare R2, Brevo API), `deploy_render_plan.md`, `application-prod.yaml` tối ưu. |
-| **Dockerfile** | `maven:3.9-eclipse-temurin-21` + `wget` healthcheck | ✅ **TỐI ƯU** — Đổi base `eclipse-temurin:21-jdk-alpine` (nhẹ hơn), bỏ `wget`, thêm `chmod +x mvnw`. |
-| **application.yaml** | Config cố định, mail inline | ✅ **TÁI CẤU TRÚC** — Dynamic port `${PORT:8085}`, Redis password support, Brevo config, mail chuyển sang profile `dev`. Swagger sorter alpha. |
-| **Profile configs** | 3 profiles (dev/test/prod) | ✅ **THAY ĐỔI** — Chỉ còn 2 profiles: `dev` (SMTP mail, debug logging) và `prod` (tắt SQL log). `application-test.yaml` đã **XOÁ**. |
-| **Security — Public Endpoints** | `GET /products/{id}` cần Authenticated | ✅ **THAY ĐỔI** — `GET /products/{id}` giờ là **Public** (thêm vào `PUBLIC_GET_URLS`). |
-| **New Docs** | 4 files docs | ✅ **MỚI** — Thêm `deploy_render_plan.md` (kế hoạch deploy Render) + `docker-commands-cheatsheet.md` (tham khảo Docker CLI). Tổng **6 files docs**. |
+| **Xác thực Tài Khoản qua OTP Email (Account Verification)** | ❌ Chưa có — Đăng ký là tài khoản kích hoạt ngay | ✅ **MỚI** — Luồng Đăng ký tạo user với `email_verified = false`, `is_active = false`. Gửi mã OTP 6 chữ số qua email. Client cần gọi `/api/v1/auth/verify-otp` để kích hoạt tài khoản (`is_active = true`, `email_verified = true`) và nhận ngay JWT tokens (`accessToken` + `refreshToken`). |
+| **Quên mật khẩu & Đặt lại (Forgot & Reset Password via OTP)** | ❌ Chưa có | ✅ **MỚI** — Endpoints `/forgot-password`, `/verify-otp`, `/resend-otp`. Khi xác thực OTP quên mật khẩu thành công, hệ thống trả về `actionToken` để client thực hiện đổi mật khẩu an toàn. |
+| **Bảng & Schema OTP (`otp_verifications`)** | ❌ 2 migrations (V1, V2) | ✅ **MỚI** — Thêm `V3__add_otp_verifications_table.sql`: Tạo cột `email_verified` trong `users` và bảng `otp_verifications` (FK `user_id`, `otp_hash`, `purpose`, `expires_at`, `attempts`, `consumed`). Index `idx_otp_user_purpose`. |
+| **OTP Cleanup Scheduler** | ❌ Chưa có | ✅ **MỚI** — `OtpCleanupScheduler` với `@Scheduled(cron = "0 0 * * * *")` tự động dọn dẹp các OTP đã dùng hoặc hết hạn hàng giờ. |
+| **HTML Email Templates & Helper** | Plain text email | ✅ **NÂNG CẤP** — `EmailTemplateHelper` + HTML Email Template (`SendEmailTemplate.html`) thiết kế chuẩn UI thương hiệu Hải Sản (màu xanh tươi mát, nút bấm rõ ràng, mã OTP nổi bật). |
+| **Tách biệt Enums (`com.devfat.mini_ecommerce.enums`)** | Enums nằm inline trong Entity | ✅ **REFACTORED** — Tách riêng các Enums thành file độc lập trong package `enums`: `Role`, `OrderStatus`, `OtpPurpose`. |
+| **Exception Handling cho Auth/OTP** | 15 Exception Handlers | ✅ **TĂNG LÊN 22 HANDLERS** — Thêm 7 custom OTP exceptions (`OtpInvalidException`, `OtpExpiredException`, `OtpAttemptsExceededException`, `ResendCooldownException`, `OtpNotFoundException`, `AccountNotVerifiedException`, `InvalidActionTokenException`). |
+| **Tổng số Endpoints REST API** | 35 Endpoints | ✅ **39 ENDPOINTS** — Thêm 4 endpoints chuyên biệt cho xác thực OTP & Quên mật khẩu (`verify-otp`, `forgot-password`, `resend-otp`). |
+| **Tài liệu Hướng dẫn Frontend** | ❌ Chưa có | ✅ **MỚI (MỤC 22)** — Thêm toàn bộ phần hướng dẫn chi tiết về API Response, Pagination, Interceptor 401, Auth Flow Specs dành cho Frontend / Full-stack / AI Developers. |
+
+---
 
 ### 1.2. Miền nghiệp vụ & Mô hình Sản phẩm Hải Sản (Seafood E-commerce Domain Model)
 
@@ -90,32 +90,32 @@ Dự án **Mini Ecommerce** được định hình là một hệ thống **Thư
 | Công nghệ | Phiên bản | Vai trò |
 |---|---|---|
 | **Java** | 21 | Ngôn ngữ chính |
-| **Spring Boot** | 3.5.16 | Framework core |
+| **Spring Boot** | 3.5.16 | Framework core (`@SpringBootApplication`, `@EnableScheduling`, `@EnableAsync`, `@EnableCaching`) |
 | **Maven** | (wrapper mvnw) | Build tool |
 | **Docker** | Multi-stage | Containerization |
 | **PostgreSQL** | 16 (Docker image) | Database chính |
-| **Redis** | latest (Docker image) | In-memory Data Store cho Caching |
+| **Redis** | latest (Docker image) | In-memory Data Store cho Caching & Performance |
 
 ### 2.2. Dependencies (pom.xml) — Đầy đủ
 
 | Dependency | Phiên bản | Mục đích | Scope |
 |---|---|---|---|
 | `spring-boot-starter-web` | (managed) | REST API, Tomcat embedded | compile |
-| `spring-boot-starter-data-jpa` | (managed) | ORM (Hibernate), JpaRepository | compile |
-| `spring-boot-starter-validation` | (managed) | Bean Validation (`@NotNull`, `@Size`...) | compile |
+| `spring-boot-starter-data-jpa` | (managed) | ORM (Hibernate), JpaRepository, Projections | compile |
+| `spring-boot-starter-validation` | (managed) | Bean Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Email`...) | compile |
 | `spring-boot-starter-security` | (managed) | Spring Security framework | compile |
-| `spring-boot-starter-mail` | (managed) | Gửi Email (JavaMailSender) — dùng ở profile `dev` | compile |
+| `spring-boot-starter-mail` | (managed) | Gửi Email (JavaMailSender) — profile `dev` | compile |
 | `spring-boot-starter-cache` | (managed) | Spring Cache Abstraction | compile |
 | `spring-boot-starter-data-redis` | (managed) | Spring Data Redis Connector & Serializers | compile |
 | `spring-boot-devtools` | (managed) | Hot reload khi dev | runtime, optional |
 | `postgresql` | (managed) | PostgreSQL JDBC driver | runtime |
 | `flyway-core` | (managed) | Database migration versioning | compile |
 | `flyway-database-postgresql` | (managed) | Flyway PostgreSQL adapter | compile |
-| `springdoc-openapi-starter-webmvc-ui` | **2.8.17** | Swagger UI + OpenAPI 3 docs | compile |
+| `springdoc-openapi-starter-webmvc-ui` | **2.8.17** | Swagger UI + OpenAPI 3 docs (`/swagger-ui.html`) | compile |
 | `jjwt-api` | **0.12.6** | JWT API | compile |
 | `jjwt-impl` | **0.12.6** | JWT implementation | runtime |
 | `jjwt-jackson` | **0.12.6** | JWT JSON serialization | runtime |
-| `lombok` | (managed) | Giảm boilerplate | compile, optional |
+| `lombok` | (managed) | Giảm boilerplate (`@Data`, `@Builder`, `@RequiredArgsConstructor`) | compile, optional |
 | `spring-dotenv` | **4.0.0** | Tự động load file `.env` vào Spring properties | compile |
 | `minio` | **8.5.17** | MinIO Java SDK (S3-compatible object storage) | compile |
 | `thumbnailator` | **0.4.20** | Resize/compress ảnh trước khi upload | compile |
@@ -127,21 +127,9 @@ Dự án **Mini Ecommerce** được định hình là một hệ thống **Thư
 
 | Plugin | Phiên bản | Vai trò |
 |---|---|---|
-| `spring-boot-maven-plugin` | (managed) | Build JAR, exclude Lombok |
+| `spring-boot-maven-plugin` | (managed) | Build executable JAR, exclude Lombok |
 | `maven-compiler-plugin` | (managed) | Config annotation processor paths cho Lombok ở cả compile + testCompile |
-| **`maven-pmd-plugin`** | **3.26.0** | **★ MỚI** — Static Analysis, sử dụng custom `pmd-ruleset.xml` |
-
-### 2.4. PMD Ruleset (`pmd-ruleset.xml`) — ★ MỚI
-
-| Rule | Mô tả |
-|---|---|
-| `UnusedLocalVariable` | Bắt biến local không sử dụng |
-| `UnusedPrivateField` | Bắt field private không sử dụng |
-| `UnusedPrivateMethod` | Bắt method private không sử dụng |
-| `UnusedFormalParameter` | Bắt tham số method không sử dụng |
-| `EmptyCatchBlock` | Bắt catch block rỗng (không xử lý exception) |
-
-> **Triết lý:** Chỉ bắt code chết & lỗi nguy hiểm — KHÔNG ép coding style cá nhân.
+| `maven-pmd-plugin` | **3.26.0** | Static Analysis, sử dụng custom `pmd-ruleset.xml` |
 
 ---
 
@@ -151,12 +139,12 @@ Dự án **Mini Ecommerce** được định hình là một hệ thống **Thư
 
 ```dockerfile
 # Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine AS builder    ← Đổi sang JDK Alpine (nhẹ hơn maven base)
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
-RUN chmod +x mvnw                               ← Đảm bảo quyền execute cho mvnw
+RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline -B
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
@@ -169,65 +157,14 @@ EXPOSE 8085
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
-> **Thay đổi so với V5:** Đổi base image từ `maven:3.9-eclipse-temurin-21` → `eclipse-temurin:21-jdk-alpine` (nhẹ hơn). Bỏ `apk add wget` vì không dùng healthcheck trong Dockerfile nữa. Thêm `chmod +x mvnw`.
-
 ### 3.2. docker-compose.yml (4 Services)
 
 | Service | Image | Port | Healthcheck / Depends |
 |---|---|---|---|
 | **db** | `postgres:16` | `5432:5432` | `pg_isready -U ${DB_USERNAME}` mỗi 5s |
-| **redis** | `redis:latest` | `6379:6379` | — (★ MỚI) |
-| **minio** | `quay.io/minio/minio` | `9000:9000`, `9001:9001` | — (★ MỚI) |
+| **redis** | `redis:latest` | `6379:6379` | — |
+| **minio** | `quay.io/minio/minio` | `9000:9000`, `9001:9001` | — |
 | **app** | Build từ Dockerfile | `8085:8085` | depends_on: db (service_healthy), redis & minio (service_started) |
-
-**Đặc điểm quan trọng:**
-- `app` depends_on `db` với `condition: service_healthy` — chờ DB ready rồi mới start app
-- `app` depends_on `redis` và `minio` với `condition: service_started`
-- Env từ `.env` + override cho container hostnames
-- 2 Volumes persist data: `pgdata` (PostgreSQL) + `miniodata` (MinIO)
-- MinIO chạy với `server /data --console-address ":9001"` — Console UI trên port 9001
-
-### 3.3. GitHub Actions CI (`ci.yml`) — ★ NÂNG CẤP
-
-```yaml
-name: CI Pipeline
-on: push/PR to main
-jobs:
-  quality-and-test:              ← Đổi tên job
-    - Checkout code
-    - Setup JDK 21 (Temurin) + Maven cache
-    - Grant execute permission for mvnw      ← MỚI
-    - Code Quality Gate (PMD): ./mvnw pmd:check    ← ★ MỚI — Fail fast trước test
-    - Run tests: ./mvnw clean test
-    - Build (compile check): ./mvnw clean package -DskipTests
-```
-
-> **Thay đổi so với V5:** Thêm step PMD Quality Gate chạy TRƯỚC test (fail fast). Tách riêng test và build thành 2 steps.
-
-### 3.4. .dockerignore & .gitignore
-
-| File | Ignore |
-|---|---|
-| `.dockerignore` | `target/`, `.git/`, `.idea/`, `*.iml`, `.env`, `.mvn/wrapper/maven-wrapper.jar` |
-| `.gitignore` | Maven build, IDE files, `.env`, `application.yaml` (chứa secrets) |
-
-### 3.5. Environment Files (3 files)
-
-| File | Mô tả | Git tracked? |
-|---|---|---|
-| `.env` | Chứa secrets thực cho **Development** (DB, JWT, Mail SMTP, MinIO local, Redis, VNPay) | ❌ KHÔNG commit |
-| `.env.production` | **★ MỚI** — Chứa secrets cho **Production** (Render PostgreSQL, Render Redis, Cloudflare R2, Brevo API, Render VNPay URLs) | ❌ KHÔNG commit |
-| `.env.example` | Template cho developer mới — có hướng dẫn local vs production cho từng nhóm config | ✅ Commit |
-
-**Cấu trúc `.env.example`:**
-- `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` — Local Docker hoặc Render PostgreSQL
-- `CORS_ALLOWED_ORIGINS` — ★ MỚI — CORS whitelist
-- `REDIS_HOST` / `REDIS_PORT` — Local Docker hoặc Render Key Value
-- `MINIO_ENDPOINT` / `MIN_IO_*` — Local MinIO hoặc Cloudflare R2
-- `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` — Gmail SMTP (dev)
-- `BREVO_API_KEY` — ★ MỚI — Brevo Transactional Email API (prod)
-- `JWT_SECRET_KEY`
-- `VNPAY_*` — VNPay Sandbox config
 
 ---
 
@@ -237,12 +174,12 @@ jobs:
 
 | Nhóm cấu hình | Key | Giá trị / Mô tả |
 |---|---|---|
-| **Profile** | `spring.profiles.active` | `${SPRING_PROFILES_ACTIVE:dev}` — ★ Dynamic từ env |
+| **Profile** | `spring.profiles.active` | `${SPRING_PROFILES_ACTIVE:dev}` |
 | **Multipart** | `spring.servlet.multipart.max-file-size` | `5MB` |
 | | `spring.servlet.multipart.max-request-size` | `5MB` |
 | **Redis** | `spring.data.redis.host` | `${REDIS_HOST:localhost}` |
 | | `spring.data.redis.port` | `${REDIS_PORT:6379}` |
-| | `spring.data.redis.password` | `${REDIS_PASSWORD:}` — ★ MỚI: hỗ trợ Redis có password |
+| | `spring.data.redis.password` | `${REDIS_PASSWORD:}` |
 | **Database** | `spring.datasource.url` | `${DB_URL}` |
 | | `spring.datasource.driver-class-name` | `org.postgresql.Driver` |
 | | `spring.datasource.hikari.maximum-pool-size` | `10` |
@@ -250,13 +187,12 @@ jobs:
 | **JPA** | `spring.jpa.database` | `postgresql` |
 | | `spring.jpa.open-in-view` | `false` |
 | | `spring.jpa.hibernate.ddl-auto` | `validate` — Flyway là nguồn sự thật duy nhất |
-| | `spring.jpa.properties.hibernate.format_sql` | `true` |
 | **Flyway** | `spring.flyway.enabled` | `true` |
 | | `spring.flyway.locations` | `classpath:db/migration` |
 | | `spring.flyway.baseline-on-migrate` | `true` |
-| | `spring.flyway.create-schemas` | `false` — ★ MỚI |
-| **Server** | `server.port` | `${PORT:8085}` — ★ Dynamic cho Render |
-| **CORS** | `app.cors.allowed-origins` | `${CORS_ALLOWED_ORIGINS:http://localhost:8085}` — ★ MỚI |
+| | `spring.flyway.create-schemas` | `false` |
+| **Server** | `server.port` | `${PORT:8085}` — Dynamic cho Render |
+| **CORS** | `app.cors.allowed-origins` | `${CORS_ALLOWED_ORIGINS:http://localhost:8085}` |
 | **JWT** | `app.jwt.secret-key` | `${JWT_SECRET_KEY}` |
 | | `app.jwt.expiration` | `3600000` (1 giờ, ms) |
 | | `app.jwt.refresh-expiration-days` | `7` (7 ngày) |
@@ -265,8 +201,8 @@ jobs:
 | | `app.minio.access-key` | `${MIN_IO_ACCESS_KEY}` |
 | | `app.minio.secret-key` | `${MIN_IO_SECRET_KEY}` |
 | | `app.minio.bucket` | `${MIN_IO_BUCKET}` |
-| **Brevo Mail** | `app.mail.brevo.api-key` | `${BREVO_API_KEY:}` — ★ MỚI |
-| | `app.mail.brevo.sender-email` | `${BREVO_SENDER_EMAIL:}` — ★ MỚI |
+| **Brevo Mail** | `app.mail.brevo.api-key` | `${BREVO_API_KEY:}` |
+| | `app.mail.brevo.sender-email` | `${BREVO_SENDER_EMAIL:}` |
 | **VNPay** | `vnpay.pay-url` | `${VNPAY_PAY_URL:sandbox URL}` |
 | | `vnpay.tmn-code` | `${VNPAY_TMN_CODE}` |
 | | `vnpay.secret-key` | `${VNPAY_SECRET_KEY}` |
@@ -274,39 +210,8 @@ jobs:
 | | `vnpay.ipn-url` | `${VNPAY_IPN_URL}` |
 | **Swagger** | `springdoc.api-docs.path` | `/v1/api-docs` |
 | | `springdoc.swagger-ui.path` | `/swagger-ui.html` |
-| | `springdoc.swagger-ui.tags-sorter` | `alpha` — ★ MỚI |
-| | `springdoc.swagger-ui.operations-sorter` | `alpha` — ★ MỚI |
-
-### 4.2. Profile-specific files (2 Profiles — ★ THAY ĐỔI)
-
-| File | Nội dung | Ghi chú |
-|---|---|---|
-| `application-dev.yaml` | `show-sql: true`, SMTP Mail config (Gmail), Flyway `repair-on-migrate`, Logging DEBUG | Mail config chỉ ở dev |
-| `application-prod.yaml` | `show-sql: false`, Logging INFO/WARN only | Tối giản cho production |
-| ~~`application-test.yaml`~~ | — | **ĐÃ XOÁ** |
-
-**application-dev.yaml chi tiết:**
-- `spring.jpa.show-sql: true`
-- `spring.flyway.repair-on-migrate: true`
-- `spring.mail.*` — SMTP Gmail config (host, port, username, password, starttls)
-- `logging.level`: `org.springframework.web: DEBUG`, `org.hibernate.SQL: DEBUG`, `org.hibernate.type: TRACE`
-
-**application-prod.yaml chi tiết:**
-- `spring.jpa.show-sql: false`
-- `logging.level`: `root: INFO`, `org.hibernate.SQL: WARN`
-
-### 4.3. Configuration Beans (8 Beans — ★ TĂNG TỪ 7)
-
-| Bean Class | Annotation | Vai trò |
-|---|---|---|
-| `SecurityConfig` | `@Configuration @EnableWebSecurity @EnableMethodSecurity` | Filter chain, CORS (externalized), BCrypt, AuthenticationManager |
-| `OpenApiConfig` | `@Configuration` | Swagger/OpenAPI + Bearer Auth scheme |
-| `VNPayConfig` | `@Configuration @ConfigurationProperties(prefix="vnpay")` | VNPay settings + helper methods |
-| `MinioConfig` | `@Configuration` | Tạo `MinioClient` bean từ endpoint/access-key/secret-key |
-| `AsyncConfig` | `@Configuration @EnableAsync` | Cấu hình `ThreadPoolTaskExecutor` (`emailTaskExecutor` core=3, max=10, queue=50) |
-| `RedisCacheConfig` | `@Configuration @EnableCaching` | Khởi tạo `RedisCacheManager` với TTL riêng (products/categories: 30m, analytics: 5m) |
-| `WebConfig` | `@Configuration` | Đăng ký `CustomPageableArgumentResolver` tự động parse tham số phân trang |
-| **`FlywayConfig`** | **`@Configuration`** | **★ MỚI** — `FlywayMigrationStrategy` gọi `repair()` trước `migrate()` để đồng bộ checksum sau khi hợp nhất migrations |
+| | `springdoc.swagger-ui.tags-sorter` | `alpha` |
+| | `springdoc.swagger-ui.operations-sorter` | `alpha` |
 
 ---
 
@@ -315,22 +220,16 @@ jobs:
 ```
 mini-ecommerce/
 ├── pom.xml                                        # Maven build config (+ PMD plugin 3.26.0)
-├── pmd-ruleset.xml                                # ★ MỚI — Custom PMD rules (unused code, empty catch)
+├── pmd-ruleset.xml                                # Custom PMD static analysis rules
 ├── mvnw / mvnw.cmd                                # Maven wrapper
 ├── Dockerfile                                     # Multi-stage build (JDK-alpine → JRE-alpine)
 ├── docker-compose.yml                             # 4 services: db + app + redis + minio
 ├── .env                                           # ⚠️ KHÔNG commit — secrets Development
-├── .env.production                                # ★ MỚI — ⚠️ KHÔNG commit — secrets Production (Render)
+├── .env.production                                # ⚠️ KHÔNG commit — secrets Production (Render)
 ├── .env.example                                   # Template cho developer mới (local & production)
-├── .dockerignore                                  # Ignore target, .git, .idea, .env
-├── .gitignore                                     # Ignore .env, application.yaml, IDE
-├── .gitattributes                                 # Git line-ending config
-├── README.md                                      # Project readme
-├── HELP.md                                        # Spring Boot generated help
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                                 # ★ NÂNG CẤP — PMD → Test → Build
-├── .mvn/                                          # Maven wrapper files
+│       └── ci.yml                                 # PMD → Test → Build CI Pipeline
 ├── src/
 │   ├── main/
 │   │   ├── java/com/devfat/mini_ecommerce/
@@ -340,53 +239,59 @@ mini-ecommerce/
 │   │   │   │   ├── ApiResponse.java               # Generic API response <T> + success/error factories
 │   │   │   │   └── PageResponse.java              # Standardized pagination response
 │   │   │   │
-│   │   │   ├── config/                            # Spring Configuration beans (9 files — ★ TĂNG TỪ 8)
-│   │   │   │   ├── SecurityConfig.java            # Security filter chain, CORS externalized, BCrypt, AuthManager
-│   │   │   │   ├── OpenApiConfig.java             # Swagger/OpenAPI + Bearer Auth scheme
+│   │   │   ├── config/                            # Spring Configuration beans (9 files)
+│   │   │   │   ├── SecurityConfig.java            # Filter chain, CORS externalized, BCrypt, AuthManager
+│   │   │   │   ├── OpenApiConfig.java             # Swagger UI + Bearer Auth scheme
 │   │   │   │   ├── VNPayConfig.java               # @ConfigurationProperties(prefix="vnpay")
-│   │   │   │   ├── VNPayUtil.java                 # HMAC-SHA512, buildQueryAndHash, verifySignature
+│   │   │   │   ├── VNPayUtil.java                 # HMAC-SHA512 checksum & query string generator
 │   │   │   │   ├── MinioConfig.java               # MinioClient bean
 │   │   │   │   ├── AsyncConfig.java               # @EnableAsync + emailTaskExecutor ThreadPool
 │   │   │   │   ├── RedisCacheConfig.java          # @EnableCaching + RedisCacheManager custom TTLs
-│   │   │   │   ├── WebConfig.java                 # Register CustomPageableArgumentResolver
-│   │   │   │   └── FlywayConfig.java              # ★ MỚI — FlywayMigrationStrategy: repair() → migrate()
+│   │   │   │   ├── WebConfig.java                 # CustomPageableArgumentResolver registration
+│   │   │   │   └── FlywayConfig.java              # FlywayMigrationStrategy: repair() → migrate()
 │   │   │   │
-│   │   │   ├── controller/                        # REST Controllers (8 files)
-│   │   │   │   ├── AuthController.java            # /api/v1/auth/** (4 endpoints)
+│   │   │   ├── controller/                        # REST Controllers (8 controllers — 39 Endpoints)
+│   │   │   │   ├── AuthController.java            # /api/v1/auth/** (8 endpoints) — Auth & OTP Flow
 │   │   │   │   ├── CategoryController.java        # /api/v1/categories/** (5 endpoints) — Trả PageResponse
 │   │   │   │   ├── ProductController.java         # /api/v1/products/** (11 endpoints) — Trả PageResponse
 │   │   │   │   ├── OrderController.java           # /api/v1/orders/** (4 endpoints)
 │   │   │   │   ├── UserController.java            # /api/v1/users/** (6 endpoints) — Trả PageResponse
 │   │   │   │   ├── PaymentController.java         # /api/v1/payments/** (3 endpoints)
 │   │   │   │   ├── PingController.java            # /api/v1/health (1 endpoint)
-│   │   │   │   └── TestUploadController.java      # /api/v1/test/upload (test MinIO)
+│   │   │   │   └── TestUploadController.java      # /api/v1/test/upload (1 endpoint test MinIO)
 │   │   │   │
-│   │   │   ├── docs/                              # Tài liệu dự án (6 files — ★ TĂNG TỪ 4)
-│   │   │   │   ├── PROJECT_OVERVIEW.md            # ★ TÀI LIỆU NÀY (V6)
+│   │   │   ├── docs/                              # Tài liệu dự án (7 files)
+│   │   │   │   ├── PROJECT_OVERVIEW.md            # ★ TÀI LIỆU NÀY (V7)
 │   │   │   │   ├── plan_tong_hop.md               # Kế hoạch tổng hợp các phase
 │   │   │   │   ├── plan_uu_tien_hoc_tap.md        # Roadmap học tập ưu tiên
 │   │   │   │   ├── auth_security_jwt_plan.md      # Plan JWT chi tiết
-│   │   │   │   ├── deploy_render_plan.md          # ★ MỚI — Kế hoạch deploy lên Render
-│   │   │   │   └── docker-commands-cheatsheet.md  # ★ MỚI — Tham khảo Docker CLI
+│   │   │   │   ├── account_verification_otp_plan.md # Plan OTP Verification chi tiết
+│   │   │   │   ├── deploy_render_plan.md          # Kế hoạch deploy lên Render
+│   │   │   │   └── docker-commands-cheatsheet.md  # Tham khảo Docker CLI
 │   │   │   │
 │   │   │   ├── dto/
-│   │   │   │   ├── request/                       # 13 request DTOs
+│   │   │   │   ├── request/                       # 17 Request DTOs (Records / Classes)
 │   │   │   │   │   ├── BasePageRequest.java       # Base class cho pagination params
-│   │   │   │   │   ├── RegisterRequestDto.java    # (record) Đăng ký user
-│   │   │   │   │   ├── LoginRequestDto.java       # (record) Đăng nhập
-│   │   │   │   │   ├── RefreshTokenRequestDto.java # (record) Refresh token
-│   │   │   │   │   ├── CreateProductRequestDto.java # (record) Tạo sản phẩm
-│   │   │   │   │   ├── UpdateProductRequestDto.java # (record) Cập nhật sản phẩm
-│   │   │   │   │   ├── CreateCategoryRequestDto.java # (record) Tạo danh mục
-│   │   │   │   │   ├── CreateOrderRequestDto.java  # (record) Tạo đơn hàng
-│   │   │   │   │   ├── OrderItemRequestDto.java    # (record) Item trong đơn hàng
-│   │   │   │   │   ├── UpdateOrderStatusRequestDto.java # (record) Cập nhật status đơn
-│   │   │   │   │   ├── ChangePasswordRequestDto.java # (record) Đổi mật khẩu
-│   │   │   │   │   ├── UpdateProfileRequestDto.java # (record) Cập nhật profile
-│   │   │   │   │   └── EmailRequestDto.java       # Request DTO cho gửi Email
+│   │   │   │   │   ├── RegisterRequestDto.java    # Đăng ký user
+│   │   │   │   │   ├── LoginRequestDto.java       # Đăng nhập
+│   │   │   │   │   ├── VerifyOtpRequestDto.java   # ★ MỚI — Xác thực OTP (email, otpCode, purpose)
+│   │   │   │   │   ├── ForgotPasswordRequestDto.java # ★ MỚI — Yêu cầu OTP quên mật khẩu
+│   │   │   │   │   ├── ResendOtpRequestDto.java   # ★ MỚI — Gửi lại OTP
+│   │   │   │   │   ├── RefreshTokenRequestDto.java # Refresh token
+│   │   │   │   │   ├── CreateProductRequestDto.java # Tạo sản phẩm
+│   │   │   │   │   ├── UpdateProductRequestDto.java # Cập nhật sản phẩm
+│   │   │   │   │   ├── CreateCategoryRequestDto.java # Tạo danh mục
+│   │   │   │   │   ├── CreateOrderRequestDto.java  # Tạo đơn hàng
+│   │   │   │   │   ├── OrderItemRequestDto.java    # Item trong đơn hàng
+│   │   │   │   │   ├── UpdateOrderStatusRequestDto.java # Cập nhật status đơn
+│   │   │   │   │   ├── ChangePasswordRequestDto.java # Đổi mật khẩu
+│   │   │   │   │   ├── UpdateProfileRequestDto.java # Cập nhật profile
+│   │   │   │   │   └── EmailRequestDto.java       # DTO truyền dữ liệu gửi Email
 │   │   │   │   │
-│   │   │   │   └── response/                      # 8 response DTOs
-│   │   │   │       ├── AuthResponseDto.java       # Login response
+│   │   │   │   └── response/                      # 10 Response DTOs
+│   │   │   │       ├── AuthResponseDto.java       # Login/Verify OTP response (tokens + type)
+│   │   │   │       ├── VerifyOtpResponseDto.java  # ★ MỚI — Return accessToken/refreshToken hoặc actionToken
+│   │   │   │       ├── ResendOtpResponseDto.java  # ★ MỚI — Return message confirmation
 │   │   │   │       ├── UserResponseDto.java       # User info (+ avatarUrl)
 │   │   │   │       ├── CategoryResponseDto.java   # Category info
 │   │   │   │       ├── ProductResponseDto.java    # Product info (+ imageUrl, active)
@@ -395,8 +300,9 @@ mini-ecommerce/
 │   │   │   │       ├── RefreshTokenResponseDto.java # Refresh response
 │   │   │   │       └── CreatePaymentResponseDto.java # Payment URL
 │   │   │   │
-│   │   │   ├── entity/                            # JPA Entities (7 entities)
-│   │   │   │   ├── UserEntity.java
+│   │   │   ├── entity/                            # JPA Entities (8 entities — ★ TĂNG TỪ 7)
+│   │   │   │   ├── UserEntity.java                # User (+ emailVerified, isActive)
+│   │   │   │   ├── OtpVerificationEntity.java     # ★ MỚI — Lưu OTP hashed, attempts, expiresAt
 │   │   │   │   ├── CategoryEntity.java
 │   │   │   │   ├── ProductEntity.java             # @Version (Optimistic Lock)
 │   │   │   │   ├── OrderEntity.java               # @Version (Optimistic Lock)
@@ -404,10 +310,20 @@ mini-ecommerce/
 │   │   │   │   ├── RefreshTokenEntity.java
 │   │   │   │   └── PaymentEntity.java
 │   │   │   │
-│   │   │   ├── enums/                             # (RỖNG) — Enums inline trong Entity
+│   │   │   ├── enums/                             # Enums độc lập (3 Enums — ★ REFACTORED)
+│   │   │   │   ├── Role.java                      # USER, ADMIN
+│   │   │   │   ├── OrderStatus.java               # PENDING, CONFIRMED, SHIPPED, DONE, CANCELLED
+│   │   │   │   └── OtpPurpose.java                # REGISTER_VERIFICATION, RESET_PASSWORD, CHANGE_PASSWORD_CONFIRMATION
 │   │   │   │
-│   │   │   ├── exception/                         # 7 custom exceptions + 1 Global handler
-│   │   │   │   ├── GlobalExceptionHandler.java    # @RestControllerAdvice (15 handlers)
+│   │   │   ├── exception/                         # 14 Custom Exceptions + 1 Global Handler (22 Handlers)
+│   │   │   │   ├── GlobalExceptionHandler.java    # @RestControllerAdvice
+│   │   │   │   ├── AccountNotVerifiedException.java # ★ MỚI — 401 Unauthorized
+│   │   │   │   ├── OtpInvalidException.java       # ★ MỚI — 400 Bad Request
+│   │   │   │   ├── OtpExpiredException.java       # ★ MỚI — 400 Bad Request
+│   │   │   │   ├── OtpAttemptsExceededException.java # ★ MỚI — 409 Conflict
+│   │   │   │   ├── ResendCooldownException.java   # ★ MỚI — 409 Conflict
+│   │   │   │   ├── OtpNotFoundException.java      # ★ MỚI — 404 Not Found
+│   │   │   │   ├── InvalidActionTokenException.java # ★ MỚI — 400 Bad Request
 │   │   │   │   ├── BadRequestException.java       # 400
 │   │   │   │   ├── ResourceNotFoundException.java # 404
 │   │   │   │   ├── DuplicateResourceException.java # 409
@@ -416,15 +332,20 @@ mini-ecommerce/
 │   │   │   │   ├── CategoryHasProductsException.java # 409
 │   │   │   │   └── InvalidRefreshTokenException.java # 401
 │   │   │   │
-│   │   │   ├── repository/                        # 6 repositories
+│   │   │   ├── repository/                        # 7 Repositories (★ TĂNG TỪ 6)
 │   │   │   │   ├── UserRepository.java
+│   │   │   │   ├── OtpVerificationRepository.java # ★ MỚI — Data access cho OTP & Cleanup
 │   │   │   │   ├── CategoryRepository.java
 │   │   │   │   ├── ProductRepository.java         # JPQL + Projections
 │   │   │   │   ├── OrderRepository.java
 │   │   │   │   ├── RefreshTokenRepository.java
 │   │   │   │   └── PaymentRepository.java
 │   │   │   │
-│   │   │   ├── security/                          # JWT Security module (7 files)
+│   │   │   ├── scheduler/                         # Background Schedulers (2 Schedulers — ★ TĂNG TỪ 1)
+│   │   │   │   ├── OtpCleanupScheduler.java       # ★ MỚI — Quét & xoá OTP hết hạn hàng giờ
+│   │   │   │   └── (PaymentExpiredInPaymentServiceImpl) # Quét payment hết hạn mỗi 2 phút
+│   │   │   │
+│   │   │   ├── security/                          # Security module (7 files)
 │   │   │   │   ├── JwtProvider.java
 │   │   │   │   ├── JwtAuthenticationFilter.java
 │   │   │   │   ├── JwtAuthenticationEntryPoint.java
@@ -433,8 +354,9 @@ mini-ecommerce/
 │   │   │   │   ├── UserPrincipal.java
 │   │   │   │   └── RefreshTokenGenerator.java
 │   │   │   │
-│   │   │   ├── service/                           # Service interfaces (8 files) + impl/ (8 files)
-│   │   │   │   ├── AuthService.java / AuthServiceImpl.java
+│   │   │   ├── service/                           # Service Interfaces (9 files) + Impl (9 files)
+│   │   │   │   ├── AuthService.java / AuthServiceImpl.java — Multi-step OTP Auth
+│   │   │   │   ├── OtpService.java / OtpServiceImpl.java — ★ MỚI: OTP generation, hash, verify, cooldown
 │   │   │   │   ├── CategoryService.java / CategoryServiceImpl.java — CacheEvict
 │   │   │   │   ├── ProductService.java / ProductServiceImpl.java — Cacheable & CacheEvict
 │   │   │   │   ├── OrderService.java / OrderServiceImpl.java — Auto restore stock + Async Email
@@ -443,453 +365,249 @@ mini-ecommerce/
 │   │   │   │   ├── StorageService.java / StorageServiceImpl.java — MinIO + Thumbnailator
 │   │   │   │   └── EmailService.java / EmailServiceImpl.java — @Async Email via MailTransport
 │   │   │   │
-│   │   │   └── util/                              # Utility classes (5 files — ★ THAY ĐỔI TỪ 3)
-│   │   │       ├── FileValidationUtil.java        # Magic bytes validation
-│   │   │       ├── MailTransport.java             # ★ MỚI: Interface (Strategy Pattern) cho email transport
-│   │   │       ├── SmtpMailTransport.java          # ★ MỚI: @Profile("dev") — JavaMailSender/SMTP
-│   │   │       ├── BrevoMailTransport.java         # ★ MỚI: @Profile("prod") — Brevo REST API
-│   │   │       └── CustomPageableArgumentResolver.java # Pageable Argument Resolver
+│   │   │   └── util/                              # Utility classes (6 files)
+│   │   │       ├── EmailTemplateHelper.java       # ★ MỚI: HTML Email Generator với branding Hải Sản
+│   │   │       ├── MailTransport.java             # Interface Strategy Pattern cho email transport
+│   │   │       ├── SmtpMailTransport.java          # @Profile("dev") — JavaMailSender/SMTP
+│   │   │       ├── BrevoMailTransport.java         # @Profile("prod") — Brevo REST API
+│   │   │       ├── FileValidationUtil.java        # Magic bytes header validation
+│   │   │       └── CustomPageableArgumentResolver.java # Custom Pageable Argument Resolver
 │   │   │
 │   │   └── resources/
-│   │       ├── application.yaml                   # Config chính (gitignored)
-│   │       ├── application-dev.yaml               # Dev: SMTP mail, debug logging
-│   │       ├── application-prod.yaml              # Prod: tắt SQL log, logging INFO
-│   │       ├── db/migration/                      # ★ HỢP NHẤT — Chỉ còn 2 files
-│   │       │   ├── V1__init_mini_shop.sql         # Schema hợp nhất (gộp V1→V7 cũ)
-│   │       │   └── V2__seed_seafood_categories_and_products.sql # Data seed 9 categories & 36 hải sản
-│   │       ├── templates/
-│   │       │   └── email/
-│   │       │       └── SendEmailTemplate.html    # HTML Email Template
-│   │       └── static/                            # (RỖNG)
-│   │
-│   └── test/java/                                 # (Chưa có test code)
+│   │       ├── application.yaml                   # Shared config
+│   │       ├── application-dev.yaml               # Dev profile: SMTP mail, debug log
+│   │       ├── application-prod.yaml              # Prod profile: Brevo mail, SQL log OFF
+│   │       ├── db/migration/                      # 3 Migrations
+│   │       │   ├── V1__init_mini_shop.sql         # Core Schema hợp nhất (7 bảng)
+│   │       │   ├── V2__seed_seafood_categories_and_products.sql # 9 categories & 36 hải sản seed data
+│   │       │   └── V3__add_otp_verifications_table.sql # ★ MỚI — Schema cho OTP Verification
+│   │       └── templates/
+│   │           └── email/
+│   │               └── SendEmailTemplate.html    # HTML Email Template gửi mã OTP & Đơn hàng
 ```
 
 ---
 
 ## 6. Database Schema & Migrations
 
-### 6.1. Lịch sử Flyway Migrations (2 migrations — ★ HỢP NHẤT TỪ 8)
+### 6.1. Lịch sử Flyway Migrations (3 migrations — ★ TĂNG TỪ 2)
 
 | File | Nội dung |
 |---|---|
-| `V1__init_mini_shop.sql` | **★ HỢP NHẤT** — Gộp toàn bộ V1→V7 cũ thành 1 file duy nhất: Tạo 7 bảng core (`users`, `categories`, `products`, `orders`, `order_items`, `refresh_tokens`, `payments`) + 9 indexes. Tất cả `id`/FK đều là `BIGINT`, có `version` cho Optimistic Lock (products, orders), có `image_url`/`avatar_url`. |
-| `V2__seed_seafood_categories_and_products.sql` | **★ ĐỔI TÊN** (V8 cũ) — Seed dữ liệu 9 danh mục hải sản & 36 sản phẩm mẫu kèm mô tả, giá thực tế, stock và version. Dùng `ON CONFLICT DO NOTHING` cho categories và `WHERE NOT EXISTS` cho products (tránh duplicate khi restart). |
+| `V1__init_mini_shop.sql` | **Core Schema hợp nhất** — Tạo 7 bảng core (`users`, `categories`, `products`, `orders`, `order_items`, `refresh_tokens`, `payments`) + 9 indexes. Tất cả PK/FK là `BIGINT`, có `version` cho Optimistic Lock. |
+| `V2__seed_seafood_categories_and_products.sql` | **Data Seed Hải Sản** — Seed 9 danh mục hải sản & 36 sản phẩm thực tế kèm giá, stock, mô tả chi tiết. |
+| **`V3__add_otp_verifications_table.sql`** | **★ MỚI** — Thêm cột `email_verified` (BOOLEAN DEFAULT FALSE) vào `users` + Tạo bảng `otp_verifications` và index `idx_otp_user_purpose`. |
 
-> **Lý do hợp nhất:** Database production trên Render là fresh — không có migration history cũ. Hợp nhất giúp khởi tạo nhanh, sạch và dễ bảo trì. `FlywayConfig` bean thực hiện `repair()` trước `migrate()` để đồng bộ checksum.
-
-### 6.2. Schema tổng quan (7 bảng)
+### 6.2. Schema tổng quan (8 bảng)
 
 ```
-users ─────────┐
-               ├── orders ──── order_items ──── products ──── categories
-               └── refresh_tokens
-                    payments ──── orders
+users ───────────┬───────── orders ──── order_items ──── products ──── categories
+                 ├───────── refresh_tokens
+                 ├───────── otp_verifications (★ MỚI)
+                 └───────── payments ──── orders
 ```
 
-| Bảng | PK | Quan hệ |
-|---|---|---|
-| `users` | BIGSERIAL | 1:N → orders, 1:N → refresh_tokens |
-| `categories` | BIGSERIAL | 1:N → products |
-| `products` | BIGSERIAL | N:1 → categories, 1:N → order_items |
-| `orders` | BIGSERIAL | N:1 → users, 1:N → order_items, 1:N → payments |
-| `order_items` | BIGSERIAL | N:1 → orders, N:1 → products |
-| `refresh_tokens` | BIGSERIAL | N:1 → users |
-| `payments` | BIGSERIAL | N:1 → orders |
+#### Chi tiết bảng `otp_verifications` (★ MỚI)
+
+```sql
+CREATE TABLE otp_verifications (
+    id           BIGSERIAL PRIMARY KEY,
+    user_id      BIGINT NOT NULL REFERENCES users(id),
+    otp_hash     VARCHAR(255) NOT NULL,
+    purpose      VARCHAR(150) NOT NULL CHECK (purpose IN ('REGISTER_VERIFICATION', 'RESET_PASSWORD', 'CHANGE_PASSWORD_CONFIRMATION')),
+    expires_at   TIMESTAMP NOT NULL,
+    attempts     INTEGER NOT NULL DEFAULT 0,
+    consumed     BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
+```
 
 ---
 
 ## 7. Entity Layer — Chi tiết từng Entity
 
-> **Quy ước chung:** Tất cả entities dùng `@Data @NoArgsConstructor @AllArgsConstructor @Builder @DynamicUpdate @DynamicInsert`. Timestamps dùng `@CreationTimestamp` và `@UpdateTimestamp`.
-
-### 7.1. UserEntity (`users`)
+### 7.1. UserEntity (`users`) — ★ CẬP NHẬT
 
 | Field | Type | JPA Annotation | Ghi chú |
 |---|---|---|---|
 | `id` | `Long` | `@Id @GeneratedValue(IDENTITY)` | PK |
 | `fullName` | `String` | `@Column(name="full_name", length=100)` | |
 | `email` | `String` | `@Column(unique=true, length=150)` | Username đăng nhập |
-| `avatarUrl` | `String` | `@Column(name="avatar_url", length=500)` | URL avatar (MinIO) |
+| `avatarUrl` | `String` | `@Column(name="avatar_url", length=500)` | URL avatar |
 | `phoneNumber` | `String` | `@Column(name="phone_number", unique=true, length=15)` | |
 | `password` | `String` | `@Column(nullable=false)` | BCrypt hash |
-| `role` | `UserEnum` enum | `@Enumerated(STRING)` | Inline enum: `USER`, `ADMIN` |
-| `isActive` | `boolean` | `@Column(name="is_active")` | Soft disable account |
-| `createdAt` | `LocalDateTime` | `@CreationTimestamp` | |
-| `updatedAt` | `LocalDateTime` | `@UpdateTimestamp` | |
+| `role` | `Role` enum | `@Enumerated(STRING)` | Enum package: `USER`, `ADMIN` |
+| `isActive` | `boolean` | `@Column(name="is_active")` | Trạng thái hoạt động account (mặc định `false` khi mới đăng ký) |
+| **`emailVerified`** | `boolean` | `@Column(name="email_verified")` | **★ MỚI** — Trạng thái đã xác thực email qua OTP |
+| `createdAt` / `updatedAt` | `LocalDateTime` | `@CreationTimestamp` / `@UpdateTimestamp` | |
 
-### 7.2. CategoryEntity (`categories`)
+### 7.2. OtpVerificationEntity (`otp_verifications`) — ★ MỚI
 
-| Field | Type | Ghi chú |
+| Field | Type | JPA Annotation / Ghi chú |
 |---|---|---|
-| `id` | `Long` | PK |
-| `name` | `String` | UNIQUE, length=50 |
-| `products` | `List<ProductEntity>` | `@OneToMany(LAZY, mappedBy="category")` |
-| `createdAt` | `LocalDateTime` | |
-
-### 7.3. ProductEntity (`products`) — Optimistic Lock + Image
-
-| Field | Type | Ghi chú |
-|---|---|---|
-| `id` | `Long` | PK |
-| `name` | `String` | NOT NULL |
-| `imageUrl` | `String` | `@Column(name="image_url", length=500)` — URL ảnh (MinIO) |
-| `description` | `String` | `@Column(columnDefinition="TEXT")` |
-| `price` | `BigDecimal` | precision=12, scale=2 |
-| `stock` | `Integer` | `@Builder.Default = 0` |
-| `category` | `CategoryEntity` | `@ManyToOne(LAZY)`, FK: `category_id` |
-| `isActive` | `boolean` | `@Builder.Default = true` |
-| `orderItems` | `List<OrderItemEntity>` | `@OneToMany(mappedBy="product")` |
-| `createdAt` / `updatedAt` | `LocalDateTime` | |
-| `version` | `Integer` | `@Version` — Optimistic Locking |
-
-### 7.4. OrderEntity (`orders`) — Optimistic Lock
-
-| Field | Type | Ghi chú |
-|---|---|---|
-| `id` | `Long` | PK |
-| `user` | `UserEntity` | `@ManyToOne(LAZY)` |
-| `status` | `OrderStatus` enum | Inline: `DONE, PENDING, SHIPPED, CONFIRMED, CANCELLED` |
-| `totalAmount` | `BigDecimal` | Default `BigDecimal.ZERO` |
-| `note` | `String` | `@Column(columnDefinition="TEXT")` |
-| `items` | `List<OrderItemEntity>` | `@OneToMany(cascade=ALL, orphanRemoval=true)` |
-| `createdAt` / `updatedAt` | `LocalDateTime` | |
-| `version` | `Integer` | `@Version` |
-
-### 7.5. PaymentEntity (`payments`)
-
-| Field | Type | Ghi chú |
-|---|---|---|
-| `id` | `Long` | PK |
-| `amount` | `BigDecimal` | precision=12, scale=2 |
-| `paymentProvider` | `PaymentProvider` enum | `VNPAY, MOMO, ZALOPAY, ACB, VCB` |
-| `paymentStatus` | `PaymentStatus` enum | `PENDING, SUCCESS, FAILED, EXPIRED` |
-| `paymentMethod` | `PaymentMethod` enum | `CASH, BANK, WALLET` |
-| `providerTransactionId` | `String` | UNIQUE, max 100 |
-| `order` | `OrderEntity` | `@ManyToOne(LAZY)` |
-| `paidAt` | `LocalDateTime` | |
-| `createdAt` / `updatedAt` | `LocalDateTime` | |
+| `id` | `Long` | `@Id @GeneratedValue(IDENTITY)` |
+| `user` | `UserEntity` | `@ManyToOne(LAZY)`, FK: `user_id` |
+| `otpHash` | `String` | `@Column(name="otp_hash", nullable=false)` — BCrypt Hash mã OTP 6 chữ số |
+| `purpose` | `OtpPurpose` enum | `@Enumerated(STRING)` — `REGISTER_VERIFICATION`, `RESET_PASSWORD`, `CHANGE_PASSWORD_CONFIRMATION` |
+| `expiresAt` | `LocalDateTime` | Thới gian hết hạn (mặc định 5 phút) |
+| `attempts` | `int` | Số lần nhập sai (max 5 lần) |
+| `consumed` | `boolean` | Mã đã được sử dụng hay chưa |
+| `createdAt` | `LocalDateTime` | Thời điểm tạo OTP |
 
 ---
 
 ## 8. Repository Layer — Data Access
 
-### 8.1. UserRepository
+### 8.5. OtpVerificationRepository (★ MỚI)
 
 | Method | Mô tả |
 |---|---|
-| `findByEmail(String)` | Tìm user bằng email |
-| `findByPhoneNumber(String)` | Tìm user bằng SĐT |
-
-### 8.2. CategoryRepository
-
-| Method | Mô tả |
-|---|---|
-| `findByNameContainingIgnoreCase(String, Pageable)` | Search + phân trang |
-| `existsByNameIgnoreCase(String)` | Check tên đã tồn tại |
-
-### 8.3. ProductRepository
-
-| Method | Mô tả |
-|---|---|
-| `findByStockGreaterThan(int)` | Lấy sản phẩm còn hàng |
-| `findByCategoryIdAndStockGreaterThan(Long, int)` | Lấy sản phẩm theo category còn hàng |
-| `findAvailableWithCategory()` | `JOIN FETCH p.category WHERE p.stock > 0` |
-| `findByMinPriceWithCategory(BigDecimal)` | `JOIN FETCH p.category WHERE p.price >= :minPrice` |
-| `findByStockGreaterThan(int, Pageable)` | Sản phẩm còn hàng có phân trang |
-| `findByNameContainsIgnoreCase(String, Pageable)` | **JOIN FETCH + isActive=true + LIKE search** — có countQuery riêng |
-
-**Projections:** `TopProductView`, `CategoryRevenueView`, `MonthlyRevenueView`.
-
-### 8.4. OrderRepository
-
-| Method | Mô tả |
-|---|---|
-| `findAllByUserId(Long)` | Lấy orders theo userId |
-| `findByUserId(Long)` | Lấy order đầu tiên theo userId |
-| `findAllByStatus(OrderStatus)` | Lấy orders theo status |
-| `findAllByUserIdAndStatus(Long, OrderStatus)` | JPQL JOIN FETCH user, lọc userId + status |
-| `findByUserIdWithDetails(Long)` | JPQL JOIN FETCH user + LEFT JOIN FETCH items |
+| `findTopByUserIdAndPurposeAndConsumedFalseOrderByCreatedAtDesc(Long, OtpPurpose)` | Tìm bản ghi OTP mới nhất chưa sử dụng của User theo mục đích |
+| `deleteByExpiresAtBeforeOrConsumedTrue(LocalDateTime)` | Xoá tất cả OTP đã hết hạn hoặc đã được sử dụng (dùng bởi Scheduler) |
 
 ---
 
 ## 9. DTO Layer — Request & Response
 
-### 9.1. Request DTOs (13 DTOs)
+### 9.1. Request DTOs Mới Cho Auth & OTP Flow (★ MỚI)
 
-| DTO | Type | Fields | Validation / Ghi chú |
-|---|---|---|---|
-| **BasePageRequest** | Class | `page, size, sortBy, direction` | Base class cho pagination params |
-| **RegisterRequestDto** | Record | `fullName, email, phoneNumber, password` | `@NotNull @NotBlank @Email @Size @Pattern` |
-| **LoginRequestDto** | Record | `email, password` | `@NotNull @NotBlank @Email @Size` |
-| **RefreshTokenRequestDto** | Record | `refreshToken` | `@NotNull @NotBlank` |
-| **CreateProductRequestDto** | Record | `name, description, price, stock, categoryId, isActive` | `@NotNull @NotBlank @DecimalMin @Min(1)` |
-| **UpdateProductRequestDto** | Record | `name, description, price, stock, isActive, categoryId` | Partial update (nullable) |
-| **CreateCategoryRequestDto** | Record | `name` | `@NotNull @NotBlank` |
-| **CreateOrderRequestDto** | Record | `items: List<OrderItemRequestDto>` | `@NotEmpty @Valid` |
-| **OrderItemRequestDto** | Record | `productId, quantity` | `@NotNull, @Min(1)` |
-| **UpdateOrderStatusRequestDto** | Record | `orderStatus` | `@NotNull` |
-| **ChangePasswordRequestDto** | Record | `oldPassword, newPassword` | `@NotNull @NotBlank @Size(8-100)` |
-| **UpdateProfileRequestDto** | Record | `fullName, phoneNumber` | `@NotBlank @Pattern(10-11 digits)` |
-| **EmailRequestDto** | **Class** | `to, subject, messageBody, attachmentPath` | DTO truyền dữ liệu gửi Email |
+- **`VerifyOtpRequestDto` (Record)**: `@NotBlank @Email String email`, `@NotBlank @Pattern(regexp = "\\d{6}") String otpCode`, `@NotNull OtpPurpose purpose`.
+- **`ForgotPasswordRequestDto` (Record)**: `@NotBlank @Email String email`.
+- **`ResendOtpRequestDto` (Record)**: `@NotBlank @Email String email`, `@NotNull OtpPurpose purpose`.
 
-### 9.2. Response DTOs
+### 9.2. Response DTOs Mới Cho Auth & OTP Flow (★ MỚI)
 
-| DTO | Fields |
-|---|---|
-| **UserResponseDto** | `userId, fullName, avatarUrl, email, phoneNumber, role, isActive, createdAt` |
-| **AuthResponseDto** | `accessToken, refreshToken, tokenType("Bearer"), expiresIn` |
-| **RefreshTokenResponseDto** | `accessToken` |
-| **CategoryResponseDto** | `id, categoryName` |
-| **ProductResponseDto** | `id, name, price, stock, description, imageUrl, active, category` |
-| **OrderResponseDto** | `id, status, totalAmount, createdAt, orderItems` |
-| **OrderItemResponseDto** | `productName, quantity, unitPrice` |
-| **CreatePaymentResponseDto** | `paymentUrl` |
+- **`VerifyOtpResponseDto` (Record)**:
+  - `String accessToken` (trả về khi purpose = `REGISTER_VERIFICATION`)
+  - `String refreshToken` (trả về khi purpose = `REGISTER_VERIFICATION`)
+  - `String actionToken` (trả về khi purpose = `RESET_PASSWORD` hoặc `CHANGE_PASSWORD_CONFIRMATION`)
+- **`ResendOtpResponseDto` (Record)**: `String message` ("Gửi lại mã OTP thành công").
 
 ---
 
 ## 10. Service Layer — Business Logic
 
-### 10.1. ProductService / ProductServiceImpl — Caching & Storage
+### 10.6. OtpService / OtpServiceImpl — ★ MỚI
 
-- **`findById(Long id)`**: `@Cacheable(value = "products", key = "#id")` — Cache thông tin sản phẩm vào Redis (TTL 30 min).
-- **`getProductsWithSearch()`**: `@Cacheable(value = "categories", key = ...)` — Cache kết quả search sản phẩm.
-- **`update()`, `softDelete()`, `increaseStock()`, `decreaseStock()`, `uploadProductImage()`**: `@CacheEvict(value = "products", key = "#id")` — Xoá cache sản phẩm khi có dữ liệu thay đổi.
-- **Analytics APIs (`getTopProducts`, `getCategoryRevenue`, `getMonthlyRevenue`)**: `@Cacheable(value = "analytics", key = "'top-products'")` v.v. — Cache thống kê với TTL 5 min.
-
-### 10.2. CategoryService / CategoryServiceImpl — Caching
-
-- **`create()`, `update()`, `deleteById()`**: `@CacheEvict(value = "categories", allEntries = true)` — Xoá sạch cache danh mục khi admin thêm/sửa/xoá.
-
-### 10.3. OrderService / OrderServiceImpl — Async Email & Stock Restoration
-
-- **`create()`**: Trừ stock theo số lượng đặt hàng. Khi tạo đơn hàng thành công, kích hoạt gửi mail xác nhận bất đồng bộ `emailService.sendPaymentSuccessEmail(...)`.
-- **`changeStatus()`**: Kiểm tra chuyển trạng thái hợp lệ qua `ALLOWED_ORDERS` map. **Đặc biệt:** Khi đơn hàng bị huỷ (`CANCELLED`), hệ thống tự động hoàn lại stock tương ứng vào kho cho từng sản phẩm.
-- **`findByUserIdWithDetails()` & `findById()`**: Kiểm tra ownership — USER chỉ xem đơn hàng của mình, ADMIN xem tất cả.
-
-### 10.4. PaymentService / PaymentServiceImpl — Async Email IPN & Auto Expire
-
-- **`handleVnPayIpn()`**: Kiểm tra chữ ký HMAC-SHA512. Khi VNPay báo `00` (Thành công), chuyển Order sang `CONFIRMED` và gọi bất đồng bộ `emailService.sendPaymentSuccessEmail(...)`.
-- **`expiredPayment()`**: `@Scheduled(fixedRate = 120000)` — Mỗi 2 phút quét Payment PENDING > 15 phút → chuyển EXPIRED, Order → CANCELLED.
-
-### 10.5. EmailService / EmailServiceImpl — ★ REFACTORED (Strategy Pattern)
-
-- **`sendTextEmail(EmailRequestDto)`**: `@Async("emailTaskExecutor")` — Gửi mail plain text qua `MailTransport`.
-- **`sendHtmlEmail(EmailRequestDto)`**: `@Async("emailTaskExecutor")` — Gửi mail HTML qua `MailTransport`.
-- **`sendAttachmentEmail(EmailRequestDto)`**: `@Async("emailTaskExecutor")` — Stub (throw `UnsupportedOperationException`).
-- **`sendOrderConfirmation(toEmail, orderId)` & `sendPaymentSuccessEmail(toEmail, orderId)`**: `@Async("emailTaskExecutor")` — Các helper method chuyên biệt phục vụ luồng nghiệp vụ đơn hàng & thanh toán.
-
-> **Kiến trúc mới:** `EmailServiceImpl` inject `MailTransport` interface. Spring tự động chọn implementation theo active profile:
-> - **Dev:** `SmtpMailTransport` (`@Profile("dev")`) → dùng `JavaMailSender` gửi qua SMTP Gmail.
-> - **Prod:** `BrevoMailTransport` (`@Profile("prod")`) → dùng Brevo REST API (`https://api.brevo.com/v3/smtp/email`).
+- **`generateAndSendOtp(user, purpose)`**:
+  - Kiểm tra resend cooldown (60 giây kể từ OTP gần nhất). Throws `ResendCooldownException` nếu chưa đủ 60s.
+  - Tạo ngẫu nhiên 6 chữ số (`SecureRandom`), hash bằng BCrypt trước khi lưu DB.
+  - Đặt thới gian hết hạn (5 phút).
+  - Gọi bất đồng bộ `EmailService` gửi email HTML có mã OTP cho user.
+- **`verifyOtp(email, otpCode, purpose)`**:
+  - Tìm OTP mới nhất theo `user_id` và `purpose`. Throws `OtpNotFoundException` nếu không tìm thấy.
+  - Kiểm tra hết hạn. Throws `OtpExpiredException` nếu đã hết 5 phút.
+  - Kiểm tra `attempts >= 5`. Throws `OtpAttemptsExceededException` nếu nhập sai quá 5 lần.
+  - Khớp mã OTP qua `passwordEncoder.matches()`. Nếu sai → tăng `attempts++`, throws `OtpInvalidException`.
+  - Đánh dấu `consumed = true`.
+  - Nếu `purpose == REGISTER_VERIFICATION` → Kích hoạt user (`is_active = true`, `email_verified = true`), sinh cặp JWT Access/Refresh Token và trả về trong `VerifyOtpResponseDto`.
+  - Nếu `purpose == RESET_PASSWORD` → Sinh `actionToken` ngẫu nhiên (UUID hashed/stored) và trả về cho FE.
 
 ---
 
-## 11. Controller Layer — API Endpoints
+## 11. Controller Layer — API Endpoints (39 Endpoints)
 
-> **Thay đổi nổi bật V6:** `GET /products/{id}` chuyển từ **Authenticated** sang **Public** (thêm vào `PUBLIC_GET_URLS` trong SecurityConfig).
+### 11.4. AuthController (`/api/v1/auth`) — 8 Endpoints (★ CẬP NHẬT)
 
-### 11.1. CategoryController (`/api/v1/categories`) — 5 endpoints
-
-| HTTP | Path | Auth | Request Params / Body | Response Wrapper |
+| HTTP | Path | Auth | Request Body | Response Wrapper / Data |
 |---|---|---|---|---|
-| POST | `/` | ADMIN | CreateCategoryRequestDto | `ApiResponse<CategoryResponseDto>` |
-| GET | `/` | Public | `search`, `page`, `size`, `sort`, `direction` | `ApiResponse<PageResponse<CategoryResponseDto>>` |
-| GET | `/{id}` | Public | Path: id | `ApiResponse<CategoryResponseDto>` |
-| PUT | `/{id}` | ADMIN | CreateCategoryRequestDto | `ApiResponse<CategoryResponseDto>` |
-| DELETE | `/{id}` | ADMIN | Path: id | `ApiResponse<Boolean>` |
-
-### 11.2. ProductController (`/api/v1/products`) — 11 endpoints
-
-| HTTP | Path | Auth | Request Params / Body | Response Wrapper |
-|---|---|---|---|---|
-| POST | `/` | ADMIN | CreateProductRequestDto | `ApiResponse<ProductResponseDto>` |
-| GET | `/` | Public `@SecurityRequirements({})` | `search`, `page`, `size`, `sort`, `direction` | `ApiResponse<PageResponse<ProductResponseDto>>` |
-| GET | `/{id}` | **Public** (★ ĐỔI từ Authenticated) | Path: id | `ApiResponse<ProductResponseDto>` |
-| PATCH | `/{id}` | ADMIN | UpdateProductRequestDto | `ApiResponse<ProductResponseDto>` |
-| DELETE | `/{id}` | ADMIN | Path: id | `ApiResponse<Boolean>` |
-| PATCH | `/increase/{id}` | ADMIN | `quantity` | `ApiResponse<ProductResponseDto>` |
-| PATCH | `/decrease/{id}` | ADMIN | `quantity` | `ApiResponse<ProductResponseDto>` |
-| GET | `/top-buy` | ADMIN | `limit` (default 10) | `ApiResponse<List<TopProductView>>` |
-| GET | `/revenue-by-category` | ADMIN | — | `ApiResponse<List<CategoryRevenueView>>` |
-| GET | `/revenue-in-month` | ADMIN | — | `ApiResponse<List<MonthlyRevenueView>>` |
-| POST | `/{id}/image` | ADMIN | multipart/form-data `file` | `ApiResponse<ProductResponseDto>` |
-
-### 11.3. UserController (`/api/v1/users`) — 6 endpoints
-
-| HTTP | Path | Auth | Request Params / Body | Response Wrapper |
-|---|---|---|---|---|
-| GET | `/me` | Authenticated | @AuthenticationPrincipal | `ApiResponse<UserResponseDto>` |
-| PATCH | `/password` | Authenticated | ChangePasswordRequestDto | 204 No Content |
-| PATCH | `/me/update` | Authenticated | UpdateProfileRequestDto | 204 No Content |
-| GET | `/` | ADMIN | `page`, `size`, `sort`, `direction` | `ApiResponse<PageResponse<UserResponseDto>>` |
-| PATCH | `/{userId}/status` | ADMIN | `isActive` | 204 No Content |
-| POST | `/me/avatar` | Authenticated | multipart/form-data `file` | `ApiResponse<UserResponseDto>` |
-
-### 11.4. AuthController (`/api/v1/auth`) — 4 endpoints
-
-| HTTP | Path | Auth | Response |
-|---|---|---|---|
-| POST | `/register` | Public | `ApiResponse<UserResponseDto>` |
-| POST | `/login` | Public | `ApiResponse<AuthResponseDto>` |
-| POST | `/refresh-token` | Public | `ApiResponse<RefreshTokenResponseDto>` |
-| POST | `/logout` | Public | `ApiResponse<Void>` |
-
-### 11.5. OrderController (`/api/v1/orders`) — 4 endpoints
-
-| HTTP | Path | Auth | Response |
-|---|---|---|---|
-| GET | `/user/{userId}` | Authenticated (ownership check) | `ApiResponse<List<OrderResponseDto>>` |
-| GET | `/{id}` | Authenticated (ownership check) | `ApiResponse<OrderResponseDto>` |
-| POST | `/` | Authenticated | `ApiResponse<OrderResponseDto>` |
-| PATCH | `/{id}/status` | ADMIN | `ApiResponse<OrderResponseDto>` |
-
-### 11.6. PaymentController (`/api/v1/payments`) — 3 endpoints
-
-| HTTP | Path | Auth | Response |
-|---|---|---|---|
-| POST | `/create` | Authenticated | `ApiResponse<CreatePaymentResponseDto>` |
-| GET | `/vnpay-return` | Public | Redirect/HTML |
-| GET | `/vnpay-ipn` | Public | VNPay IPN response |
+| POST | `/register` | Public | RegisterRequestDto | `ApiResponse<UserResponseDto>` (tài khoản chưa active, OTP được gửi) |
+| POST | `/verify-otp` | Public | VerifyOtpRequestDto | `ApiResponse<VerifyOtpResponseDto>` (Trả JWT Tokens hoặc ActionToken) |
+| POST | `/resend-otp` | Public | ResendOtpRequestDto | `ApiResponse<ResendOtpResponseDto>` (Gửi lại OTP có cooldown 60s) |
+| POST | `/forgot-password` | Public | ForgotPasswordRequestDto | `ApiResponse<String>` (Gửi OTP quên mật khẩu) |
+| POST | `/login` | Public | LoginRequestDto | `ApiResponse<AuthResponseDto>` (Bắt buộc tài khoản đã active & verified) |
+| POST | `/refresh-token` | Public | RefreshTokenRequestDto | `ApiResponse<RefreshTokenResponseDto>` |
+| POST | `/logout` | Public | RefreshTokenRequestDto | `ApiResponse<Void>` |
 
 ---
 
 ## 12. Security & Authentication (JWT)
 
-- **Access Token:** JWT Expiration 1h (3600000ms).
-- **Refresh Token:** Opaque Random 64 bytes → SHA-256 Hash stored in DB, Expiration 7 days.
-- **Security Chain:** `JwtAuthenticationFilter` intercepts, validates token, sets `SecurityContext`.
-- **Public Endpoints:** `/auth/**`, `/health`, `/payments/vnpay-*`, Swagger URLs.
-- **Public GET:** `/products`, `/products/{id}` (★ MỚI), `/categories`, `/categories/{id}`.
-- **CORS:** ★ **Externalized** qua `@Value("${app.cors.allowed-origins}")` — đọc từ `.env`, hỗ trợ multiple origins.
-
----
-
-## 13. File Upload & Storage (MinIO)
-
-- **Magic Bytes Validation:** `FileValidationUtil` kiểm tra trực tiếp byte header (JPEG, PNG, GIF, WebP) loại bỏ nguy cơ mạo danh định dạng file.
-- **Image Resizing:** `Thumbnailator` tự động nén & chuẩn hoá ảnh về kích thước `800x800` (quality 0.85).
-- **Docker:** MinIO container riêng trong `docker-compose.yml` (port 9000 API, 9001 Console).
-- **Production:** Cloudflare R2 (S3-compatible) thay thế MinIO local.
-
----
-
-## 14. Payment Integration — VNPay
-
-- **Flow:** `POST /orders` (PENDING) ➔ `POST /payments/create` ➔ VNPay Sandbox ➔ `handleVnPayIpn()` ➔ Order CONFIRMED + Async Email sent.
-- **Scheduler:** `@Scheduled(fixedRate = 120000)` — Mỗi 2 phút quét payment PENDING > 15 phút → chuyển EXPIRED, Order → CANCELLED.
+- **Register State:** Khi đăng ký, User có `is_active = false` và `email_verified = false`.
+- **Login Requirement:** `AuthServiceImpl.login()` kiểm tra `user.isActive() && user.isEmailVerified()`. Nếu chưa verified → ném `AccountNotVerifiedException` (401 Unauthorized).
+- **Public Auth Endpoints:** Tất cả 8 endpoints dưới `/api/v1/auth/**` đều là **Public**.
 
 ---
 
 ## 15. Exception Handling
 
-- **GlobalExceptionHandler (`@RestControllerAdvice`)**: Xử lý **15** loại exceptions:
+### Danh sách 22 Exception Handlers trong `GlobalExceptionHandler`
 
-| Exception | HTTP Status |
-|---|---|
-| `BadRequestException` | 400 |
-| `ResourceNotFoundException` | 404 |
-| `InsufficientStockException` | 409 |
-| `InvalidStatusTransitionException` | 409 |
-| `CategoryHasProductsException` | 409 |
-| `DuplicateResourceException` | 409 |
-| `ObjectOptimisticLockingFailureException` | 409 |
-| `DataIntegrityViolationException` | 409 |
-| `MaxUploadSizeExceededException` | 400 |
-| `MethodArgumentNotValidException` | 400 (+ validation error map) |
-| `BadCredentialsException` | 401 |
-| `InvalidRefreshTokenException` | 401 |
-| `DisabledException` | 403 |
-| `AccessDeniedException` | 403 |
-| `Exception` (catch-all) | 500 |
+| Exception Class | HTTP Status | Thông điệp / Mô tả |
+|---|---|---|
+| **`AccountNotVerifiedException`** | **401 Unauthorized** | **★ MỚI** — "Tài khoản chưa được xác thực email. Vui lòng xác thực OTP." |
+| **`OtpInvalidException`** | **400 Bad Request** | **★ MỚI** — "Mã OTP không chính xác. Số lần thử còn lại: N" |
+| **`OtpExpiredException`** | **400 Bad Request** | **★ MỚI** — "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại mã." |
+| **`OtpAttemptsExceededException`** | **409 Conflict** | **★ MỚI** — "Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng lấy mã mới." |
+| **`ResendCooldownException`** | **409 Conflict** | **★ MỚI** — "Vui lòng đợi 60 giây trước khi yêu cầu mã OTP mới." |
+| **`OtpNotFoundException`** | **404 Not Found** | **★ MỚI** — "Không tìm thấy yêu cầu xác thực OTP phù hợp." |
+| **`InvalidActionTokenException`** | **400 Bad Request** | **★ MỚI** — "Mã xác nhận thao tác (Action Token) không hợp lệ hoặc đã dùng." |
+| `BadRequestException` | 400 Bad Request | Yêu cầu không hợp lệ |
+| `ResourceNotFoundException` | 404 Not Found | Không tìm thấy tài nguyên |
+| `InsufficientStockException` | 409 Conflict | Số lượng hàng trong kho không đủ |
+| `InvalidStatusTransitionException` | 409 Conflict | Chuyển trạng thái đơn hàng không hợp lệ |
+| `CategoryHasProductsException` | 409 Conflict | Không thể xoá danh mục đang chứa sản phẩm |
+| `DuplicateResourceException` | 409 Conflict | Email hoặc số điện thoại đã tồn tại |
+| `ObjectOptimisticLockingFailureException` | 409 Conflict | Dữ liệu đã bị thay đổi bởi giao dịch khác (Optimistic Lock) |
+| `DataIntegrityViolationException` | 409 Conflict | Lỗi vi phạm ràng buộc dữ liệu Database |
+| `MaxUploadSizeExceededException` | 400 Bad Request | Dung lượng file upload vượt quá 5MB |
+| `MethodArgumentNotValidException` | 400 Bad Request | Lỗi Validation dữ liệu đầu vào |
+| `BadCredentialsException` | 401 Unauthorized | Email hoặc mật khẩu không chính xác |
+| `InvalidRefreshTokenException` | 401 Unauthorized | Refresh token không hợp lệ hoặc đã hết hạn |
+| `DisabledException` | 403 Forbidden | Tài khoản đã bị khoá bởi Admin |
+| `AccessDeniedException` | 403 Forbidden | Không có quyền truy cập API |
+| `Exception` | 500 Internal Server Error | Lỗi hệ thống chưa xác định |
 
 ---
 
 ## 16. Common — API Response Format
 
-### PageResponse\<T\> — Chuẩn hoá Phân Trang
+### Format chuẩn `ApiResponse<T>`
 
-```java
-@Getter @Builder @NoArgsConstructor @AllArgsConstructor
-public class PageResponse<T> {
-    private List<T> content;
-    private int page;
-    private int size;
-    private long totalElements;
-    private int totalPages;
-    private boolean last;
-
-    public static <T> PageResponse<T> of(Page<T> page) {
-        return PageResponse.<T>builder()
-                .content(page.getContent())
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .last(page.isLast())
-                .build();
-    }
+```json
+{
+  "code": 200,
+  "message": "Thao tác thành công!",
+  "data": { ... },
+  "errors": null,
+  "timestamp": "2026-07-28T00:45:00.123"
 }
 ```
-
-> **Trạng thái:** Tất cả REST controllers trong hệ thống đã được đồng bộ sử dụng `PageResponse<T>` làm format phản hồi chuẩn duy nhất cho pagination.
 
 ---
 
 ## 17. Business Flows (Luồng nghiệp vụ)
 
-### 17.1. Email Strategy Pattern Flow — ★ MỚI V6
+### 17.5. Account Registration & OTP Verification Flow (Luồng Đăng ký & Xác thực Tài khoản) — ★ MỚI
 
 ```
-                    ┌────────────────────────────┐
-                    │     EmailServiceImpl        │
-                    │  @Async("emailTaskExecutor")│
-                    └──────────┬─────────────────┘
-                               │ inject MailTransport
-                    ┌──────────┴─────────────────┐
-                    │    MailTransport (interface)  │
-                    └──────────┬─────────────────┘
-                 ┌─────────────┴─────────────────┐
-                 │                               │
-    ┌────────────┴────────────┐    ┌─────────────┴────────────┐
-    │   SmtpMailTransport      │    │   BrevoMailTransport      │
-    │   @Profile("dev")        │    │   @Profile("prod")        │
-    │   JavaMailSender/SMTP    │    │   Brevo REST API          │
-    │   (Gmail SMTP relay)     │    │   (api.brevo.com/v3/smtp) │
-    └─────────────────────────┘    └──────────────────────────┘
+1. Client (FE) ──► POST /api/v1/auth/register (fullName, email, phoneNumber, password)
+2. Service ──────► Lưu UserEntity (is_active = false, email_verified = false)
+3. Service ──────► OtpService.generateAndSendOtp(user, REGISTER_VERIFICATION)
+4. OtpService ───► Sinh 6 chữ số ➔ Hash BCrypt ➔ Save OtpVerificationEntity (expires_at = NOW + 5m)
+5. OtpService ───► Async Email (HTML Template với mã 6 chữ số)
+6. Backend ──────► Trả UserResponseDto (HTTP 201 Created)
+7. Client (FE) ──► Chuyển sang màn hình nhập OTP 6 chữ số
+8. Client (FE) ──► POST /api/v1/auth/verify-otp (email, otpCode, purpose = REGISTER_VERIFICATION)
+9. Service ──────► Check OTP valid ➔ Set user (is_active = true, email_verified = true)
+10. Service ─────► Sinh cặp JWT Tokens (accessToken, refreshToken)
+11. Backend ─────► Trả VerifyOtpResponseDto chứa accessToken + refreshToken (HTTP 200 OK)
+12. Client (FE) ──► Đăng nhập thành công tự động, lưu Token vào LocalStorage/Cookie ➔ Vào App!
 ```
 
-### 17.2. Async Email Notification Flow
+### 17.6. Forgot Password & Reset Flow (Luồng Quên Mật Khẩu & Đặt Lại) — ★ MỚI
 
 ```
-1. Client gửi request Đặt hàng / Thanh toán thành công (VNPay IPN)
-2. Service xử lý xong DB Transaction (Save Order / Update Status)
-3. Service gọi EmailService.sendOrderConfirmation(...) / sendPaymentSuccessEmail(...)
-4. Spring AOP Proxy bắt lời gọi → Đẩy task sang ThreadPoolTaskExecutor ("emailTaskExecutor")
-5. Main Thread trả HTTP Response lập tức cho Client (Không bị block bởi SMTP/API delay)
-6. Worker Thread trong ThreadPool gọi MailTransport implementation (SMTP hoặc Brevo tùy profile)
-```
-
-### 17.3. Redis Caching Flow
-
-```
-1. Client request GET /api/v1/products/{id}
-2. Spring Cache Interceptor kiểm tra key "products::{id}" trong Redis:
-   - HIT  ➔ Trả kết quả JSON từ Redis lập tức (Bỏ qua DB & Service logic)
-   - MISS ➔ Gọi method ProductServiceImpl.findById() truy vấn DB ➔ Lưu kết quả vào Redis ➔ Trả kết quả cho Client
-3. Khi Admin gọi PATCH/DELETE /products/{id}:
-   - Executing DB update
-   - Interceptor thực thi @CacheEvict(value = "products", key = "#id") ➔ Xoá key tương ứng trong Redis
-```
-
-### 17.4. Flyway Migration Flow — ★ MỚI V6
-
-```
-1. Spring Boot khởi động → FlywayConfig bean (FlywayMigrationStrategy) được kích hoạt
-2. flyway.repair() — Đồng bộ checksum trong flyway_schema_history với file hiện tại
-   (KHÔNG chạy lại migration, KHÔNG xoá dữ liệu)
-3. flyway.migrate() — Chạy các migration chưa apply
-4. JPA Hibernate ddl-auto=validate — Kiểm tra Entity mapping khớp với schema thực tế
+1. Client (FE) ──► POST /api/v1/auth/forgot-password (email)
+2. Service ──────► OtpService.generateAndSendOtp(user, RESET_PASSWORD) ➔ Send Email OTP
+3. Client (FE) ──► Màn hình nhập OTP Quên mật khẩu
+4. Client (FE) ──► POST /api/v1/auth/verify-otp (email, otpCode, purpose = RESET_PASSWORD)
+5. Service ──────► Check OTP valid ➔ Sinh `actionToken`
+6. Backend ──────► Trả VerifyOtpResponseDto chứa `actionToken`
+7. Client (FE) ──► Chuyển màn hình Đặt mật khẩu mới (truyền actionToken + newPassword)
+8. Client (FE) ──► Đổi mật khẩu thành công ➔ Chuyển về Đăng nhập
 ```
 
 ---
@@ -899,16 +617,14 @@ public class PageResponse<T> {
 | Pattern | Áp dụng ở đâu |
 |---|---|
 | **Layered Architecture** | Controller → Service → Repository → Entity |
-| **Strategy Pattern** | ★ **MỚI V6** — `MailTransport` interface + `SmtpMailTransport` (dev) / `BrevoMailTransport` (prod) |
-| **Profile-based DI** | ★ **MỚI V6** — `@Profile("dev")` và `@Profile("prod")` tự động chọn bean theo môi trường |
-| **Distributed Caching** | Redis + Spring `@Cacheable` / `@CacheEvict` với TTL linh hoạt |
-| **Async Task Execution** | `@Async` + `ThreadPoolTaskExecutor` tách biệt xử lý Email khỏi HTTP Worker Thread |
-| **Custom Argument Resolver** | `CustomPageableArgumentResolver` tự động bind query params vào Spring `Pageable` |
-| **Optimistic Locking** | `@Version` trên `ProductEntity` + `OrderEntity` chống Race Condition |
-| **Magic Bytes Validation** | `FileValidationUtil` kiểm tra byte header file upload |
-| **Object Storage (S3-compatible)** | MinIO SDK lưu trữ media tách biệt |
-| **Static Analysis** | ★ **MỚI V6** — PMD plugin (`maven-pmd-plugin` 3.26.0) tích hợp CI Pipeline |
-| **Flyway Repair Strategy** | ★ **MỚI V6** — `FlywayConfig` bean gọi `repair()` trước `migrate()` |
+| **Multi-step Auth & OTP Flow** | ★ **MỚI V7** — OTP Secure Generation, Hash Storage, Max Attempt Guard, Cooldown Lock |
+| **Strategy Pattern** | `MailTransport` interface + `SmtpMailTransport` (dev) / `BrevoMailTransport` (prod) |
+| **Distributed Caching** | Redis + Spring `@Cacheable` / `@CacheEvict` |
+| **Async Task Isolation** | `@Async("emailTaskExecutor")` tách biệt gửi mail HTML |
+| **Scheduled Maintenance** | `@Scheduled` — `OtpCleanupScheduler` & `PaymentExpiredScheduler` |
+| **Optimistic Locking** | `@Version` trên `ProductEntity` + `OrderEntity` |
+| **Magic Bytes Validation** | `FileValidationUtil` |
+| **Static Analysis** | PMD Static Analysis (`maven-pmd-plugin` 3.26.0) |
 
 ---
 
@@ -919,31 +635,29 @@ public class PageResponse<T> {
 - [x] Layered Architecture chuẩn
 - [x] CRUD đầy đủ: Category, Product, Order, User
 - [x] JWT Authentication + Refresh Token (stateless)
+- [x] **Xác thực tài khoản qua Email OTP** (★ MỚI V7)
+- [x] **Luồng Quên & Đặt lại Mật khẩu via OTP** (★ MỚI V7)
+- [x] **OTP Cleanup Scheduler** (★ MỚI V7)
+- [x] **HTML Email Template Branding Hải Sản** (★ MỚI V7)
 - [x] Role-based Authorization (USER/ADMIN)
 - [x] VNPay Payment Integration (sandbox) + Auto Expire Scheduled Job
 - [x] Optimistic Locking (`@Version` trên Product & Order)
-- [x] Flyway Database Migrations (★ hợp nhất thành 2 migrations — schema + seed data)
+- [x] Flyway Database Migrations (3 migrations — V1 schema, V2 seed, V3 OTP table)
 - [x] Docker Multi-stage + Docker Compose (4 services: db, app, redis, minio)
-- [x] GitHub Actions CI (★ PMD Quality Gate + Test + Build)
+- [x] GitHub Actions CI (PMD Quality Gate + Test + Build)
 - [x] MinIO file upload + magic bytes validation + Thumbnailator image resize
-- [x] **Redis Distributed Caching** (`@Cacheable`, `@CacheEvict` cho Products, Categories, Analytics)
-- [x] **Async Email Processing** (`@Async`, `ThreadPoolTaskExecutor`, MailTransport Strategy Pattern)
-- [x] **Email Strategy Pattern** (★ MỚI — SmtpMailTransport dev / BrevoMailTransport prod)
-- [x] **Chuẩn hoá Pagination** (`PageResponse<T>` & `CustomPageableArgumentResolver`)
-- [x] **Hoàn Stock khi Cancel Order** (Tự động cộng bù kho khi huỷ đơn)
-- [x] **CORS Externalized** (★ MỚI — đọc từ `.env` qua `@Value`)
-- [x] **PMD Static Analysis** (★ MỚI — custom ruleset + CI integration)
-- [x] **FlywayConfig** (★ MỚI — repair before migrate strategy)
-- [x] **Production Config** (★ MỚI — `.env.production`, `deploy_render_plan.md`)
+- [x] Redis Distributed Caching (`@Cacheable`, `@CacheEvict`)
+- [x] Async Email Processing (`@Async`, MailTransport Strategy Pattern)
+- [x] CORS Externalized (đọc từ `.env`)
+- [x] Production Config (`.env.production`, `deploy_render_plan.md`)
 
 ### 19.2. Chưa làm / Cần cải thiện ⚠️
 
-- [ ] **Unit Tests** — Viết JUnit 5 + Mockito cho Service Layer
+- [ ] **Unit Tests** — Viết JUnit 5 + Mockito cho Service Layer & Controller Layer
+- [ ] **Frontend UI** — Xây dựng giao diện Web (React / Next.js / Vue) tích hợp với REST API
 - [ ] **Cart (Giỏ hàng)** — Module quản lý giỏ hàng lưu trữ Database / Redis
-- [ ] **Search nâng cao** — Filter sản phẩm theo khoảng giá (`minPrice`, `maxPrice`) và danh mục
-- [ ] **TestUploadController** — Ẩn hoặc phân quyền ADMIN trước khi deploy Production
-- [ ] **sendAttachmentEmail** — Triển khai gửi email có đính kèm file (hiện đang throw UnsupportedOperationException)
-- [ ] **Frontend UI** — Xây dựng giao diện người dùng
+- [ ] **Search & Filter nâng cao** — Lọc sản phẩm theo khoảng giá (`minPrice`, `maxPrice`)
+- [ ] **Production Deployment** — Triển khai chính thức lên Render + Cloudflare R2 + Brevo
 
 ---
 
@@ -951,64 +665,138 @@ public class PageResponse<T> {
 
 | # | Vấn đề ban đầu | Trạng thái | Giải pháp đã áp dụng |
 |---|---|---|---|
-| 1 | **PageResponse chưa được sử dụng** | ✅ **ĐÃ XỬ LÝ** | Áp dụng `PageResponse.of(Page<T>)` cho tất cả GET Controllers có phân trang. |
-| 2 | **Pagination parameters rời rạc** | ✅ **ĐÃ XỬ LÝ** | Xây dựng `CustomPageableArgumentResolver` & `WebConfig` parse tự động. |
-| 3 | **Order cancelled chưa hoàn stock** | ✅ **ĐÃ XỬ LÝ** | Thêm logic tự động hoàn stock sản phẩm trong `OrderServiceImpl.changeStatus()`. |
-| 4 | **Email thông báo bị chậm HTTP Request** | ✅ **ĐÃ XỬ LÝ** | Tách luồng gửi mail sang `@Async` với `emailTaskExecutor` Thread Pool riêng. |
-| 5 | **Truy vấn DB lặp lại nhiều lần** | ✅ **ĐÃ XỬ LÝ** | Redis Caching cho Product detail, Category list và Analytics reports. |
-| 6 | **CORS Hardcoded** | ✅ **ĐÃ XỬ LÝ (V6)** | ★ Chuyển CORS config sang đọc từ `.env` qua `@Value("${app.cors.allowed-origins}")`. |
-| 7 | **Email chỉ có 1 transport** | ✅ **ĐÃ XỬ LÝ (V6)** | ★ Áp dụng Strategy Pattern: `MailTransport` interface + 2 implementations theo `@Profile`. |
-| 8 | **Flyway 8 migrations rời rạc** | ✅ **ĐÃ XỬ LÝ (V6)** | ★ Hợp nhất thành 2 files + `FlywayConfig` bean auto repair. |
-| 9 | **Không có Static Analysis** | ✅ **ĐÃ XỬ LÝ (V6)** | ★ PMD plugin + custom ruleset + CI Quality Gate. |
-| 10 | **Thiếu Unit Test** | 🟡 **CẦN LÀM** | Chuẩn bị viết test coverage cho Service & Controller layers bằng JUnit 5 + Mockito. |
+| 1 | **Chưa có xác thực email khi đăng ký** | ✅ **ĐÃ XỬ LÝ (V7)** | Triển khai OTP 6 chữ số gửi qua HTML Email, bảo mật hash BCrypt, 5 phút hết hạn, max 5 lần thử. |
+| 2 | **Chưa có luồng Quên mật khẩu** | ✅ **ĐÃ XỬ LÝ (V7)** | Bổ sung OTP Reset Password flow + trả `actionToken` an toàn. |
+| 3 | **OTP hết hạn chiếm dụng DB** | ✅ **ĐÃ XỬ LÝ (V7)** | `OtpCleanupScheduler` dọn dẹp các OTP hết hạn/consumed hàng giờ. |
+| 4 | **Enums nằm rải rác trong Entity** | ✅ **ĐÃ XỬ LÝ (V7)** | Tách riêng package `enums` độc lập (`Role`, `OrderStatus`, `OtpPurpose`). |
+| 5 | **Email bị chậm HTTP Request** | ✅ **ĐÃ XỬ LÝ** | Async Email với ThreadPoolTaskExecutor + Strategy Pattern. |
+| 6 | **CORS Hardcoded** | ✅ **ĐÃ XỬ LÝ** | CORS whitelist đọc động từ `.env`. |
+| 7 | **Thiếu Unit Test** | 🟡 **CẦN LÀM** | Chuẩn bị viết test coverage cho Service & Controller layers. |
 
 ---
 
 ## 21. Tổng hợp Kiến thức & Kỹ thuật chức năng cốt lõi
 
-### 21.1. DevOps, Containerization & CI/CD
-- **Multi-stage Docker Build:** Tách giai đoạn `builder` (`eclipse-temurin:21-jdk-alpine`) và `runtime` (`eclipse-temurin:21-jre-alpine`) giảm dung lượng image, tối ưu layer cache.
-- **Docker Compose 4 Services:** Orchestrate `db` (PostgreSQL 16), `app` (Spring Boot), `redis` (cache), `minio` (object storage) với healthcheck và dependency ordering.
-- **GitHub Actions CI Pipeline:** 3-step pipeline: **PMD Quality Gate** (fail fast) → **Unit Tests** → **Build Compile Check**.
-- **PMD Static Analysis:** Custom ruleset bắt code chết (unused variables/fields/methods) và lỗi nguy hiểm (empty catch blocks).
-
-### 21.2. Strategy Pattern — Profile-based Email Transport (★ MỚI V6)
-- **Interface Segregation:** `MailTransport` interface định nghĩa 2 method `sendTextEmail()` và `sendHtmlEmail()`.
-- **Profile-based DI:** Spring tự động inject implementation phù hợp dựa trên `@Profile`:
-  - `dev` → `SmtpMailTransport` (JavaMailSender, Gmail SMTP relay)
-  - `prod` → `BrevoMailTransport` (Brevo REST API, không cần SMTP server)
-- **Lợi ích:** Không cần `if/else` chọn transport, code sạch, dễ thêm provider mới (VD: SendGrid, AWS SES).
-
-### 21.3. Flyway Migration Consolidation (★ MỚI V6)
-- **Hợp nhất Migrations:** 8 files incremental (V1→V8) → 2 files (V1 schema + V2 seed data).
-- **FlywayConfig Bean:** `FlywayMigrationStrategy` gọi `repair()` trước `migrate()` để xử lý checksum mismatch khi file migration thay đổi nội dung.
-- **An toàn:** `repair()` chỉ cập nhật metadata trong `flyway_schema_history` — KHÔNG chạy lại migration hay xoá dữ liệu.
-
-### 21.4. Redis Distributed Caching Strategy
-- **Cache Abstraction:** Sử dụng `@Cacheable` và `@CacheEvict` decouple logic ứng dụng khỏi cache provider.
-- **Granular TTLs:** `RedisCacheManager` định cấu hình thời gian sống khác nhau cho từng cache region (Products: 30m, Categories: 30m, Analytics: 5m).
-- **Cache Invalidation:** Xoá sạch hoặc xoá theo key chính xác khi có thao tác Mutation.
-
-### 21.5. Async Task Processing & Thread Pool Isolation
-- **Non-blocking Execution:** Áp dụng `@Async` giúp giải phóng worker thread đảm nhận request HTTP ngay lập tức.
-- **ThreadPool Task Executor:** Cấu hình `emailTaskExecutor` tùy chỉnh (`corePoolSize=3`, `maxPoolSize=10`, `queueCapacity=50`, `threadNamePrefix="EmailAsync-"`).
-
-### 21.6. Object Storage & File Security (MinIO)
-- **Magic Bytes Validation:** `FileValidationUtil` kiểm tra trực tiếp byte header (JPEG, PNG, GIF, WebP) loại bỏ nguy cơ fake extension.
-- **Image Optimization:** Sử dụng `Thumbnailator` nén & resize về kích thước `800x800` (quality 0.85).
-- **Production Migration:** Cloudflare R2 (S3-compatible) thay thế MinIO local — chỉ cần đổi endpoint/credentials trong `.env.production`.
-
-### 21.7. Security & Stateless Authentication
-- **Dual-Token Strategy:** Access Token JWT (1h) + Opaque Refresh Token (7 ngày, SHA-256 hashed in DB).
-- **Custom Security EntryPoints:** Phản hồi chuẩn format JSON cho 401 Unauthorized và 403 Access Denied.
-- **CORS Externalized:** ★ **MỚI V6** — Domain whitelist đọc từ `.env`, không hardcode trong source code.
-
-### 21.8. Production Deployment Preparation (★ MỚI V6)
-- **Render Platform:** PostgreSQL + Redis (Key Value) managed services.
-- **Cloudflare R2:** S3-compatible object storage thay thế MinIO.
-- **Brevo API:** Transactional email API thay thế Gmail SMTP (no rate limit, production-grade).
-- **Dynamic Port:** `server.port = ${PORT:8085}` — Render cung cấp port qua biến môi trường.
+### 21.9. Multi-step OTP Verification & Hashed Security (★ MỚI V7)
+- **Non-reversible Hash:** Mã OTP 6 chữ số không bao giờ lưu dưới dạng plain text trong DB. Hệ thống nén BCrypt Hash mã OTP trước khi lưu.
+- **Brute-force Prevention:** Giới hạn tối đa 5 lần nhập sai (`attempts >= 5`). Quá 5 lần, bản ghi bị khoá và bắt buộc yêu cầu OTP mới.
+- **Resend Cooldown Guard:** Áp dụng khoảng chờ 60s giữa các lần bấm "Gửi lại OTP" tránh spam email và lãng phí tài nguyên mail gateway.
+- **Action Token Pattern:** Sau khi verify OTP cho tác vụ nhạy cảm (như Quên Mật Khẩu), Backend trả về `actionToken` có thời hạn ngắn để làm bằng chứng cho bước đổi mật khẩu tiếp theo.
 
 ---
 
-> **🎯 Kết luận:** Dự án Mini Ecommerce đã được nâng cấp toàn diện với **35 API Endpoints**, **2 Flyway Migrations (hợp nhất)**, **Redis Distributed Caching**, **Async Email Processing (Strategy Pattern)**, **MinIO Storage**, **VNPay Sandbox Integration**, **PMD Static Analysis**, **CI Pipeline 3-step**, **CORS Externalized**, và **Production Deployment Preparation (Render + Cloudflare R2 + Brevo)**. Các bước tiếp theo sẽ tập trung vào **Unit Testing (JUnit 5 + Mockito)** và xây dựng **Frontend UI**.
+## 22. Hướng dẫn & Lưu ý Dành Cho Frontend (FE / Full-stack & AI Reader)
+
+> **Phần này dành riêng cho Developer Frontend (React, Vue, Next.js...) hoặc các AI subagents hỗ trợ viết code FE để tích hợp chính xác và mượt mà với Backend.**
+
+### 22.1. Server Connection & Swagger Reference
+
+- **Base URL (Local):** `http://localhost:8085`
+- **Swagger UI (Interactive API Docs):** `http://localhost:8085/swagger-ui.html`
+- **OpenAPI JSON Spec:** `http://localhost:8085/v1/api-docs`
+
+---
+
+### 22.2. Quy Chuẩn Phản Hồi API (API Response Conventions)
+
+Tất cả các API đều phản hồi dưới định dạng JSON đồng nhất theo class `ApiResponse<T>`:
+
+```typescript
+interface ApiResponse<T> {
+  code: number;          // HTTP Status Code (200, 201, 400, 401, 403, 404, 409, 500)
+  message: string;       // Thông điệp tiếng Anh/Việt mô tả kết quả
+  data: T | null;        // Dữ liệu trả về (Object, Array, PageResponse, hoặc null)
+  errors: any | null;    // Chi tiết lỗi (nếu có, ví dụ map lỗi validation)
+  timestamp: string;     // ISO Timestamp
+}
+```
+
+---
+
+### 22.3. Quy Chuẩn Phân Trang (Pagination Standards)
+
+Các API danh sách (`GET /products`, `GET /categories`, `GET /users`) nhận query parameters phân trang:
+- `page`: Trang cần lấy (**0-indexed**, mặc định `0` = trang 1)
+- `size`: Số lượng items/trang (mặc định `10`)
+- `sort`: Field cần sắp xếp (ví dụ: `price`, `createdAt`, `name`)
+- `direction`: Hướng sắp xếp (`asc` hoặc `desc`)
+
+**Dữ liệu trả về nằm trong `data` dưới dạng `PageResponse<T>`:**
+
+```typescript
+interface PageResponse<T> {
+  content: T[];          // Mảng các item của trang hiện tại
+  page: number;          // Số trang hiện tại (0-indexed)
+  size: number;          // Kích thước trang
+  totalElements: number; // Tổng số item trên toàn hệ thống
+  totalPages: number;    // Tổng số trang
+  last: boolean;         // Có phải trang cuối cùng không
+}
+```
+
+---
+
+### 22.4. Luồng Xác Thực Auth & Token Storage (Frontend Auth Specs)
+
+#### 1. Đăng ký & Xác thực OTP (Registration Flow)
+```
+[Bước 1] FE gọi POST /api/v1/auth/register 
+         Body: { fullName, email, phoneNumber, password }
+         -> Trả về HTTP 201 + UserResponseDto.
+         -> FE hiển thị Modal/Màn hình "Nhập mã OTP 6 chữ số đã gửi về email".
+
+[Bước 2] FE gọi POST /api/v1/auth/verify-otp
+         Body: { email, otpCode: "123456", purpose: "REGISTER_VERIFICATION" }
+         -> Trả về HTTP 200 + VerifyOtpResponseDto: { accessToken, refreshToken, actionToken: null }
+         -> FE lưu accessToken & refreshToken vào LocalStorage / Secure Cookie.
+         -> FE set header Authorization cho các request sau & Tự động chuyển thẳng vào Dashboard/Trang chủ!
+```
+
+#### 2. Đăng nhập (Login Flow)
+```
+FE gọi POST /api/v1/auth/login 
+Body: { email, password }
+-> Nếu thành công: Trả về AuthResponseDto: { accessToken, refreshToken, tokenType: "Bearer", expiresIn: 3600000 }
+-> Nếu lỗi 401 "AccountNotVerifiedException": 
+   FE bắt mã lỗi 401 ➔ Thông báo user: "Tài khoản chưa được kích thực email" ➔ Chuyển user sang màn hình nhập OTP ➔ Có nút "Resend OTP" gọi POST /api/v1/auth/resend-otp { email, purpose: "REGISTER_VERIFICATION" }.
+```
+
+#### 3. Tự động Refresh Token khi 401 Unauthorized (Axios Interceptor Pattern)
+- Access Token có thời hạn **1 giờ**.
+- Refresh Token có thời hạn **7 ngày**.
+- Khi bất kỳ API nào trả về `401 Unauthorized` (do Token hết hạn):
+  1. Axios Interceptor tạm hoãn các request bị lỗi.
+  2. Gửi request `POST /api/v1/auth/refresh-token` với Body: `{ refreshToken }`.
+  3. Nhận `accessToken` mới ➔ Cập nhật LocalStorage/State.
+  4. Thử lại request ban đầu với Header `Authorization: Bearer <new_access_token>`.
+  5. Nếu Refresh Token cũng hết hạn (401) ➔ Xoá LocalStorage & Chuyển hướng người dùng về `/login`.
+
+---
+
+### 22.5. Bảng Phân Quyền & Access Rules Cho Frontend
+
+| API Group | Endpoints | Mức độ Phân quyền (Auth Requirement) |
+|---|---|---|
+| **Public Catalog** | `GET /api/v1/products`, `GET /api/v1/products/{id}`, `GET /api/v1/categories`, `GET /api/v1/categories/{id}` | **Public** — Không cần token (dùng cho khách vãng lai xem sản phẩm) |
+| **Auth Operations** | `POST /api/v1/auth/**` (register, verify-otp, resend-otp, forgot-password, login, refresh-token, logout) | **Public** — Không cần token |
+| **Payment Return/IPN**| `GET /api/v1/payments/vnpay-return`, `GET /api/v1/payments/vnpay-ipn` | **Public** — VNPay callback |
+| **User Profile** | `GET /api/v1/users/me`, `PATCH /api/v1/users/me/update`, `PATCH /api/v1/users/password`, `POST /api/v1/users/me/avatar` | **Authenticated** — Cần Header `Authorization: Bearer <token>` |
+| **Orders & Payment** | `POST /api/v1/orders`, `GET /api/v1/orders/user/{userId}`, `GET /api/v1/orders/{id}`, `POST /api/v1/payments/create` | **Authenticated** — User chỉ xem/tạo đơn của chính mình |
+| **Admin Portal** | `POST/PUT/DELETE` Products & Categories, `GET /api/v1/products/top-buy`, `GET /api/v1/products/revenue-*`, `GET /api/v1/users`, `PATCH /api/v1/users/{id}/status`, `PATCH /api/v1/orders/{id}/status` | **ADMIN Role Only** — Cần Token có Role `ADMIN` |
+
+---
+
+### 22.6. Hướng dẫn Upload Media (Hình ảnh Sản phẩm & Avatar User)
+
+- **Header Content-Type:** `multipart/form-data`
+- **Field Name:** `file`
+- **Dung lượng tối đa:** `5MB`
+- **Định dạng cho phép:** `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+- **Endpoints Upload:**
+  - POST `/api/v1/users/me/avatar`: Upload avatar cá nhân (Cần Bearer Token)
+  - POST `/api/v1/products/{id}/image`: Upload ảnh sản phẩm (Cần Admin Bearer Token)
+
+---
+
+> **🎯 KẾT LUẬN CHO FE & AI AGENTS:**
+> Hệ thống Backend **Mini Ecommerce Seafood** hiện đã hoàn chỉnh 100% về cơ chế **Xác thực OTP Email**, **Phân quyền Security**, **Quản lý Sản phẩm/Đơn hàng/Thanh toán VNPay**, **Upload ảnh**, và **Swagger Documentation**. Frontend có thể bắt đầu tích hợp trực tiếp dựa theo tài liệu hướng dẫn trên.

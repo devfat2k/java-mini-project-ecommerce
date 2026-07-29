@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 
-@Profile("prod") // ← chỉ active khi SPRING_PROFILES_ACTIVE=prod
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -44,6 +43,11 @@ public class BrevoMailTransport implements MailTransport {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("api-key", brevoApiKey);
         headers.set("accept", "application/json");
+
+        String maskedKey = (brevoApiKey != null && brevoApiKey.length() > 10)
+                ? brevoApiKey.substring(0, 6) + "..." + brevoApiKey.substring(brevoApiKey.length() - 4)
+                : "NULL/EMPTY";
+        log.info("Gửi email qua Brevo API với sender: {}, apiKey: {}", senderEmail, maskedKey);
 
         Map<String, Object> body = Map.of(
                 "sender", Map.of("email", senderEmail, "name", "Mini Ecommerce"),

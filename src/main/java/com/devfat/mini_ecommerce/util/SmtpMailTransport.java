@@ -11,7 +11,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("dev") // ← chỉ active khi SPRING_PROFILES_ACTIVE=dev
+@Profile("smtp") // chỉ active khi SPRING_PROFILES_ACTIVE=smtp
 @RequiredArgsConstructor
 @Slf4j
 public class SmtpMailTransport implements MailTransport {

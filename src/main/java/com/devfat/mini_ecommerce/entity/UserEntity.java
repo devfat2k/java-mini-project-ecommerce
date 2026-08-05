@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.entity;
 
+import com.devfat.mini_ecommerce.base.BaseEntity;
 import com.devfat.mini_ecommerce.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,16 +10,15 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
-
+@Getter @Setter
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicInsert
 @DynamicUpdate
 @Builder
 @Table(name = "users")
-public class UserEntity {
+public class UserEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,12 +50,18 @@ public class UserEntity {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductEntity that)) return false;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+    }
 
 }

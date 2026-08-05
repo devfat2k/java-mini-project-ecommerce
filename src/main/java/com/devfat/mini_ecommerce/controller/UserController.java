@@ -1,8 +1,8 @@
 package com.devfat.mini_ecommerce.controller;
 
 
-import com.devfat.mini_ecommerce.common.ApiResponse;
-import com.devfat.mini_ecommerce.common.PageResponse;
+import com.devfat.mini_ecommerce.base.ApiResponse;
+import com.devfat.mini_ecommerce.base.PageResponse;
 import com.devfat.mini_ecommerce.dto.request.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateProfileRequestDto;
 import com.devfat.mini_ecommerce.dto.response.UserResponseDto;
@@ -12,9 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

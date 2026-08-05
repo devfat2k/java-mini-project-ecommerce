@@ -1,6 +1,6 @@
 package com.devfat.mini_ecommerce.controller;
 
-import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.base.ApiResponse;
 import com.devfat.mini_ecommerce.service.StorageService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

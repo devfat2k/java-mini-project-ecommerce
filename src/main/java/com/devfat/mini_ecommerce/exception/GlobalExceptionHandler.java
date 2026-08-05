@@ -1,6 +1,6 @@
 package com.devfat.mini_ecommerce.exception;
 
-import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.base.ApiResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,23 +1,22 @@
 package com.devfat.mini_ecommerce.entity;
 
+import com.devfat.mini_ecommerce.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import java.math.BigDecimal;
 
-@Data
+@Getter
+@Setter
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicUpdate
 @DynamicInsert
-@Entity
 @Builder
 @Table(name = "order_items")
-public class OrderItemEntity {
+public class OrderItemEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
@@ -36,4 +35,17 @@ public class OrderItemEntity {
 
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice = BigDecimal.ZERO;
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductEntity that)) return false;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+    }
 }

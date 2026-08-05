@@ -1,12 +1,10 @@
 package com.devfat.mini_ecommerce.entity;
 
 
+import com.devfat.mini_ecommerce.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -16,15 +14,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
+@Getter
+@Setter
+@Entity
 @DynamicUpdate
 @DynamicInsert
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-@Entity
 @Table(name = "payments")
-public class PaymentEntity {
+public class PaymentEntity extends BaseEntity {
 
     public enum PaymentStatus {PENDING, SUCCESS, FAILED, EXPIRED }
 
@@ -62,12 +61,18 @@ public class PaymentEntity {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductEntity that)) return false;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+    }
 }

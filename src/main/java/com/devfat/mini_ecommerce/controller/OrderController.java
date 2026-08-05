@@ -1,6 +1,6 @@
 package com.devfat.mini_ecommerce.controller;
 
-import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.base.ApiResponse;
 import com.devfat.mini_ecommerce.dto.request.CreateOrderRequestDto;
 import com.devfat.mini_ecommerce.dto.request.UpdateOrderStatusRequestDto;
 import com.devfat.mini_ecommerce.dto.response.OrderResponseDto;

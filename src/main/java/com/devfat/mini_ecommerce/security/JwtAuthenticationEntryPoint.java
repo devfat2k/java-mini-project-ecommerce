@@ -1,6 +1,6 @@
 package com.devfat.mini_ecommerce.security;
 
-import com.devfat.mini_ecommerce.common.ApiResponse;
+import com.devfat.mini_ecommerce.base.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

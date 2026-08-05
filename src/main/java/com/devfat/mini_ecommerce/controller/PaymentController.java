@@ -1,8 +1,7 @@
 package com.devfat.mini_ecommerce.controller;
 
 
-import com.devfat.mini_ecommerce.common.ApiResponse;
-import com.devfat.mini_ecommerce.config.VNPayUtil;
+import com.devfat.mini_ecommerce.base.ApiResponse;
 import com.devfat.mini_ecommerce.dto.response.CreatePaymentResponseDto;
 import com.devfat.mini_ecommerce.entity.PaymentEntity;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;

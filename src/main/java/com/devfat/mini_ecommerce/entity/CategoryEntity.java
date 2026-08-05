@@ -1,9 +1,7 @@
 package com.devfat.mini_ecommerce.entity;
+import com.devfat.mini_ecommerce.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -11,15 +9,16 @@ import org.hibernate.annotations.DynamicUpdate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicUpdate
 @DynamicInsert
 @Entity
+@Getter @Setter
 @Builder
 @Table(name = "categories")
-public class CategoryEntity {
+public class CategoryEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +28,19 @@ public class CategoryEntity {
     @Column(nullable = false, unique = true , length = 50)
     private String name;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
-    private List<ProductEntity> products;
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
+//    private List<ProductEntity> products;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductEntity that)) return false;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+    }
 }

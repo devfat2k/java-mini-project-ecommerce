@@ -1,4 +1,4 @@
-package com.devfat.mini_ecommerce.common;
+package com.devfat.mini_ecommerce.base;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

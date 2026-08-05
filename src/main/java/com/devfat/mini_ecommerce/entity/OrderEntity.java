@@ -1,10 +1,8 @@
 package com.devfat.mini_ecommerce.entity;
 
+import com.devfat.mini_ecommerce.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -15,15 +13,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter @Setter
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicUpdate
 @DynamicInsert
-@Entity
 @Builder
 @Table(name = "orders")
-public class OrderEntity {
+public class OrderEntity extends BaseEntity {
     public enum OrderStatus { DONE, PENDING, SHIPPED, CONFIRMED, CANCELLED }
 
     @Id
@@ -54,15 +52,19 @@ public class OrderEntity {
     private List<OrderItemEntity> items = new ArrayList<>();
 
 
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @Version
     private Integer version;
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductEntity that)) return false;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+    }
 }

@@ -1,6 +1,6 @@
 -- ============================================================
 -- MINI SHOP — Consolidated Schema V1
--- Dynamic validation compliant: every table has created_at & updated_at
+-- Dynamic validation compliant: every table has created_at, updated_at, created_by, updated_by
 -- ============================================================
 
 -- ============================================================
@@ -17,7 +17,9 @@ CREATE TABLE users (
                        email_verified BOOLEAN      NOT NULL DEFAULT FALSE,
                        avatar_url     VARCHAR(500),
                        created_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
-                       updated_at     TIMESTAMP    NOT NULL DEFAULT NOW()
+                       updated_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+                       created_by     VARCHAR(150),
+                       updated_by     VARCHAR(150)
 );
 
 -- ============================================================
@@ -27,7 +29,9 @@ CREATE TABLE categories (
                             id         BIGSERIAL PRIMARY KEY,
                             name       VARCHAR(50) UNIQUE NOT NULL,
                             created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                            updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                            updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                            created_by VARCHAR(150),
+                            updated_by VARCHAR(150)
 );
 
 -- ============================================================
@@ -44,7 +48,9 @@ CREATE TABLE products (
                           image_url   VARCHAR(500),
                           version     INTEGER   NOT NULL DEFAULT 0,
                           created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-                          updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+                          updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+                          created_by  VARCHAR(150),
+                          updated_by  VARCHAR(150)
 );
 
 -- ============================================================
@@ -58,7 +64,9 @@ CREATE TABLE orders (
                         note         TEXT,
                         version      INTEGER   NOT NULL DEFAULT 0,
                         created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-                        updated_at   TIMESTAMP NOT NULL DEFAULT NOW()
+                        updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+                        created_by   VARCHAR(150),
+                        updated_by   VARCHAR(150)
 );
 
 -- ============================================================
@@ -71,7 +79,9 @@ CREATE TABLE order_items (
                              quantity   INTEGER        NOT NULL CHECK (quantity > 0),
                              unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
                              created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                             updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                             updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                             created_by VARCHAR(150),
+                             updated_by VARCHAR(150)
 );
 
 -- ============================================================
@@ -84,7 +94,9 @@ CREATE TABLE refresh_tokens (
                                 expires_at TIMESTAMP NOT NULL,
                                 revoked    BOOLEAN NOT NULL DEFAULT FALSE,
                                 created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                                updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                                updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                                created_by VARCHAR(150),
+                                updated_by VARCHAR(150)
 );
 
 -- ============================================================
@@ -100,7 +112,9 @@ CREATE TABLE payments (
                           provider_transaction_id VARCHAR(100) UNIQUE,
                           paid_at                 TIMESTAMP,
                           created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
-                          updated_at              TIMESTAMP NOT NULL DEFAULT NOW()
+                          updated_at              TIMESTAMP NOT NULL DEFAULT NOW(),
+                          created_by              VARCHAR(150),
+                          updated_by              VARCHAR(150)
 );
 
 -- ============================================================
@@ -115,7 +129,9 @@ CREATE TABLE otp_verifications (
                                    attempts   INTEGER NOT NULL DEFAULT 0,
                                    consumed   BOOLEAN NOT NULL DEFAULT FALSE,
                                    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                                   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                                   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                                   created_by VARCHAR(150),
+                                   updated_by VARCHAR(150)
 );
 
 -- ============================================================

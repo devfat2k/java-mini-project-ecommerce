@@ -3,13 +3,7 @@ package com.devfat.mini_ecommerce.category.internal;
 import com.devfat.mini_ecommerce.product.internal.ProductEntity;
 
 
-
-
-
-
-
-
-
+import com.devfat.mini_ecommerce.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,7 +22,7 @@ import java.util.List;
 @Getter @Setter
 @Builder
 @Table(name = "categories")
-public class CategoryEntity {
+public class CategoryEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,10 +34,6 @@ public class CategoryEntity {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
     private List<ProductEntity> products;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
 
     @Override

@@ -269,118 +269,59 @@ mini-ecommerce/
 │   │   │   │   ├── deploy_render_plan.md          # Kế hoạch deploy lên Render
 │   │   │   │   └── docker-commands-cheatsheet.md  # Tham khảo Docker CLI
 │   │   │   │
-│   │   │   ├── dto/
-│   │   │   │   ├── request/                       # 17 Request DTOs (Records / Classes)
-│   │   │   │   │   ├── BasePageRequest.java       # Base class cho pagination params
-│   │   │   │   │   ├── RegisterRequestDto.java    # Đăng ký user
-│   │   │   │   │   ├── LoginRequestDto.java       # Đăng nhập
-│   │   │   │   │   ├── VerifyOtpRequestDto.java   # ★ MỚI — Xác thực OTP (email, otpCode, purpose)
-│   │   │   │   │   ├── ForgotPasswordRequestDto.java # ★ MỚI — Yêu cầu OTP quên mật khẩu
-│   │   │   │   │   ├── ResendOtpRequestDto.java   # ★ MỚI — Gửi lại OTP
-│   │   │   │   │   ├── RefreshTokenRequestDto.java # Refresh token
-│   │   │   │   │   ├── CreateProductRequestDto.java # Tạo sản phẩm
-│   │   │   │   │   ├── UpdateProductRequestDto.java # Cập nhật sản phẩm
-│   │   │   │   │   ├── CreateCategoryRequestDto.java # Tạo danh mục
-│   │   │   │   │   ├── CreateOrderRequestDto.java  # Tạo đơn hàng
-│   │   │   │   │   ├── OrderItemRequestDto.java    # Item trong đơn hàng
-│   │   │   │   │   ├── UpdateOrderStatusRequestDto.java # Cập nhật status đơn
-│   │   │   │   │   ├── ChangePasswordRequestDto.java # Đổi mật khẩu
-│   │   │   │   │   ├── UpdateProfileRequestDto.java # Cập nhật profile
-│   │   │   │   │   └── EmailRequestDto.java       # DTO truyền dữ liệu gửi Email
-│   │   │   │   │
-│   │   │   │   └── response/                      # 10 Response DTOs
-│   │   │   │       ├── AuthResponseDto.java       # Login/Verify OTP response (tokens + type)
-│   │   │   │       ├── VerifyOtpResponseDto.java  # ★ MỚI — Return accessToken/refreshToken hoặc actionToken
-│   │   │   │       ├── ResendOtpResponseDto.java  # ★ MỚI — Return message confirmation
-│   │   │   │       ├── UserResponseDto.java       # User info (+ avatarUrl)
-│   │   │   │       ├── CategoryResponseDto.java   # Category info
-│   │   │   │       ├── ProductResponseDto.java    # Product info (+ imageUrl, active)
-│   │   │   │       ├── OrderResponseDto.java      # Order info
-│   │   │   │       ├── OrderItemResponseDto.java  # Order item info
-│   │   │   │       ├── RefreshTokenResponseDto.java # Refresh response
-│   │   │   │       └── CreatePaymentResponseDto.java # Payment URL
+│   │   │   ├── shared/                            # 🛠️ Hạ tầng dùng chung (Open Module)
+│   │   │   │   ├── PingController.java            # /api/v1/health
+│   │   │   │   ├── package-info.java              # @ApplicationModule(type = OPEN)
+│   │   │   │   ├── base/                          # BaseEntity, ApiResponse, PageResponse, BasePageRequest
+│   │   │   │   ├── config/                        # SecurityConfig, FlywayConfig, WebConfig, AsyncConfig...
+│   │   │   │   ├── exception/                     # BusinessException (Base), GlobalExceptionHandler, BadRequestException...
+│   │   │   │   ├── security/                      # JwtProvider, JwtFilter, UserPrincipal (Security DTO)
+│   │   │   │   └── util/                          # CustomPageableArgumentResolver
 │   │   │   │
-│   │   │   ├── entity/                            # JPA Entities (8 entities — ★ TĂNG TỪ 7)
-│   │   │   │   ├── UserEntity.java                # User (+ emailVerified, isActive)
-│   │   │   │   ├── OtpVerificationEntity.java     # ★ MỚI — Lưu OTP hashed, attempts, expiresAt
-│   │   │   │   ├── CategoryEntity.java
-│   │   │   │   ├── ProductEntity.java             # @Version (Optimistic Lock)
-│   │   │   │   ├── OrderEntity.java               # @Version (Optimistic Lock)
-│   │   │   │   ├── OrderItemEntity.java
-│   │   │   │   ├── RefreshTokenEntity.java
-│   │   │   │   └── PaymentEntity.java
+│   │   │   ├── auth/                              # 🔑 Module Authentication & OTP
+│   │   │   │   ├── AuthController.java, AuthService.java, OtpService.java, OtpPurpose.java
+│   │   │   │   ├── dto/                           # LoginRequestDto, RegisterRequestDto, AuthResponseDto...
+│   │   │   │   ├── exception/                     # InvalidOtpException, OtpExpiredException, OtpNotFoundException...
+│   │   │   │   └── internal/                      # AuthServiceImpl, OtpServiceImpl, RefreshTokenEntity, RefreshTokenRepository, RefreshTokenGenerator...
 │   │   │   │
-│   │   │   ├── enums/                             # Enums độc lập (3 Enums — ★ REFACTORED)
-│   │   │   │   ├── Role.java                      # USER, ADMIN
-│   │   │   │   ├── OrderStatus.java               # PENDING, CONFIRMED, SHIPPED, DONE, CANCELLED
-│   │   │   │   └── OtpPurpose.java                # REGISTER_VERIFICATION, RESET_PASSWORD, CHANGE_PASSWORD_CONFIRMATION
+│   │   │   ├── category/                          # 🗂️ Module Category
+│   │   │   │   ├── CategoryController.java, CategoryService.java, CategoryResponseDto...
+│   │   │   │   ├── exception/                     # CategoryHasProductsException
+│   │   │   │   └── internal/                      # CategoryServiceImpl, CategoryEntity, CategoryRepository, CategoryMapper
 │   │   │   │
-│   │   │   ├── exception/                         # 14 Custom Exceptions + 1 Global Handler (22 Handlers)
-│   │   │   │   ├── GlobalExceptionHandler.java    # @RestControllerAdvice
-│   │   │   │   ├── AccountNotVerifiedException.java # ★ MỚI — 401 Unauthorized
-│   │   │   │   ├── OtpInvalidException.java       # ★ MỚI — 400 Bad Request
-│   │   │   │   ├── OtpExpiredException.java       # ★ MỚI — 400 Bad Request
-│   │   │   │   ├── OtpAttemptsExceededException.java # ★ MỚI — 409 Conflict
-│   │   │   │   ├── ResendCooldownException.java   # ★ MỚI — 409 Conflict
-│   │   │   │   ├── OtpNotFoundException.java      # ★ MỚI — 404 Not Found
-│   │   │   │   ├── InvalidActionTokenException.java # ★ MỚI — 400 Bad Request
-│   │   │   │   ├── BadRequestException.java       # 400
-│   │   │   │   ├── ResourceNotFoundException.java # 404
-│   │   │   │   ├── DuplicateResourceException.java # 409
-│   │   │   │   ├── InsufficientStockException.java # 409
-│   │   │   │   ├── InvalidStatusTransitionException.java # 409
-│   │   │   │   ├── CategoryHasProductsException.java # 409
-│   │   │   │   └── InvalidRefreshTokenException.java # 401
+│   │   │   ├── product/                           # 📦 Module Product
+│   │   │   │   ├── ProductController.java, ProductService.java, ProductResponseDto...
+│   │   │   │   ├── exception/                     # InsufficientStockException, OptimisticLockException
+│   │   │   │   └── internal/                      # ProductServiceImpl, ProductEntity, ProductRepository, ProductMapper
 │   │   │   │
-│   │   │   ├── repository/                        # 7 Repositories (★ TĂNG TỪ 6)
-│   │   │   │   ├── UserRepository.java
-│   │   │   │   ├── OtpVerificationRepository.java # ★ MỚI — Data access cho OTP & Cleanup
-│   │   │   │   ├── CategoryRepository.java
-│   │   │   │   ├── ProductRepository.java         # JPQL + Projections
-│   │   │   │   ├── OrderRepository.java
-│   │   │   │   ├── RefreshTokenRepository.java
-│   │   │   │   └── PaymentRepository.java
+│   │   │   ├── order/                             # 🛒 Module Order
+│   │   │   │   ├── OrderController.java, OrderService.java, OrderStatus, OrderResponseDto...
+│   │   │   │   ├── exception/                     # InvalidStatusTransitionException
+│   │   │   │   └── internal/                      # OrderServiceImpl, OrderEntity, OrderItemEntity, OrderRepository...
 │   │   │   │
-│   │   │   ├── scheduler/                         # Background Schedulers (2 Schedulers — ★ TĂNG TỪ 1)
-│   │   │   │   ├── OtpCleanupScheduler.java       # ★ MỚI — Quét & xoá OTP hết hạn hàng giờ
-│   │   │   │   └── (PaymentExpiredInPaymentServiceImpl) # Quét payment hết hạn mỗi 2 phút
+│   │   │   ├── payment/                           # 💳 Module Payment (VNPAY)
+│   │   │   │   ├── PaymentController.java, PaymentService.java, PaymentStatus, PaymentMethod, PaymentProvider
+│   │   │   │   └── internal/                      # PaymentServiceImpl, PaymentEntity, PaymentRepository, VNPayConfig...
 │   │   │   │
-│   │   │   ├── security/                          # Security module (7 files)
-│   │   │   │   ├── JwtProvider.java
-│   │   │   │   ├── JwtAuthenticationFilter.java
-│   │   │   │   ├── JwtAuthenticationEntryPoint.java
-│   │   │   │   ├── JwtAccessDeniedHandler.java
-│   │   │   │   ├── CustomUserDetailsService.java
-│   │   │   │   ├── UserPrincipal.java
-│   │   │   │   └── RefreshTokenGenerator.java
+│   │   │   ├── user/                              # 👤 Module User & Profile
+│   │   │   │   ├── UserController.java, UserService.java, Role, UserResponseDto...
+│   │   │   │   └── internal/                      # UserServiceImpl, UserEntity, CustomUserDetailsService...
 │   │   │   │
-│   │   │   ├── service/                           # Service Interfaces (9 files) + Impl (9 files)
-│   │   │   │   ├── AuthService.java / AuthServiceImpl.java — Multi-step OTP Auth
-│   │   │   │   ├── OtpService.java / OtpServiceImpl.java — ★ MỚI: OTP generation, hash, verify, cooldown
-│   │   │   │   ├── CategoryService.java / CategoryServiceImpl.java — CacheEvict
-│   │   │   │   ├── ProductService.java / ProductServiceImpl.java — Cacheable & CacheEvict
-│   │   │   │   ├── OrderService.java / OrderServiceImpl.java — Auto restore stock + Async Email
-│   │   │   │   ├── UserService.java / UserServiceImpl.java
-│   │   │   │   ├── PaymentService.java / PaymentServiceImpl.java — Async Email IPN
-│   │   │   │   ├── StorageService.java / StorageServiceImpl.java — MinIO + Thumbnailator
-│   │   │   │   └── EmailService.java / EmailServiceImpl.java — @Async Email via MailTransport
+│   │   │   ├── storage/                           # 💾 Module Storage (MinIO)
+│   │   │   │   ├── StorageService.java
+│   │   │   │   └── internal/                      # StorageServiceImpl, MinioConfig, FileValidationUtil, TestUploadController
 │   │   │   │
-│   │   │   └── util/                              # Utility classes (6 files)
-│   │   │       ├── EmailTemplateHelper.java       # ★ MỚI: HTML Email Generator với branding Hải Sản
-│   │   │       ├── MailTransport.java             # Interface Strategy Pattern cho email transport
-│   │   │       ├── SmtpMailTransport.java          # @Profile("dev") — JavaMailSender/SMTP
-│   │   │       ├── BrevoMailTransport.java         # @Profile("prod") — Brevo REST API
-│   │   │       ├── FileValidationUtil.java        # Magic bytes header validation
-│   │   │       └── CustomPageableArgumentResolver.java # Custom Pageable Argument Resolver
+│   │   │   └── notification/                      # 📧 Module Notification (Brevo / SMTP)
+│   │   │       ├── EmailService.java, EmailRequestDto
+│   │   │       └── internal/                      # EmailServiceImpl, MailTransport, BrevoMailTransport...
 │   │   │
 │   │   └── resources/
 │   │       ├── application.yaml                   # Shared config
 │   │       ├── application-dev.yaml               # Dev profile: SMTP mail, debug log
 │   │       ├── application-prod.yaml              # Prod profile: Brevo mail, SQL log OFF
-│   │       ├── db/migration/                      # 3 Migrations
-│   │       │   ├── V1__init_mini_shop.sql         # Core Schema hợp nhất (7 bảng)
-│   │       │   ├── V2__seed_seafood_categories_and_products.sql # 9 categories & 36 hải sản seed data
-│   │       │   └── V3__add_otp_verifications_table.sql # ★ MỚI — Schema cho OTP Verification
+│   │       ├── db/migration/                      # 2 Flyway Migrations tối ưu
+│   │       │   ├── V1__init_mini_shop.sql         # Core Schema hợp nhất (8 bảng: users, categories, products, orders, order_items, refresh_tokens, payments, otp_verifications)
+│   │       │   └── V2__seed_seafood_categories_and_products.sql # 9 categories & 36 hải sản seed data
 │   │       └── templates/
 │   │           └── email/
 │   │               └── SendEmailTemplate.html    # HTML Email Template gửi mã OTP & Đơn hàng
@@ -390,13 +331,12 @@ mini-ecommerce/
 
 ## 6. Database Schema & Migrations
 
-### 6.1. Lịch sử Flyway Migrations (3 migrations — ★ TĂNG TỪ 2)
+### 6.1. Lịch sử Flyway Migrations (2 migrations tối ưu)
 
 | File | Nội dung |
 |---|---|
-| `V1__init_mini_shop.sql` | **Core Schema hợp nhất** — Tạo 7 bảng core (`users`, `categories`, `products`, `orders`, `order_items`, `refresh_tokens`, `payments`) + 9 indexes. Tất cả PK/FK là `BIGINT`, có `version` cho Optimistic Lock. |
-| `V2__seed_seafood_categories_and_products.sql` | **Data Seed Hải Sản** — Seed 9 danh mục hải sản & 36 sản phẩm thực tế kèm giá, stock, mô tả chi tiết. |
-| **`V3__add_otp_verifications_table.sql`** | **★ MỚI** — Thêm cột `email_verified` (BOOLEAN DEFAULT FALSE) vào `users` + Tạo bảng `otp_verifications` và index `idx_otp_user_purpose`. |
+| `V1__init_mini_shop.sql` | **Core Schema hợp nhất** — Tạo 8 bảng core (`users`, `categories`, `products`, `orders`, `order_items`, `refresh_tokens`, `payments`, `otp_verifications`) + full `created_at`/`updated_at` + index. Tất cả PK/FK là `BIGINT`, có `version` cho Optimistic Lock. |
+| `V2__seed_seafood_categories_and_products.sql` | **Data Seed Hải Sản** — Seed 9 danh mục hải sản & 36 sản phẩm thực tế kèm giá, stock, mô tả chi tiết và đầy đủ timestamp. |
 
 ### 6.2. Schema tổng quan (8 bảng)
 

@@ -84,6 +84,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_URLS).permitAll()
                         .requestMatchers(SWAGGER_URLS).permitAll()
                         .anyRequest().authenticated())
+
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/api/v1/public/**").permitAll()
+//                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/api/v1/user/**").authenticated()
+//                        .anyRequest().authenticated()
+//                );
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement((session) ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -8,6 +8,7 @@ import com.devfat.mini_ecommerce.entity.UserEntity;
 import com.devfat.mini_ecommerce.enums.OtpPurpose;
 import com.devfat.mini_ecommerce.exception.BadRequestException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
+import com.devfat.mini_ecommerce.mapper.UserMapper;
 import com.devfat.mini_ecommerce.repository.RefreshTokenRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
 import com.devfat.mini_ecommerce.service.OtpService;
@@ -36,26 +37,26 @@ public class UserServiceImpl implements UserService {
 
     private final StorageService storageService;
     private final OtpService otpService;
+    private final UserMapper userMapper;
 
-
-    public UserResponseDto toResponseDto(UserEntity userEntity) {
-        return UserResponseDto.builder()
-                .userId(userEntity.getId())
-                .email(userEntity.getEmail())
-                .fullName(userEntity.getFullName())
-                .avatarUrl(userEntity.getAvatarUrl())
-                .phoneNumber(userEntity.getPhoneNumber())
-                .role(userEntity.getRole())
-                .isActive(userEntity.isActive())
-                .createdAt(userEntity.getCreatedAt())
-                .build();
-    }
+//    public UserResponseDto toResponseDto(UserEntity userEntity) {
+//        return UserResponseDto.builder()
+//                .userId(userEntity.getId())
+//                .email(userEntity.getEmail())
+//                .fullName(userEntity.getFullName())
+//                .avatarUrl(userEntity.getAvatarUrl())
+//                .phoneNumber(userEntity.getPhoneNumber())
+//                .role(userEntity.getRole())
+//                .isActive(userEntity.isActive())
+//                .createdAt(userEntity.getCreatedAt())
+//                .build();
+//    }
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDto getMe(Long id) {
         return userRepository.findById(id)
-                .map(this::toResponseDto)
+                .map(userMapper::toResponseDto)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
@@ -63,7 +64,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable)
-                .map(this::toResponseDto);
+                .map(userMapper::toResponseDto);
     }
     
 
@@ -128,7 +129,7 @@ public class UserServiceImpl implements UserService {
         String url = storageService.uploadFile(file, "UserImage", true);
         user.setAvatarUrl(url);
         userRepository.save(user);
-        return toResponseDto(user);
+        return userMapper.toResponseDto(user);
     }
 
     @Override

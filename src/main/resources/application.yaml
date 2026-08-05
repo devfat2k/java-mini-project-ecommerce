@@ -63,6 +63,11 @@ app:
     brevo:
       api-key: ${BREVO_API_KEY:}
       sender-email: ${BREVO_SENDER_EMAIL:}
+  scheduler:
+    otp-cleanup:
+      cron: "${OTP_CLEANUP_CRON:0 0 * * * *}"
+    payment-expired:
+      cron: "${PAYMENT_EXPIRED_CRON:0 */2 * * * *}"
 
 vnpay:
   pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
@@ -70,6 +75,7 @@ vnpay:
   secret-key: ${VNPAY_SECRET_KEY}
   return-url: ${VNPAY_RETURN_URL}
   ipn-url: ${VNPAY_IPN_URL}
+
 
 springdoc:
   api-docs:

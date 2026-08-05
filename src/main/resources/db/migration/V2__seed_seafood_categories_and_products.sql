@@ -1,13 +1,13 @@
-INSERT INTO categories (name, created_at) VALUES
-    ('Cá biển', now()),
-    ('Tôm', now()),
-    ('Mực & Bạch tuộc', now()),
-    ('Cua & Ghẹ', now()),
-    ('Ốc & Nghêu Sò', now()),
-    ('Set hải sản văn phòng', now()),
-    ('Set hải sản nhậu', now()),
-    ('Hải sản khô', now()),
-    ('Nước mắm & Gia vị', now())
+INSERT INTO categories (name, created_at, updated_at) VALUES
+    ('Cá biển', now(), now()),
+    ('Tôm', now(), now()),
+    ('Mực & Bạch tuộc', now(), now()),
+    ('Cua & Ghẹ', now(), now()),
+    ('Ốc & Nghêu Sò', now(), now()),
+    ('Set hải sản văn phòng', now(), now()),
+    ('Set hải sản nhậu', now(), now()),
+    ('Hải sản khô', now(), now()),
+    ('Nước mắm & Gia vị', now(), now())
 ON CONFLICT (name) DO NOTHING;
 
 -- Dùng INSERT ... SELECT WHERE NOT EXISTS vì products.name không có UNIQUE constraint

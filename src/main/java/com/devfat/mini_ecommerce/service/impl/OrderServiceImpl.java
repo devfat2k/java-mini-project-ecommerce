@@ -11,6 +11,7 @@ import com.devfat.mini_ecommerce.entity.UserEntity;
 import com.devfat.mini_ecommerce.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.exception.InvalidStatusTransitionException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
+import com.devfat.mini_ecommerce.mapper.OrderMapper;
 import com.devfat.mini_ecommerce.repository.OrderRepository;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.repository.UserRepository;
@@ -38,6 +39,8 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final EmailService emailService;
 
+    private final OrderMapper  orderMapper;
+
 
 
     private static final Map<OrderEntity.OrderStatus, Set<OrderEntity.OrderStatus>> ALLOWED_ORDERS = Map.of(
@@ -47,22 +50,22 @@ public class OrderServiceImpl implements OrderService {
             // DONE, CANCELLED không có entry -> get() trả null -> exception -> đúng vì đây là trạng thái kết thúc
     );
 
-    private OrderResponseDto toOrderResponse(OrderEntity orderEntity) {
-        return OrderResponseDto.builder()
-                .id(orderEntity.getId())
-                .status(orderEntity.getStatus())
-                .totalAmount(orderEntity.getTotalAmount())
-                .createdAt(orderEntity.getCreatedAt())
-                .orderItems(
-                        orderEntity.getItems().stream()
-                                .map(item -> OrderItemResponseDto.builder()
-                                        .productName(item.getProduct().getName())
-                                        .quantity(item.getQuantity())
-                                        .unitPrice(item.getUnitPrice())
-                                        .build()
-                                ).toList()
-                ).build();
-    }
+//    private OrderResponseDto toOrderResponse(OrderEntity orderEntity) {
+//        return OrderResponseDto.builder()
+//                .id(orderEntity.getId())
+//                .status(orderEntity.getStatus())
+//                .totalAmount(orderEntity.getTotalAmount())
+//                .createdAt(orderEntity.getCreatedAt())
+//                .orderItems(
+//                        orderEntity.getItems().stream()
+//                                .map(item -> OrderItemResponseDto.builder()
+//                                        .productName(item.getProduct().getName())
+//                                        .quantity(item.getQuantity())
+//                                        .unitPrice(item.getUnitPrice())
+//                                        .build()
+//                                ).toList()
+//                ).build();
+//    }
 
 
     /**
@@ -90,7 +93,7 @@ public class OrderServiceImpl implements OrderService {
 
         return orderRepository.findByUserIdWithDetails(userIdPath)
                 .stream()
-                .map(this::toOrderResponse)
+                .map(orderMapper::toResponseDto)
                 .toList();
     }
 
@@ -118,8 +121,10 @@ public class OrderServiceImpl implements OrderService {
             throw new AccessDeniedException("Access denied. This order does not belong to you!");
         }
 
-        return toOrderResponse(order);
+//        return toOrderResponse(order);
+        return orderMapper.toResponseDto(order);
     }
+
 
     @Override
     @Transactional
@@ -161,7 +166,8 @@ public class OrderServiceImpl implements OrderService {
 
         emailService.sendPaymentSuccessEmail(order.getUser().getEmail(), order.getId());
 
-        return toOrderResponse(orderRepository.save(order));
+//        return toOrderResponse(orderRepository.save(order));
+        return orderMapper.toResponseDto(order);
     }
 
     // TODO (Optimize later): Xử lý Race Condition khi có nhiều request cùng update stock
@@ -187,6 +193,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
-        return toOrderResponse(orderRepository.save(order));
+//        return toOrderResponse(orderRepository.save(order));
+        return orderMapper.toResponseDto(orderRepository.save(order));
     }
 }

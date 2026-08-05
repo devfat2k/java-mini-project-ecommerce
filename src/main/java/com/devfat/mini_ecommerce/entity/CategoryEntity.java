@@ -18,7 +18,7 @@ import java.util.List;
 @Getter @Setter
 @Builder
 @Table(name = "categories")
-public class CategoryEntity extends BaseEntity {
+public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,8 +28,12 @@ public class CategoryEntity extends BaseEntity {
     @Column(nullable = false, unique = true , length = 50)
     private String name;
 
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
-//    private List<ProductEntity> products;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
+    private List<ProductEntity> products;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
 
     @Override

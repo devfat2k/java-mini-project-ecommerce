@@ -9,6 +9,7 @@ import com.devfat.mini_ecommerce.entity.ProductEntity;
 import com.devfat.mini_ecommerce.exception.BadRequestException;
 import com.devfat.mini_ecommerce.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.exception.ResourceNotFoundException;
+import com.devfat.mini_ecommerce.mapper.ProductMapper;
 import com.devfat.mini_ecommerce.repository.CategoryRepository;
 import com.devfat.mini_ecommerce.repository.ProductRepository;
 import com.devfat.mini_ecommerce.service.ProductService;
@@ -35,24 +36,25 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
 
     private final StorageService storageService;
+    private final ProductMapper productMapper;
 
-    private ProductResponseDto toResponse(ProductEntity productEntity) {
-        CategoryResponseDto categoryDto = productEntity.getCategory() != null
-                ? CategoryResponseDto.builder()
-                .id(productEntity.getCategory().getId())
-                .categoryName(productEntity.getCategory().getName())
-                .build()
-                : null;
-       return ProductResponseDto.builder()
-               .id(productEntity.getId())
-               .name(productEntity.getName())
-               .imageUrl(productEntity.getImageUrl())
-               .description(productEntity.getDescription())
-               .active(productEntity.isActive())
-               .price(productEntity.getPrice())
-               .stock(productEntity.getStock())
-               .category(categoryDto) .build();
-    }
+//    private ProductResponseDto toResponse(ProductEntity productEntity) {
+//        CategoryResponseDto categoryDto = productEntity.getCategory() != null
+//                ? CategoryResponseDto.builder()
+//                .id(productEntity.getCategory().getId())
+//                .categoryName(productEntity.getCategory().getName())
+//                .build()
+//                : null;
+//       return ProductResponseDto.builder()
+//               .id(productEntity.getId())
+//               .name(productEntity.getName())
+//               .imageUrl(productEntity.getImageUrl())
+//               .description(productEntity.getDescription())
+//               .active(productEntity.isActive())
+//               .price(productEntity.getPrice())
+//               .stock(productEntity.getStock())
+//               .category(categoryDto) .build();
+//    }
 
     @Override
     @Transactional
@@ -66,7 +68,8 @@ public class ProductServiceImpl implements ProductService {
         product.setStock(createProductRequestDto.stock());
         product.setActive(createProductRequestDto.isActive());
 
-        return toResponse(productRepository.save(product));
+//        return toResponse(productRepository.save(product));
+        return productMapper.toResponseDto(productRepository.save(product));
     }
 
     @Override
@@ -75,7 +78,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponseDto> getProductsWithSearch(String search, Pageable pageable) {
         return productRepository.findByNameContainsIgnoreCase(search, pageable)
-                .map(this::toResponse);
+                .map(productMapper::toResponseDto);
     }
 
     @Override
@@ -83,7 +86,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponseDto findById(Long id) {
         return productRepository.findById(id)
-                .map(this::toResponse)
+                .map(productMapper::toResponseDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy id = " + id));
     }
 
@@ -108,8 +111,10 @@ public class ProductServiceImpl implements ProductService {
             product.setCategory(category);
         }
 
-        return toResponse(productRepository.save(product));
+//        return toResponse(productRepository.save(product));
+        return productMapper.toResponseDto(productRepository.save(product));
     }
+
 
     @Override
     @CacheEvict(value = "products", key = "#id")
@@ -126,8 +131,10 @@ public class ProductServiceImpl implements ProductService {
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);
 
-        return toResponse(product);
+//        return toResponse(product);
+        return productMapper.toResponseDto(product);
     }
+
 
     @Override
     @CacheEvict(value = "products", key = "#id")
@@ -140,8 +147,10 @@ public class ProductServiceImpl implements ProductService {
         product.setStock(product.getStock() + quantity);
         productRepository.save(product);
 
-        return toResponse(product);
+//        return toResponse(product);
+        return productMapper.toResponseDto(product);
     }
+
 
     @Override
     @CacheEvict(value = "products", key = "#id")
@@ -187,6 +196,7 @@ public class ProductServiceImpl implements ProductService {
         product.setImageUrl(url);
         productRepository.save(product);
 
-        return toResponse(product);
+//        return toResponse(product);
+        return  productMapper.toResponseDto(product);
     }
 }

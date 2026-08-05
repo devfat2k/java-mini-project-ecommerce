@@ -17,7 +17,7 @@ public class AsyncConfig {
         executor.setCorePoolSize(3);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(50);
-        executor.setThreadNamePrefix("EmailAsync-");
+        executor.setThreadNamePrefix("Async-");
         executor.initialize();
         return executor;
     }

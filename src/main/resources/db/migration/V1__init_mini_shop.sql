@@ -1,23 +1,23 @@
 -- ============================================================
--- MINI SHOP — Schema hợp nhất (gộp từ V1 → V7 cũ)
--- Trạng thái cuối cùng: mọi id/FK là BIGINT, có version cho
--- Optimistic Lock (products, orders), có image_url/avatar_url
+-- MINI SHOP — Consolidated Schema V1
+-- Dynamic validation compliant: every table has created_at & updated_at
 -- ============================================================
 
 -- ============================================================
 -- 1. USERS
 -- ============================================================
 CREATE TABLE users (
-                       id           BIGSERIAL PRIMARY KEY,
-                       full_name    VARCHAR(100) NOT NULL,
-                       email        VARCHAR(150) UNIQUE NOT NULL,
-                       phone_number VARCHAR(15)  UNIQUE NOT NULL,
-                       password     VARCHAR(255) NOT NULL,
-                       role         VARCHAR(20)  NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN')),
-                       is_active    BOOLEAN      NOT NULL DEFAULT TRUE,
-                       avatar_url   VARCHAR(500),
-                       created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
-                       updated_at   TIMESTAMP    NOT NULL DEFAULT NOW()
+                       id             BIGSERIAL PRIMARY KEY,
+                       full_name      VARCHAR(100) NOT NULL,
+                       email          VARCHAR(150) UNIQUE NOT NULL,
+                       phone_number   VARCHAR(15)  UNIQUE NOT NULL,
+                       password       VARCHAR(255) NOT NULL,
+                       role           VARCHAR(20)  NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN')),
+                       is_active      BOOLEAN      NOT NULL DEFAULT TRUE,
+                       email_verified BOOLEAN      NOT NULL DEFAULT FALSE,
+                       avatar_url     VARCHAR(500),
+                       created_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+                       updated_at     TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -26,7 +26,8 @@ CREATE TABLE users (
 CREATE TABLE categories (
                             id         BIGSERIAL PRIMARY KEY,
                             name       VARCHAR(50) UNIQUE NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+                            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                            updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -68,7 +69,9 @@ CREATE TABLE order_items (
                              order_id   BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
                              product_id BIGINT NOT NULL REFERENCES products(id),
                              quantity   INTEGER        NOT NULL CHECK (quantity > 0),
-                             unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0)
+                             unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
+                             created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                             updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -80,7 +83,8 @@ CREATE TABLE refresh_tokens (
                                 token_hash VARCHAR(255) NOT NULL,
                                 expires_at TIMESTAMP NOT NULL,
                                 revoked    BOOLEAN NOT NULL DEFAULT FALSE,
-                                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+                                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                                updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -100,7 +104,22 @@ CREATE TABLE payments (
 );
 
 -- ============================================================
--- 8. INDEXES
+-- 8. OTP_VERIFICATIONS
+-- ============================================================
+CREATE TABLE otp_verifications (
+                                   id         BIGSERIAL PRIMARY KEY,
+                                   user_id    BIGINT NOT NULL REFERENCES users(id),
+                                   otp_hash   VARCHAR(255) NOT NULL,
+                                   purpose    VARCHAR(150) NOT NULL CHECK (purpose IN ('REGISTER_VERIFICATION', 'RESET_PASSWORD', 'CHANGE_PASSWORD_CONFIRMATION')),
+                                   expires_at TIMESTAMP NOT NULL,
+                                   attempts   INTEGER NOT NULL DEFAULT 0,
+                                   consumed   BOOLEAN NOT NULL DEFAULT FALSE,
+                                   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                                   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- 9. INDEXES
 -- ============================================================
 CREATE INDEX idx_products_category         ON products(category_id);
 CREATE INDEX idx_orders_user               ON orders(user_id);
@@ -111,3 +130,4 @@ CREATE INDEX idx_refresh_tokens_user_id    ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
 CREATE INDEX idx_payments_order            ON payments(order_id);
 CREATE INDEX idx_payments_status           ON payments(status);
+CREATE INDEX idx_otp_user_purpose          ON otp_verifications(user_id, purpose);

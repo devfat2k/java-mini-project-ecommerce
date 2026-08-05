@@ -16,7 +16,7 @@ public class OtpCleanupScheduler {
 
     private final OtpVerificationRepository otpVerificationRepository;
 
-    @Scheduled(cron = "0 0 3 * * *")   // chạy mỗi ngày lúc 3h sáng — giờ ít traffic
+    @Scheduled(cron = "${app.scheduler.otp-cleanup.cron}")   // chạy mỗi ngày lúc 3h sáng — giờ ít traffic
     @Transactional
     public void cleanupExpiredOtps() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(7);

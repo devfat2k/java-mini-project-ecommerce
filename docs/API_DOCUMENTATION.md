@@ -1,6 +1,8 @@
 # 📘 TÀI LIỆU HƯỚNG DẪN SỬ DỤNG VÀ QUY TRÌNH HOẠT ĐỘNG CÁC API ENDPOINTS
 ## 🛒 DỰ ÁN MINI E-COMMERCE (BÁN HẢI SẢN TƯƠI SỐNG & CHẾ BIẾN)
 
+> **Lưu ý:** Vui lòng xem bản chính thức chi tiết tại [src/main/java/com/devfat/mini_ecommerce/docs/API_DOCUMENTATION.md](file:///Users/andy2015bui/Desktop/mini-ecommerce/src/main/java/com/devfat/mini_ecommerce/docs/API_DOCUMENTATION.md).
+
 > **Mục đích tài liệu:** Cung cấp hướng dẫn toàn diện, cực kỳ chi tiết về **chuẩn API Response, quy trình hoạt động (Execution Flow) của từng Module**, và **chi tiết từng API Endpoint** trong dự án Mini E-commerce. Tài liệu phục vụ trực tiếp cho Developers (Frontend, Backend, Mobile, Full-stack) và AI Agents trong quá trình tích hợp và phát triển hệ thống.
 >
 > **Cập nhật lần cuối:** 2026-07-28  

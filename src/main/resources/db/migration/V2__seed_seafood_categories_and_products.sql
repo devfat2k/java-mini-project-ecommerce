@@ -61,3 +61,32 @@ SELECT * FROM (VALUES
     ('Sốt me chấm hải sản 250g',              'Sốt me chua ngọt, hợp mực/tôm nướng',       45000::NUMERIC, 70,  (SELECT id FROM categories WHERE name = 'Nước mắm & Gia vị'), TRUE, now(), now(), 0)
 ) AS v(name, description, price, stock, category_id, is_active, created_at, updated_at, version)
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE products.name = v.name);
+
+
+INSERT INTO roles (id, name, description, created_by) VALUES
+                                                          (1, 'ADMIN', 'Quản trị viên toàn quyền hệ thống', 'SYSTEM'),
+                                                          (2, 'USER', 'Khách hàng người dùng thông thường', 'SYSTEM')
+    ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO permissions (id, code, description, created_by) VALUES
+                                                                (1, 'product:create', 'Quyền tạo sản phẩm mới', 'SYSTEM'),
+                                                                (2, 'product:read', 'Quyền xem danh sách & chi tiết sản phẩm', 'SYSTEM'),
+                                                                (3, 'product:update', 'Quyền cập nhật thông tin sản phẩm', 'SYSTEM'),
+                                                                (4, 'product:delete', 'Quyền xóa/ẩn sản phẩm', 'SYSTEM'),
+                                                                (5, 'category:manage', 'Quyền quản lý danh mục sản phẩm', 'SYSTEM'),
+                                                                (6, 'order:create', 'Quyền tạo đơn hàng mới', 'SYSTEM'),
+                                                                (7, 'order:read', 'Quyền xem đơn hàng của mình', 'SYSTEM'),
+                                                                (8, 'order:manage', 'Quyền quản lý & duyệt tất cả đơn hàng', 'SYSTEM'),
+                                                                (9, 'user:manage', 'Quyền quản lý người dùng', 'SYSTEM'),
+                                                                (10, 'rbac:manage', 'Quyền quản lý vai trò & phân quyền', 'SYSTEM')
+    ON CONFLICT (id) DO NOTHING;
+
+-- ADMIN có tất cả 10 quyền
+INSERT INTO role_permissions (role_id, permission_id, created_by) VALUES
+                                                                      (1, 1, 'SYSTEM'), (1, 2, 'SYSTEM'), (1, 3, 'SYSTEM'), (1, 4, 'SYSTEM'), (1, 5, 'SYSTEM'),
+                                                                      (1, 6, 'SYSTEM'), (1, 7, 'SYSTEM'), (1, 8, 'SYSTEM'), (1, 9, 'SYSTEM'), (1, 10, 'SYSTEM')
+    ON CONFLICT DO NOTHING;
+-- USER có 3 quyền đọc sản phẩm, tạo & xem đơn hàng
+INSERT INTO role_permissions (role_id, permission_id, created_by) VALUES
+                                                                      (2, 2, 'SYSTEM'), (2, 6, 'SYSTEM'), (2, 7, 'SYSTEM')
+    ON CONFLICT DO NOTHING;

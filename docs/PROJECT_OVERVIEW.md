@@ -37,33 +37,33 @@
 
 ## 1. Tổng quan dự án
 
-| Thuộc tính | Giá trị |
-|---|---|
-| **Tên dự án** | Mini Ecommerce — Bán Hải Sản Tươi Sống & Chế Biến (Seafood) |
-| **Group ID** | `com.devfat` |
-| **Artifact ID** | `mini-ecommerce` |
-| **Version** | `0.0.1-SNAPSHOT` |
-| **Main class** | `MiniEcommerceApplication` |
-| **Base package** | `com.devfat.mini_ecommerce` |
-| **Miền nghiệp vụ (Domain)** | **E-commerce Bán Hải Sản (Seafood)** — Tươi sống, phile, chế biến sẵn & gia vị |
-| **Mục tiêu** | Side project cá nhân — rèn luyện Java Backend, áp dụng best practices thực tế, chuẩn bị kết nối Frontend (React/Next.js/Vue) và làm portfolio |
-| **Kiến trúc** | Layered Architecture (Controller → Service → Repository → Entity) |
-| **API Style** | RESTful JSON API, Stateless (JWT, không session) |
-| **Trạng thái hiện tại** | Hoàn thiện hệ thống **Xác thực OTP Email**, chuẩn bị **Frontend Integration** & **Production Deployment** lên Render |
+| Thuộc tính                  | Giá trị                                                                                                                                       |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tên dự án**               | Mini Ecommerce — Bán Hải Sản Tươi Sống & Chế Biến (Seafood)                                                                                   |
+| **Group ID**                | `com.devfat`                                                                                                                                  |
+| **Artifact ID**             | `mini-ecommerce`                                                                                                                              |
+| **Version**                 | `0.0.1-SNAPSHOT`                                                                                                                              |
+| **Main class**              | `MiniEcommerceApplication`                                                                                                                    |
+| **Base package**            | `com.devfat.mini_ecommerce`                                                                                                                   |
+| **Miền nghiệp vụ (Domain)** | **E-commerce Bán Hải Sản (Seafood)** — Tươi sống, phile, chế biến sẵn & gia vị                                                                |
+| **Mục tiêu**                | Side project cá nhân — rèn luyện Java Backend, áp dụng best practices thực tế, chuẩn bị kết nối Frontend (React/Next.js/Vue) và làm portfolio |
+| **Kiến trúc**               | Layered Architecture (Controller → Service → Repository → Entity)                                                                             |
+| **API Style**               | RESTful JSON API, Stateless (JWT, không session)                                                                                              |
+| **Trạng thái hiện tại**     | Hoàn thiện hệ thống **Xác thực OTP Email**, chuẩn bị **Frontend Integration** & **Production Deployment** lên Render                          |
 
 ### 1.1. Điểm thay đổi & bổ sung mới nhất (V6 → V7, tính đến 2026-07-28)
 
-| Module / Tính năng | Trạng thái V6 (2026-07-26) | Trạng thái V7 Hiện tại (2026-07-28) |
-|---|---|---|
-| **Xác thực Tài Khoản qua OTP Email (Account Verification)** | ❌ Chưa có — Đăng ký là tài khoản kích hoạt ngay | ✅ **MỚI** — Luồng Đăng ký tạo user với `email_verified = false`, `is_active = false`. Gửi mã OTP 6 chữ số qua email. Client cần gọi `/api/v1/auth/verify-otp` để kích hoạt tài khoản (`is_active = true`, `email_verified = true`) và nhận ngay JWT tokens (`accessToken` + `refreshToken`). |
-| **Quên mật khẩu & Đặt lại (Forgot & Reset Password via OTP)** | ❌ Chưa có | ✅ **MỚI** — Endpoints `/forgot-password`, `/verify-otp`, `/resend-otp`. Khi xác thực OTP quên mật khẩu thành công, hệ thống trả về `actionToken` để client thực hiện đổi mật khẩu an toàn. |
-| **Bảng & Schema OTP (`otp_verifications`)** | ❌ 2 migrations (V1, V2) | ✅ **MỚI** — Thêm `V3__add_otp_verifications_table.sql`: Tạo cột `email_verified` trong `users` và bảng `otp_verifications` (FK `user_id`, `otp_hash`, `purpose`, `expires_at`, `attempts`, `consumed`). Index `idx_otp_user_purpose`. |
-| **OTP Cleanup Scheduler** | ❌ Chưa có | ✅ **MỚI** — `OtpCleanupScheduler` với `@Scheduled(cron = "0 0 * * * *")` tự động dọn dẹp các OTP đã dùng hoặc hết hạn hàng giờ. |
-| **HTML Email Templates & Helper** | Plain text email | ✅ **NÂNG CẤP** — `EmailTemplateHelper` + HTML Email Template (`SendEmailTemplate.html`) thiết kế chuẩn UI thương hiệu Hải Sản (màu xanh tươi mát, nút bấm rõ ràng, mã OTP nổi bật). |
-| **Tách biệt Enums (`com.devfat.mini_ecommerce.enums`)** | Enums nằm inline trong Entity | ✅ **REFACTORED** — Tách riêng các Enums thành file độc lập trong package `enums`: `Role`, `OrderStatus`, `OtpPurpose`. |
-| **Exception Handling cho Auth/OTP** | 15 Exception Handlers | ✅ **TĂNG LÊN 22 HANDLERS** — Thêm 7 custom OTP exceptions (`OtpInvalidException`, `OtpExpiredException`, `OtpAttemptsExceededException`, `ResendCooldownException`, `OtpNotFoundException`, `AccountNotVerifiedException`, `InvalidActionTokenException`). |
-| **Tổng số Endpoints REST API** | 35 Endpoints | ✅ **39 ENDPOINTS** — Thêm 4 endpoints chuyên biệt cho xác thực OTP & Quên mật khẩu (`verify-otp`, `forgot-password`, `resend-otp`). |
-| **Tài liệu Hướng dẫn Frontend** | ❌ Chưa có | ✅ **MỚI (MỤC 22)** — Thêm toàn bộ phần hướng dẫn chi tiết về API Response, Pagination, Interceptor 401, Auth Flow Specs dành cho Frontend / Full-stack / AI Developers. |
+| Module / Tính năng                                            | Trạng thái V6 (2026-07-26)                       | Trạng thái V7 Hiện tại (2026-07-28)                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Xác thực Tài Khoản qua OTP Email (Account Verification)**   | ❌ Chưa có — Đăng ký là tài khoản kích hoạt ngay | ✅ **MỚI** — Luồng Đăng ký tạo user với `email_verified = false`, `is_active = false`. Gửi mã OTP 6 chữ số qua email. Client cần gọi `/api/v1/auth/verify-otp` để kích hoạt tài khoản (`is_active = true`, `email_verified = true`) và nhận ngay JWT tokens (`accessToken` + `refreshToken`). |
+| **Quên mật khẩu & Đặt lại (Forgot & Reset Password via OTP)** | ❌ Chưa có                                       | ✅ **MỚI** — Endpoints `/forgot-password`, `/verify-otp`, `/resend-otp`. Khi xác thực OTP quên mật khẩu thành công, hệ thống trả về `actionToken` để client thực hiện đổi mật khẩu an toàn.                                                                                                   |
+| **Bảng & Schema OTP (`otp_verifications`)**                   | ❌ 2 migrations (V1, V2)                         | ✅ **MỚI** — Thêm `V3__add_otp_verifications_table.sql`: Tạo cột `email_verified` trong `users` và bảng `otp_verifications` (FK `user_id`, `otp_hash`, `purpose`, `expires_at`, `attempts`, `consumed`). Index `idx_otp_user_purpose`.                                                        |
+| **OTP Cleanup Scheduler**                                     | ❌ Chưa có                                       | ✅ **MỚI** — `OtpCleanupScheduler` với `@Scheduled(cron = "0 0 * * * *")` tự động dọn dẹp các OTP đã dùng hoặc hết hạn hàng giờ.                                                                                                                                                              |
+| **HTML Email Templates & Helper**                             | Plain text email                                 | ✅ **NÂNG CẤP** — `EmailTemplateHelper` + HTML Email Template (`SendEmailTemplate.html`) thiết kế chuẩn UI thương hiệu Hải Sản (màu xanh tươi mát, nút bấm rõ ràng, mã OTP nổi bật).                                                                                                          |
+| **Tách biệt Enums (`com.devfat.mini_ecommerce.enums`)**       | Enums nằm inline trong Entity                    | ✅ **REFACTORED** — Tách riêng các Enums thành file độc lập trong package `enums`: `Role`, `OrderStatus`, `OtpPurpose`.                                                                                                                                                                       |
+| **Exception Handling cho Auth/OTP**                           | 15 Exception Handlers                            | ✅ **TĂNG LÊN 22 HANDLERS** — Thêm 7 custom OTP exceptions (`OtpInvalidException`, `OtpExpiredException`, `OtpAttemptsExceededException`, `ResendCooldownException`, `OtpNotFoundException`, `AccountNotVerifiedException`, `InvalidActionTokenException`).                                   |
+| **Tổng số Endpoints REST API**                                | 35 Endpoints                                     | ✅ **39 ENDPOINTS** — Thêm 4 endpoints chuyên biệt cho xác thực OTP & Quên mật khẩu (`verify-otp`, `forgot-password`, `resend-otp`).                                                                                                                                                          |
+| **Tài liệu Hướng dẫn Frontend**                               | ❌ Chưa có                                       | ✅ **MỚI (MỤC 22)** — Thêm toàn bộ phần hướng dẫn chi tiết về API Response, Pagination, Interceptor 401, Auth Flow Specs dành cho Frontend / Full-stack / AI Developers.                                                                                                                      |
 
 ---
 
@@ -87,49 +87,49 @@ Dự án **Mini Ecommerce** được định hình là một hệ thống **Thư
 
 ### 2.1. Core
 
-| Công nghệ | Phiên bản | Vai trò |
-|---|---|---|
-| **Java** | 21 | Ngôn ngữ chính |
-| **Spring Boot** | 3.5.16 | Framework core (`@SpringBootApplication`, `@EnableScheduling`, `@EnableAsync`, `@EnableCaching`) |
-| **Maven** | (wrapper mvnw) | Build tool |
-| **Docker** | Multi-stage | Containerization |
-| **PostgreSQL** | 16 (Docker image) | Database chính |
-| **Redis** | latest (Docker image) | In-memory Data Store cho Caching & Performance |
+| Công nghệ       | Phiên bản             | Vai trò                                                                                          |
+| --------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| **Java**        | 21                    | Ngôn ngữ chính                                                                                   |
+| **Spring Boot** | 3.5.16                | Framework core (`@SpringBootApplication`, `@EnableScheduling`, `@EnableAsync`, `@EnableCaching`) |
+| **Maven**       | (wrapper mvnw)        | Build tool                                                                                       |
+| **Docker**      | Multi-stage           | Containerization                                                                                 |
+| **PostgreSQL**  | 16 (Docker image)     | Database chính                                                                                   |
+| **Redis**       | latest (Docker image) | In-memory Data Store cho Caching & Performance                                                   |
 
 ### 2.2. Dependencies (pom.xml) — Đầy đủ
 
-| Dependency | Phiên bản | Mục đích | Scope |
-|---|---|---|---|
-| `spring-boot-starter-web` | (managed) | REST API, Tomcat embedded | compile |
-| `spring-boot-starter-data-jpa` | (managed) | ORM (Hibernate), JpaRepository, Projections | compile |
-| `spring-boot-starter-validation` | (managed) | Bean Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Email`...) | compile |
-| `spring-boot-starter-security` | (managed) | Spring Security framework | compile |
-| `spring-boot-starter-mail` | (managed) | Gửi Email (JavaMailSender) — profile `dev` | compile |
-| `spring-boot-starter-cache` | (managed) | Spring Cache Abstraction | compile |
-| `spring-boot-starter-data-redis` | (managed) | Spring Data Redis Connector & Serializers | compile |
-| `spring-boot-devtools` | (managed) | Hot reload khi dev | runtime, optional |
-| `postgresql` | (managed) | PostgreSQL JDBC driver | runtime |
-| `flyway-core` | (managed) | Database migration versioning | compile |
-| `flyway-database-postgresql` | (managed) | Flyway PostgreSQL adapter | compile |
-| `springdoc-openapi-starter-webmvc-ui` | **2.8.17** | Swagger UI + OpenAPI 3 docs (`/swagger-ui.html`) | compile |
-| `jjwt-api` | **0.12.6** | JWT API | compile |
-| `jjwt-impl` | **0.12.6** | JWT implementation | runtime |
-| `jjwt-jackson` | **0.12.6** | JWT JSON serialization | runtime |
-| `lombok` | (managed) | Giảm boilerplate (`@Data`, `@Builder`, `@RequiredArgsConstructor`) | compile, optional |
-| `spring-dotenv` | **4.0.0** | Tự động load file `.env` vào Spring properties | compile |
-| `minio` | **8.5.17** | MinIO Java SDK (S3-compatible object storage) | compile |
-| `thumbnailator` | **0.4.20** | Resize/compress ảnh trước khi upload | compile |
-| `spring-boot-starter-test` | (managed) | Unit/Integration testing | test |
+| Dependency                            | Phiên bản  | Mục đích                                                           | Scope             |
+| ------------------------------------- | ---------- | ------------------------------------------------------------------ | ----------------- |
+| `spring-boot-starter-web`             | (managed)  | REST API, Tomcat embedded                                          | compile           |
+| `spring-boot-starter-data-jpa`        | (managed)  | ORM (Hibernate), JpaRepository, Projections                        | compile           |
+| `spring-boot-starter-validation`      | (managed)  | Bean Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Email`...)    | compile           |
+| `spring-boot-starter-security`        | (managed)  | Spring Security framework                                          | compile           |
+| `spring-boot-starter-mail`            | (managed)  | Gửi Email (JavaMailSender) — profile `dev`                         | compile           |
+| `spring-boot-starter-cache`           | (managed)  | Spring Cache Abstraction                                           | compile           |
+| `spring-boot-starter-data-redis`      | (managed)  | Spring Data Redis Connector & Serializers                          | compile           |
+| `spring-boot-devtools`                | (managed)  | Hot reload khi dev                                                 | runtime, optional |
+| `postgresql`                          | (managed)  | PostgreSQL JDBC driver                                             | runtime           |
+| `flyway-core`                         | (managed)  | Database migration versioning                                      | compile           |
+| `flyway-database-postgresql`          | (managed)  | Flyway PostgreSQL adapter                                          | compile           |
+| `springdoc-openapi-starter-webmvc-ui` | **2.8.17** | Swagger UI + OpenAPI 3 docs (`/swagger-ui.html`)                   | compile           |
+| `jjwt-api`                            | **0.12.6** | JWT API                                                            | compile           |
+| `jjwt-impl`                           | **0.12.6** | JWT implementation                                                 | runtime           |
+| `jjwt-jackson`                        | **0.12.6** | JWT JSON serialization                                             | runtime           |
+| `lombok`                              | (managed)  | Giảm boilerplate (`@Data`, `@Builder`, `@RequiredArgsConstructor`) | compile, optional |
+| `spring-dotenv`                       | **4.0.0**  | Tự động load file `.env` vào Spring properties                     | compile           |
+| `minio`                               | **8.5.17** | MinIO Java SDK (S3-compatible object storage)                      | compile           |
+| `thumbnailator`                       | **0.4.20** | Resize/compress ảnh trước khi upload                               | compile           |
+| `spring-boot-starter-test`            | (managed)  | Unit/Integration testing                                           | test              |
 
 > **Lưu ý:** Dự án **KHÔNG** dùng VNPay SDK bên thứ 3. VNPay được tích hợp trực tiếp bằng thuật toán HMAC-SHA512 (`javax.crypto.Mac`).
 
 ### 2.3. Build Plugins (3 Plugins)
 
-| Plugin | Phiên bản | Vai trò |
-|---|---|---|
-| `spring-boot-maven-plugin` | (managed) | Build executable JAR, exclude Lombok |
-| `maven-compiler-plugin` | (managed) | Config annotation processor paths cho Lombok ở cả compile + testCompile |
-| `maven-pmd-plugin` | **3.26.0** | Static Analysis, sử dụng custom `pmd-ruleset.xml` |
+| Plugin                     | Phiên bản  | Vai trò                                                                 |
+| -------------------------- | ---------- | ----------------------------------------------------------------------- |
+| `spring-boot-maven-plugin` | (managed)  | Build executable JAR, exclude Lombok                                    |
+| `maven-compiler-plugin`    | (managed)  | Config annotation processor paths cho Lombok ở cả compile + testCompile |
+| `maven-pmd-plugin`         | **3.26.0** | Static Analysis, sử dụng custom `pmd-ruleset.xml`                       |
 
 ---
 
@@ -159,12 +159,12 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ### 3.2. docker-compose.yml (4 Services)
 
-| Service | Image | Port | Healthcheck / Depends |
-|---|---|---|---|
-| **db** | `postgres:16` | `5432:5432` | `pg_isready -U ${DB_USERNAME}` mỗi 5s |
-| **redis** | `redis:latest` | `6379:6379` | — |
-| **minio** | `quay.io/minio/minio` | `9000:9000`, `9001:9001` | — |
-| **app** | Build từ Dockerfile | `8085:8085` | depends_on: db (service_healthy), redis & minio (service_started) |
+| Service   | Image                 | Port                     | Healthcheck / Depends                                             |
+| --------- | --------------------- | ------------------------ | ----------------------------------------------------------------- |
+| **db**    | `postgres:16`         | `5432:5432`              | `pg_isready -U ${DB_USERNAME}` mỗi 5s                             |
+| **redis** | `redis:latest`        | `6379:6379`              | —                                                                 |
+| **minio** | `quay.io/minio/minio` | `9000:9000`, `9001:9001` | —                                                                 |
+| **app**   | Build từ Dockerfile   | `8085:8085`              | depends_on: db (service_healthy), redis & minio (service_started) |
 
 ---
 
@@ -172,46 +172,46 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ### 4.1. application.yaml (file chính — Shared cả dev & prod)
 
-| Nhóm cấu hình | Key | Giá trị / Mô tả |
-|---|---|---|
-| **Profile** | `spring.profiles.active` | `${SPRING_PROFILES_ACTIVE:dev}` |
-| **Multipart** | `spring.servlet.multipart.max-file-size` | `5MB` |
-| | `spring.servlet.multipart.max-request-size` | `5MB` |
-| **Redis** | `spring.data.redis.host` | `${REDIS_HOST:localhost}` |
-| | `spring.data.redis.port` | `${REDIS_PORT:6379}` |
-| | `spring.data.redis.password` | `${REDIS_PASSWORD:}` |
-| **Database** | `spring.datasource.url` | `${DB_URL}` |
-| | `spring.datasource.driver-class-name` | `org.postgresql.Driver` |
-| | `spring.datasource.hikari.maximum-pool-size` | `10` |
-| | `spring.datasource.hikari.connection-timeout` | `30000` |
-| **JPA** | `spring.jpa.database` | `postgresql` |
-| | `spring.jpa.open-in-view` | `false` |
-| | `spring.jpa.hibernate.ddl-auto` | `validate` — Flyway là nguồn sự thật duy nhất |
-| **Flyway** | `spring.flyway.enabled` | `true` |
-| | `spring.flyway.locations` | `classpath:db/migration` |
-| | `spring.flyway.baseline-on-migrate` | `true` |
-| | `spring.flyway.create-schemas` | `false` |
-| **Server** | `server.port` | `${PORT:8085}` — Dynamic cho Render |
-| **CORS** | `app.cors.allowed-origins` | `${CORS_ALLOWED_ORIGINS:http://localhost:8085}` |
-| **JWT** | `app.jwt.secret-key` | `${JWT_SECRET_KEY}` |
-| | `app.jwt.expiration` | `3600000` (1 giờ, ms) |
-| | `app.jwt.refresh-expiration-days` | `7` (7 ngày) |
-| **Upload** | `app.upload.max-image-size` | `5MB` |
-| **MinIO** | `app.minio.endpoint` | `${MINIO_ENDPOINT:http://localhost:9000}` |
-| | `app.minio.access-key` | `${MIN_IO_ACCESS_KEY}` |
-| | `app.minio.secret-key` | `${MIN_IO_SECRET_KEY}` |
-| | `app.minio.bucket` | `${MIN_IO_BUCKET}` |
-| **Brevo Mail** | `app.mail.brevo.api-key` | `${BREVO_API_KEY:}` |
-| | `app.mail.brevo.sender-email` | `${BREVO_SENDER_EMAIL:}` |
-| **VNPay** | `vnpay.pay-url` | `${VNPAY_PAY_URL:sandbox URL}` |
-| | `vnpay.tmn-code` | `${VNPAY_TMN_CODE}` |
-| | `vnpay.secret-key` | `${VNPAY_SECRET_KEY}` |
-| | `vnpay.return-url` | `${VNPAY_RETURN_URL}` |
-| | `vnpay.ipn-url` | `${VNPAY_IPN_URL}` |
-| **Swagger** | `springdoc.api-docs.path` | `/v1/api-docs` |
-| | `springdoc.swagger-ui.path` | `/swagger-ui.html` |
-| | `springdoc.swagger-ui.tags-sorter` | `alpha` |
-| | `springdoc.swagger-ui.operations-sorter` | `alpha` |
+| Nhóm cấu hình  | Key                                           | Giá trị / Mô tả                                 |
+| -------------- | --------------------------------------------- | ----------------------------------------------- |
+| **Profile**    | `spring.profiles.active`                      | `${SPRING_PROFILES_ACTIVE:dev}`                 |
+| **Multipart**  | `spring.servlet.multipart.max-file-size`      | `5MB`                                           |
+|                | `spring.servlet.multipart.max-request-size`   | `5MB`                                           |
+| **Redis**      | `spring.data.redis.host`                      | `${REDIS_HOST:localhost}`                       |
+|                | `spring.data.redis.port`                      | `${REDIS_PORT:6379}`                            |
+|                | `spring.data.redis.password`                  | `${REDIS_PASSWORD:}`                            |
+| **Database**   | `spring.datasource.url`                       | `${DB_URL}`                                     |
+|                | `spring.datasource.driver-class-name`         | `org.postgresql.Driver`                         |
+|                | `spring.datasource.hikari.maximum-pool-size`  | `10`                                            |
+|                | `spring.datasource.hikari.connection-timeout` | `30000`                                         |
+| **JPA**        | `spring.jpa.database`                         | `postgresql`                                    |
+|                | `spring.jpa.open-in-view`                     | `false`                                         |
+|                | `spring.jpa.hibernate.ddl-auto`               | `validate` — Flyway là nguồn sự thật duy nhất   |
+| **Flyway**     | `spring.flyway.enabled`                       | `true`                                          |
+|                | `spring.flyway.locations`                     | `classpath:db/migration`                        |
+|                | `spring.flyway.baseline-on-migrate`           | `true`                                          |
+|                | `spring.flyway.create-schemas`                | `false`                                         |
+| **Server**     | `server.port`                                 | `${PORT:8085}` — Dynamic cho Render             |
+| **CORS**       | `app.cors.allowed-origins`                    | `${CORS_ALLOWED_ORIGINS:http://localhost:8085}` |
+| **JWT**        | `app.jwt.secret-key`                          | `${JWT_SECRET_KEY}`                             |
+|                | `app.jwt.expiration`                          | `3600000` (1 giờ, ms)                           |
+|                | `app.jwt.refresh-expiration-days`             | `7` (7 ngày)                                    |
+| **Upload**     | `app.upload.max-image-size`                   | `5MB`                                           |
+| **MinIO**      | `app.minio.endpoint`                          | `${MINIO_ENDPOINT:http://localhost:9000}`       |
+|                | `app.minio.access-key`                        | `${MIN_IO_ACCESS_KEY}`                          |
+|                | `app.minio.secret-key`                        | `${MIN_IO_SECRET_KEY}`                          |
+|                | `app.minio.bucket`                            | `${MIN_IO_BUCKET}`                              |
+| **Brevo Mail** | `app.mail.brevo.api-key`                      | `${BREVO_API_KEY:}`                             |
+|                | `app.mail.brevo.sender-email`                 | `${BREVO_SENDER_EMAIL:}`                        |
+| **VNPay**      | `vnpay.pay-url`                               | `${VNPAY_PAY_URL:sandbox URL}`                  |
+|                | `vnpay.tmn-code`                              | `${VNPAY_TMN_CODE}`                             |
+|                | `vnpay.secret-key`                            | `${VNPAY_SECRET_KEY}`                           |
+|                | `vnpay.return-url`                            | `${VNPAY_RETURN_URL}`                           |
+|                | `vnpay.ipn-url`                               | `${VNPAY_IPN_URL}`                              |
+| **Swagger**    | `springdoc.api-docs.path`                     | `/v1/api-docs`                                  |
+|                | `springdoc.swagger-ui.path`                   | `/swagger-ui.html`                              |
+|                | `springdoc.swagger-ui.tags-sorter`            | `alpha`                                         |
+|                | `springdoc.swagger-ui.operations-sorter`      | `alpha`                                         |
 
 ---
 
@@ -333,10 +333,10 @@ mini-ecommerce/
 
 ### 6.1. Lịch sử Flyway Migrations (2 migrations tối ưu)
 
-| File | Nội dung |
-|---|---|
-| `V1__init_mini_shop.sql` | **Core Schema hợp nhất** — Tạo 8 bảng core (`users`, `categories`, `products`, `orders`, `order_items`, `refresh_tokens`, `payments`, `otp_verifications`) + full `created_at`/`updated_at` + index. Tất cả PK/FK là `BIGINT`, có `version` cho Optimistic Lock. |
-| `V2__seed_seafood_categories_and_products.sql` | **Data Seed Hải Sản** — Seed 9 danh mục hải sản & 36 sản phẩm thực tế kèm giá, stock, mô tả chi tiết và đầy đủ timestamp. |
+| File                                           | Nội dung                                                                                                                                                                                                                                                         |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `V1__init_mini_shop.sql`                       | **Core Schema hợp nhất** — Tạo 8 bảng core (`users`, `categories`, `products`, `orders`, `order_items`, `refresh_tokens`, `payments`, `otp_verifications`) + full `created_at`/`updated_at` + index. Tất cả PK/FK là `BIGINT`, có `version` cho Optimistic Lock. |
+| `V2__seed_seafood_categories_and_products.sql` | **Data Seed Hải Sản** — Seed 9 danh mục hải sản & 36 sản phẩm thực tế kèm giá, stock, mô tả chi tiết và đầy đủ timestamp.                                                                                                                                        |
 
 ### 6.2. Schema tổng quan (8 bảng)
 
@@ -370,31 +370,31 @@ CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
 
 ### 7.1. UserEntity (`users`) — ★ CẬP NHẬT
 
-| Field | Type | JPA Annotation | Ghi chú |
-|---|---|---|---|
-| `id` | `Long` | `@Id @GeneratedValue(IDENTITY)` | PK |
-| `fullName` | `String` | `@Column(name="full_name", length=100)` | |
-| `email` | `String` | `@Column(unique=true, length=150)` | Username đăng nhập |
-| `avatarUrl` | `String` | `@Column(name="avatar_url", length=500)` | URL avatar |
-| `phoneNumber` | `String` | `@Column(name="phone_number", unique=true, length=15)` | |
-| `password` | `String` | `@Column(nullable=false)` | BCrypt hash |
-| `role` | `Role` enum | `@Enumerated(STRING)` | Enum package: `USER`, `ADMIN` |
-| `isActive` | `boolean` | `@Column(name="is_active")` | Trạng thái hoạt động account (mặc định `false` khi mới đăng ký) |
-| **`emailVerified`** | `boolean` | `@Column(name="email_verified")` | **★ MỚI** — Trạng thái đã xác thực email qua OTP |
-| `createdAt` / `updatedAt` | `LocalDateTime` | `@CreationTimestamp` / `@UpdateTimestamp` | |
+| Field                     | Type            | JPA Annotation                                         | Ghi chú                                                         |
+| ------------------------- | --------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| `id`                      | `Long`          | `@Id @GeneratedValue(IDENTITY)`                        | PK                                                              |
+| `fullName`                | `String`        | `@Column(name="full_name", length=100)`                |                                                                 |
+| `email`                   | `String`        | `@Column(unique=true, length=150)`                     | Username đăng nhập                                              |
+| `avatarUrl`               | `String`        | `@Column(name="avatar_url", length=500)`               | URL avatar                                                      |
+| `phoneNumber`             | `String`        | `@Column(name="phone_number", unique=true, length=15)` |                                                                 |
+| `password`                | `String`        | `@Column(nullable=false)`                              | BCrypt hash                                                     |
+| `role`                    | `Role` enum     | `@Enumerated(STRING)`                                  | Enum package: `USER`, `ADMIN`                                   |
+| `isActive`                | `boolean`       | `@Column(name="is_active")`                            | Trạng thái hoạt động account (mặc định `false` khi mới đăng ký) |
+| **`emailVerified`**       | `boolean`       | `@Column(name="email_verified")`                       | **★ MỚI** — Trạng thái đã xác thực email qua OTP                |
+| `createdAt` / `updatedAt` | `LocalDateTime` | `@CreationTimestamp` / `@UpdateTimestamp`              |                                                                 |
 
 ### 7.2. OtpVerificationEntity (`otp_verifications`) — ★ MỚI
 
-| Field | Type | JPA Annotation / Ghi chú |
-|---|---|---|
-| `id` | `Long` | `@Id @GeneratedValue(IDENTITY)` |
-| `user` | `UserEntity` | `@ManyToOne(LAZY)`, FK: `user_id` |
-| `otpHash` | `String` | `@Column(name="otp_hash", nullable=false)` — BCrypt Hash mã OTP 6 chữ số |
-| `purpose` | `OtpPurpose` enum | `@Enumerated(STRING)` — `REGISTER_VERIFICATION`, `RESET_PASSWORD`, `CHANGE_PASSWORD_CONFIRMATION` |
-| `expiresAt` | `LocalDateTime` | Thới gian hết hạn (mặc định 5 phút) |
-| `attempts` | `int` | Số lần nhập sai (max 5 lần) |
-| `consumed` | `boolean` | Mã đã được sử dụng hay chưa |
-| `createdAt` | `LocalDateTime` | Thời điểm tạo OTP |
+| Field       | Type              | JPA Annotation / Ghi chú                                                                          |
+| ----------- | ----------------- | ------------------------------------------------------------------------------------------------- |
+| `id`        | `Long`            | `@Id @GeneratedValue(IDENTITY)`                                                                   |
+| `user`      | `UserEntity`      | `@ManyToOne(LAZY)`, FK: `user_id`                                                                 |
+| `otpHash`   | `String`          | `@Column(name="otp_hash", nullable=false)` — BCrypt Hash mã OTP 6 chữ số                          |
+| `purpose`   | `OtpPurpose` enum | `@Enumerated(STRING)` — `REGISTER_VERIFICATION`, `RESET_PASSWORD`, `CHANGE_PASSWORD_CONFIRMATION` |
+| `expiresAt` | `LocalDateTime`   | Thới gian hết hạn (mặc định 5 phút)                                                               |
+| `attempts`  | `int`             | Số lần nhập sai (max 5 lần)                                                                       |
+| `consumed`  | `boolean`         | Mã đã được sử dụng hay chưa                                                                       |
+| `createdAt` | `LocalDateTime`   | Thời điểm tạo OTP                                                                                 |
 
 ---
 
@@ -402,10 +402,10 @@ CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
 
 ### 8.5. OtpVerificationRepository (★ MỚI)
 
-| Method | Mô tả |
-|---|---|
-| `findTopByUserIdAndPurposeAndConsumedFalseOrderByCreatedAtDesc(Long, OtpPurpose)` | Tìm bản ghi OTP mới nhất chưa sử dụng của User theo mục đích |
-| `deleteByExpiresAtBeforeOrConsumedTrue(LocalDateTime)` | Xoá tất cả OTP đã hết hạn hoặc đã được sử dụng (dùng bởi Scheduler) |
+| Method                                                                            | Mô tả                                                               |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `findTopByUserIdAndPurposeAndConsumedFalseOrderByCreatedAtDesc(Long, OtpPurpose)` | Tìm bản ghi OTP mới nhất chưa sử dụng của User theo mục đích        |
+| `deleteByExpiresAtBeforeOrConsumedTrue(LocalDateTime)`                            | Xoá tất cả OTP đã hết hạn hoặc đã được sử dụng (dùng bởi Scheduler) |
 
 ---
 
@@ -451,15 +451,15 @@ CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
 
 ### 11.4. AuthController (`/api/v1/auth`) — 8 Endpoints (★ CẬP NHẬT)
 
-| HTTP | Path | Auth | Request Body | Response Wrapper / Data |
-|---|---|---|---|---|
-| POST | `/register` | Public | RegisterRequestDto | `ApiResponse<UserResponseDto>` (tài khoản chưa active, OTP được gửi) |
-| POST | `/verify-otp` | Public | VerifyOtpRequestDto | `ApiResponse<VerifyOtpResponseDto>` (Trả JWT Tokens hoặc ActionToken) |
-| POST | `/resend-otp` | Public | ResendOtpRequestDto | `ApiResponse<ResendOtpResponseDto>` (Gửi lại OTP có cooldown 60s) |
-| POST | `/forgot-password` | Public | ForgotPasswordRequestDto | `ApiResponse<String>` (Gửi OTP quên mật khẩu) |
-| POST | `/login` | Public | LoginRequestDto | `ApiResponse<AuthResponseDto>` (Bắt buộc tài khoản đã active & verified) |
-| POST | `/refresh-token` | Public | RefreshTokenRequestDto | `ApiResponse<RefreshTokenResponseDto>` |
-| POST | `/logout` | Public | RefreshTokenRequestDto | `ApiResponse<Void>` |
+| HTTP | Path               | Auth   | Request Body             | Response Wrapper / Data                                                  |
+| ---- | ------------------ | ------ | ------------------------ | ------------------------------------------------------------------------ |
+| POST | `/register`        | Public | RegisterRequestDto       | `ApiResponse<UserResponseDto>` (tài khoản chưa active, OTP được gửi)     |
+| POST | `/verify-otp`      | Public | VerifyOtpRequestDto      | `ApiResponse<VerifyOtpResponseDto>` (Trả JWT Tokens hoặc ActionToken)    |
+| POST | `/resend-otp`      | Public | ResendOtpRequestDto      | `ApiResponse<ResendOtpResponseDto>` (Gửi lại OTP có cooldown 60s)        |
+| POST | `/forgot-password` | Public | ForgotPasswordRequestDto | `ApiResponse<String>` (Gửi OTP quên mật khẩu)                            |
+| POST | `/login`           | Public | LoginRequestDto          | `ApiResponse<AuthResponseDto>` (Bắt buộc tài khoản đã active & verified) |
+| POST | `/refresh-token`   | Public | RefreshTokenRequestDto   | `ApiResponse<RefreshTokenResponseDto>`                                   |
+| POST | `/logout`          | Public | RefreshTokenRequestDto   | `ApiResponse<Void>`                                                      |
 
 ---
 
@@ -475,30 +475,30 @@ CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
 
 ### Danh sách 22 Exception Handlers trong `GlobalExceptionHandler`
 
-| Exception Class | HTTP Status | Thông điệp / Mô tả |
-|---|---|---|
-| **`AccountNotVerifiedException`** | **401 Unauthorized** | **★ MỚI** — "Tài khoản chưa được xác thực email. Vui lòng xác thực OTP." |
-| **`OtpInvalidException`** | **400 Bad Request** | **★ MỚI** — "Mã OTP không chính xác. Số lần thử còn lại: N" |
-| **`OtpExpiredException`** | **400 Bad Request** | **★ MỚI** — "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại mã." |
-| **`OtpAttemptsExceededException`** | **409 Conflict** | **★ MỚI** — "Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng lấy mã mới." |
-| **`ResendCooldownException`** | **409 Conflict** | **★ MỚI** — "Vui lòng đợi 60 giây trước khi yêu cầu mã OTP mới." |
-| **`OtpNotFoundException`** | **404 Not Found** | **★ MỚI** — "Không tìm thấy yêu cầu xác thực OTP phù hợp." |
-| **`InvalidActionTokenException`** | **400 Bad Request** | **★ MỚI** — "Mã xác nhận thao tác (Action Token) không hợp lệ hoặc đã dùng." |
-| `BadRequestException` | 400 Bad Request | Yêu cầu không hợp lệ |
-| `ResourceNotFoundException` | 404 Not Found | Không tìm thấy tài nguyên |
-| `InsufficientStockException` | 409 Conflict | Số lượng hàng trong kho không đủ |
-| `InvalidStatusTransitionException` | 409 Conflict | Chuyển trạng thái đơn hàng không hợp lệ |
-| `CategoryHasProductsException` | 409 Conflict | Không thể xoá danh mục đang chứa sản phẩm |
-| `DuplicateResourceException` | 409 Conflict | Email hoặc số điện thoại đã tồn tại |
-| `ObjectOptimisticLockingFailureException` | 409 Conflict | Dữ liệu đã bị thay đổi bởi giao dịch khác (Optimistic Lock) |
-| `DataIntegrityViolationException` | 409 Conflict | Lỗi vi phạm ràng buộc dữ liệu Database |
-| `MaxUploadSizeExceededException` | 400 Bad Request | Dung lượng file upload vượt quá 5MB |
-| `MethodArgumentNotValidException` | 400 Bad Request | Lỗi Validation dữ liệu đầu vào |
-| `BadCredentialsException` | 401 Unauthorized | Email hoặc mật khẩu không chính xác |
-| `InvalidRefreshTokenException` | 401 Unauthorized | Refresh token không hợp lệ hoặc đã hết hạn |
-| `DisabledException` | 403 Forbidden | Tài khoản đã bị khoá bởi Admin |
-| `AccessDeniedException` | 403 Forbidden | Không có quyền truy cập API |
-| `Exception` | 500 Internal Server Error | Lỗi hệ thống chưa xác định |
+| Exception Class                           | HTTP Status               | Thông điệp / Mô tả                                                           |
+| ----------------------------------------- | ------------------------- | ---------------------------------------------------------------------------- |
+| **`AccountNotVerifiedException`**         | **401 Unauthorized**      | **★ MỚI** — "Tài khoản chưa được xác thực email. Vui lòng xác thực OTP."     |
+| **`OtpInvalidException`**                 | **400 Bad Request**       | **★ MỚI** — "Mã OTP không chính xác. Số lần thử còn lại: N"                  |
+| **`OtpExpiredException`**                 | **400 Bad Request**       | **★ MỚI** — "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại mã."                |
+| **`OtpAttemptsExceededException`**        | **409 Conflict**          | **★ MỚI** — "Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng lấy mã mới."         |
+| **`ResendCooldownException`**             | **409 Conflict**          | **★ MỚI** — "Vui lòng đợi 60 giây trước khi yêu cầu mã OTP mới."             |
+| **`OtpNotFoundException`**                | **404 Not Found**         | **★ MỚI** — "Không tìm thấy yêu cầu xác thực OTP phù hợp."                   |
+| **`InvalidActionTokenException`**         | **400 Bad Request**       | **★ MỚI** — "Mã xác nhận thao tác (Action Token) không hợp lệ hoặc đã dùng." |
+| `BadRequestException`                     | 400 Bad Request           | Yêu cầu không hợp lệ                                                         |
+| `ResourceNotFoundException`               | 404 Not Found             | Không tìm thấy tài nguyên                                                    |
+| `InsufficientStockException`              | 409 Conflict              | Số lượng hàng trong kho không đủ                                             |
+| `InvalidStatusTransitionException`        | 409 Conflict              | Chuyển trạng thái đơn hàng không hợp lệ                                      |
+| `CategoryHasProductsException`            | 409 Conflict              | Không thể xoá danh mục đang chứa sản phẩm                                    |
+| `DuplicateResourceException`              | 409 Conflict              | Email hoặc số điện thoại đã tồn tại                                          |
+| `ObjectOptimisticLockingFailureException` | 409 Conflict              | Dữ liệu đã bị thay đổi bởi giao dịch khác (Optimistic Lock)                  |
+| `DataIntegrityViolationException`         | 409 Conflict              | Lỗi vi phạm ràng buộc dữ liệu Database                                       |
+| `MaxUploadSizeExceededException`          | 400 Bad Request           | Dung lượng file upload vượt quá 5MB                                          |
+| `MethodArgumentNotValidException`         | 400 Bad Request           | Lỗi Validation dữ liệu đầu vào                                               |
+| `BadCredentialsException`                 | 401 Unauthorized          | Email hoặc mật khẩu không chính xác                                          |
+| `InvalidRefreshTokenException`            | 401 Unauthorized          | Refresh token không hợp lệ hoặc đã hết hạn                                   |
+| `DisabledException`                       | 403 Forbidden             | Tài khoản đã bị khoá bởi Admin                                               |
+| `AccessDeniedException`                   | 403 Forbidden             | Không có quyền truy cập API                                                  |
+| `Exception`                               | 500 Internal Server Error | Lỗi hệ thống chưa xác định                                                   |
 
 ---
 
@@ -554,17 +554,17 @@ CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
 
 ## 18. Coding Conventions & Patterns
 
-| Pattern | Áp dụng ở đâu |
-|---|---|
-| **Layered Architecture** | Controller → Service → Repository → Entity |
+| Pattern                        | Áp dụng ở đâu                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
+| **Layered Architecture**       | Controller → Service → Repository → Entity                                           |
 | **Multi-step Auth & OTP Flow** | ★ **MỚI V7** — OTP Secure Generation, Hash Storage, Max Attempt Guard, Cooldown Lock |
-| **Strategy Pattern** | `MailTransport` interface + `SmtpMailTransport` (dev) / `BrevoMailTransport` (prod) |
-| **Distributed Caching** | Redis + Spring `@Cacheable` / `@CacheEvict` |
-| **Async Task Isolation** | `@Async("emailTaskExecutor")` tách biệt gửi mail HTML |
-| **Scheduled Maintenance** | `@Scheduled` — `OtpCleanupScheduler` & `PaymentExpiredScheduler` |
-| **Optimistic Locking** | `@Version` trên `ProductEntity` + `OrderEntity` |
-| **Magic Bytes Validation** | `FileValidationUtil` |
-| **Static Analysis** | PMD Static Analysis (`maven-pmd-plugin` 3.26.0) |
+| **Strategy Pattern**           | `MailTransport` interface + `SmtpMailTransport` (dev) / `BrevoMailTransport` (prod)  |
+| **Distributed Caching**        | Redis + Spring `@Cacheable` / `@CacheEvict`                                          |
+| **Async Task Isolation**       | `@Async("emailTaskExecutor")` tách biệt gửi mail HTML                                |
+| **Scheduled Maintenance**      | `@Scheduled` — `OtpCleanupScheduler` & `PaymentExpiredScheduler`                     |
+| **Optimistic Locking**         | `@Version` trên `ProductEntity` + `OrderEntity`                                      |
+| **Magic Bytes Validation**     | `FileValidationUtil`                                                                 |
+| **Static Analysis**            | PMD Static Analysis (`maven-pmd-plugin` 3.26.0)                                      |
 
 ---
 
@@ -603,21 +603,22 @@ CREATE INDEX idx_otp_user_purpose ON otp_verifications(user_id, purpose);
 
 ## 20. Góp ý tối ưu & Bảng theo dõi cải tiến
 
-| # | Vấn đề ban đầu | Trạng thái | Giải pháp đã áp dụng |
-|---|---|---|---|
-| 1 | **Chưa có xác thực email khi đăng ký** | ✅ **ĐÃ XỬ LÝ (V7)** | Triển khai OTP 6 chữ số gửi qua HTML Email, bảo mật hash BCrypt, 5 phút hết hạn, max 5 lần thử. |
-| 2 | **Chưa có luồng Quên mật khẩu** | ✅ **ĐÃ XỬ LÝ (V7)** | Bổ sung OTP Reset Password flow + trả `actionToken` an toàn. |
-| 3 | **OTP hết hạn chiếm dụng DB** | ✅ **ĐÃ XỬ LÝ (V7)** | `OtpCleanupScheduler` dọn dẹp các OTP hết hạn/consumed hàng giờ. |
-| 4 | **Enums nằm rải rác trong Entity** | ✅ **ĐÃ XỬ LÝ (V7)** | Tách riêng package `enums` độc lập (`Role`, `OrderStatus`, `OtpPurpose`). |
-| 5 | **Email bị chậm HTTP Request** | ✅ **ĐÃ XỬ LÝ** | Async Email với ThreadPoolTaskExecutor + Strategy Pattern. |
-| 6 | **CORS Hardcoded** | ✅ **ĐÃ XỬ LÝ** | CORS whitelist đọc động từ `.env`. |
-| 7 | **Thiếu Unit Test** | 🟡 **CẦN LÀM** | Chuẩn bị viết test coverage cho Service & Controller layers. |
+| #   | Vấn đề ban đầu                         | Trạng thái           | Giải pháp đã áp dụng                                                                            |
+| --- | -------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | **Chưa có xác thực email khi đăng ký** | ✅ **ĐÃ XỬ LÝ (V7)** | Triển khai OTP 6 chữ số gửi qua HTML Email, bảo mật hash BCrypt, 5 phút hết hạn, max 5 lần thử. |
+| 2   | **Chưa có luồng Quên mật khẩu**        | ✅ **ĐÃ XỬ LÝ (V7)** | Bổ sung OTP Reset Password flow + trả `actionToken` an toàn.                                    |
+| 3   | **OTP hết hạn chiếm dụng DB**          | ✅ **ĐÃ XỬ LÝ (V7)** | `OtpCleanupScheduler` dọn dẹp các OTP hết hạn/consumed hàng giờ.                                |
+| 4   | **Enums nằm rải rác trong Entity**     | ✅ **ĐÃ XỬ LÝ (V7)** | Tách riêng package `enums` độc lập (`Role`, `OrderStatus`, `OtpPurpose`).                       |
+| 5   | **Email bị chậm HTTP Request**         | ✅ **ĐÃ XỬ LÝ**      | Async Email với ThreadPoolTaskExecutor + Strategy Pattern.                                      |
+| 6   | **CORS Hardcoded**                     | ✅ **ĐÃ XỬ LÝ**      | CORS whitelist đọc động từ `.env`.                                                              |
+| 7   | **Thiếu Unit Test**                    | 🟡 **CẦN LÀM**       | Chuẩn bị viết test coverage cho Service & Controller layers.                                    |
 
 ---
 
 ## 21. Tổng hợp Kiến thức & Kỹ thuật chức năng cốt lõi
 
 ### 21.9. Multi-step OTP Verification & Hashed Security (★ MỚI V7)
+
 - **Non-reversible Hash:** Mã OTP 6 chữ số không bao giờ lưu dưới dạng plain text trong DB. Hệ thống nén BCrypt Hash mã OTP trước khi lưu.
 - **Brute-force Prevention:** Giới hạn tối đa 5 lần nhập sai (`attempts >= 5`). Quá 5 lần, bản ghi bị khoá và bắt buộc yêu cầu OTP mới.
 - **Resend Cooldown Guard:** Áp dụng khoảng chờ 60s giữa các lần bấm "Gửi lại OTP" tránh spam email và lãng phí tài nguyên mail gateway.
@@ -643,11 +644,11 @@ Tất cả các API đều phản hồi dưới định dạng JSON đồng nh�
 
 ```typescript
 interface ApiResponse<T> {
-  code: number;          // HTTP Status Code (200, 201, 400, 401, 403, 404, 409, 500)
-  message: string;       // Thông điệp tiếng Anh/Việt mô tả kết quả
-  data: T | null;        // Dữ liệu trả về (Object, Array, PageResponse, hoặc null)
-  errors: any | null;    // Chi tiết lỗi (nếu có, ví dụ map lỗi validation)
-  timestamp: string;     // ISO Timestamp
+  code: number; // HTTP Status Code (200, 201, 400, 401, 403, 404, 409, 500)
+  message: string; // Thông điệp tiếng Anh/Việt mô tả kết quả
+  data: T | null; // Dữ liệu trả về (Object, Array, PageResponse, hoặc null)
+  errors: any | null; // Chi tiết lỗi (nếu có, ví dụ map lỗi validation)
+  timestamp: string; // ISO Timestamp
 }
 ```
 
@@ -656,6 +657,7 @@ interface ApiResponse<T> {
 ### 22.3. Quy Chuẩn Phân Trang (Pagination Standards)
 
 Các API danh sách (`GET /products`, `GET /categories`, `GET /users`) nhận query parameters phân trang:
+
 - `page`: Trang cần lấy (**0-indexed**, mặc định `0` = trang 1)
 - `size`: Số lượng items/trang (mặc định `10`)
 - `sort`: Field cần sắp xếp (ví dụ: `price`, `createdAt`, `name`)
@@ -665,12 +667,12 @@ Các API danh sách (`GET /products`, `GET /categories`, `GET /users`) nhận qu
 
 ```typescript
 interface PageResponse<T> {
-  content: T[];          // Mảng các item của trang hiện tại
-  page: number;          // Số trang hiện tại (0-indexed)
-  size: number;          // Kích thước trang
+  content: T[]; // Mảng các item của trang hiện tại
+  page: number; // Số trang hiện tại (0-indexed)
+  size: number; // Kích thước trang
   totalElements: number; // Tổng số item trên toàn hệ thống
-  totalPages: number;    // Tổng số trang
-  last: boolean;         // Có phải trang cuối cùng không
+  totalPages: number; // Tổng số trang
+  last: boolean; // Có phải trang cuối cùng không
 }
 ```
 
@@ -679,8 +681,9 @@ interface PageResponse<T> {
 ### 22.4. Luồng Xác Thực Auth & Token Storage (Frontend Auth Specs)
 
 #### 1. Đăng ký & Xác thực OTP (Registration Flow)
+
 ```
-[Bước 1] FE gọi POST /api/v1/auth/register 
+[Bước 1] FE gọi POST /api/v1/auth/register
          Body: { fullName, email, phoneNumber, password }
          -> Trả về HTTP 201 + UserResponseDto.
          -> FE hiển thị Modal/Màn hình "Nhập mã OTP 6 chữ số đã gửi về email".
@@ -693,15 +696,17 @@ interface PageResponse<T> {
 ```
 
 #### 2. Đăng nhập (Login Flow)
+
 ```
-FE gọi POST /api/v1/auth/login 
+FE gọi POST /api/v1/auth/login
 Body: { email, password }
 -> Nếu thành công: Trả về AuthResponseDto: { accessToken, refreshToken, tokenType: "Bearer", expiresIn: 3600000 }
--> Nếu lỗi 401 "AccountNotVerifiedException": 
+-> Nếu lỗi 401 "AccountNotVerifiedException":
    FE bắt mã lỗi 401 ➔ Thông báo user: "Tài khoản chưa được kích thực email" ➔ Chuyển user sang màn hình nhập OTP ➔ Có nút "Resend OTP" gọi POST /api/v1/auth/resend-otp { email, purpose: "REGISTER_VERIFICATION" }.
 ```
 
 #### 3. Tự động Refresh Token khi 401 Unauthorized (Axios Interceptor Pattern)
+
 - Access Token có thời hạn **1 giờ**.
 - Refresh Token có thời hạn **7 ngày**.
 - Khi bất kỳ API nào trả về `401 Unauthorized` (do Token hết hạn):
@@ -715,14 +720,14 @@ Body: { email, password }
 
 ### 22.5. Bảng Phân Quyền & Access Rules Cho Frontend
 
-| API Group | Endpoints | Mức độ Phân quyền (Auth Requirement) |
-|---|---|---|
-| **Public Catalog** | `GET /api/v1/products`, `GET /api/v1/products/{id}`, `GET /api/v1/categories`, `GET /api/v1/categories/{id}` | **Public** — Không cần token (dùng cho khách vãng lai xem sản phẩm) |
-| **Auth Operations** | `POST /api/v1/auth/**` (register, verify-otp, resend-otp, forgot-password, login, refresh-token, logout) | **Public** — Không cần token |
-| **Payment Return/IPN**| `GET /api/v1/payments/vnpay-return`, `GET /api/v1/payments/vnpay-ipn` | **Public** — VNPay callback |
-| **User Profile** | `GET /api/v1/users/me`, `PATCH /api/v1/users/me/update`, `PATCH /api/v1/users/password`, `POST /api/v1/users/me/avatar` | **Authenticated** — Cần Header `Authorization: Bearer <token>` |
-| **Orders & Payment** | `POST /api/v1/orders`, `GET /api/v1/orders/user/{userId}`, `GET /api/v1/orders/{id}`, `POST /api/v1/payments/create` | **Authenticated** — User chỉ xem/tạo đơn của chính mình |
-| **Admin Portal** | `POST/PUT/DELETE` Products & Categories, `GET /api/v1/products/top-buy`, `GET /api/v1/products/revenue-*`, `GET /api/v1/users`, `PATCH /api/v1/users/{id}/status`, `PATCH /api/v1/orders/{id}/status` | **ADMIN Role Only** — Cần Token có Role `ADMIN` |
+| API Group              | Endpoints                                                                                                                                                                                             | Mức độ Phân quyền (Auth Requirement)                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Public Catalog**     | `GET /api/v1/products`, `GET /api/v1/products/{id}`, `GET /api/v1/categories`, `GET /api/v1/categories/{id}`                                                                                          | **Public** — Không cần token (dùng cho khách vãng lai xem sản phẩm) |
+| **Auth Operations**    | `POST /api/v1/auth/**` (register, verify-otp, resend-otp, forgot-password, login, refresh-token, logout)                                                                                              | **Public** — Không cần token                                        |
+| **Payment Return/IPN** | `GET /api/v1/payments/vnpay-return`, `GET /api/v1/payments/vnpay-ipn`                                                                                                                                 | **Public** — VNPay callback                                         |
+| **User Profile**       | `GET /api/v1/users/me`, `PATCH /api/v1/users/me/update`, `PATCH /api/v1/users/password`, `POST /api/v1/users/me/avatar`                                                                               | **Authenticated** — Cần Header `Authorization: Bearer <token>`      |
+| **Orders & Payment**   | `POST /api/v1/orders`, `GET /api/v1/orders/user/{userId}`, `GET /api/v1/orders/{id}`, `POST /api/v1/payments/create`                                                                                  | **Authenticated** — User chỉ xem/tạo đơn của chính mình             |
+| **Admin Portal**       | `POST/PUT/DELETE` Products & Categories, `GET /api/v1/products/top-buy`, `GET /api/v1/products/revenue-*`, `GET /api/v1/users`, `PATCH /api/v1/users/{id}/status`, `PATCH /api/v1/orders/{id}/status` | **ADMIN Role Only** — Cần Token có Role `ADMIN`                     |
 
 ---
 

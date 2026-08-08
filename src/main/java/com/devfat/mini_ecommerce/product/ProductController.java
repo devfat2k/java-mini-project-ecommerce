@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.devfat.mini_ecommerce.shared.ratelimit.RateLimit;
+import com.devfat.mini_ecommerce.shared.ratelimit.RateLimitType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +38,7 @@ public class ProductController {
             summary = "Create product",
             description = "Create a new product using the request body."
     )
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('product:create') or hasRole('ADMIN')")
     @PostMapping()
     public ResponseEntity<ApiResponse<ProductResponseDto>> createProduct(
             @Valid @RequestBody()CreateProductRequestDto createProductRequest
@@ -54,6 +56,7 @@ public class ProductController {
             description = "Retrieve products with pagination, search and sorting."
     )
     @SecurityRequirements({})
+    @RateLimit(type = RateLimitType.PUBLIC_API, byIp = true)
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProductResponseDto>>> getAll(
             @RequestParam(required = false, defaultValue = "") String search,
@@ -86,7 +89,7 @@ public class ProductController {
             summary = "Update product",
             description = "Update one or more product fields. Only provided fields will be updated."
     )
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('product:update') or hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(
             @PathVariable Long id,
@@ -104,7 +107,7 @@ public class ProductController {
             summary = "Soft delete product",
             description = "Mark the product as inactive."
     )
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('product:delete') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Boolean>> deleteProduct(
             @PathVariable Long id

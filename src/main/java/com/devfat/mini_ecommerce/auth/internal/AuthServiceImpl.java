@@ -20,9 +20,10 @@ import com.devfat.mini_ecommerce.shared.exception.DuplicateResourceException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.shared.security.JwtProvider;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
-import com.devfat.mini_ecommerce.user.Role;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
-import com.devfat.mini_ecommerce.user.internal.CustomUserDetailsService;
+import com.devfat.mini_ecommerce.user.internal.PermissionEntity;
+import com.devfat.mini_ecommerce.user.internal.RoleEntity;
+import com.devfat.mini_ecommerce.user.internal.RoleRepository;
 import com.devfat.mini_ecommerce.user.internal.UserEntity;
 import com.devfat.mini_ecommerce.user.internal.UserRepository;
 
@@ -52,6 +53,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -60,6 +63,7 @@ import java.util.Locale;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -85,12 +89,15 @@ public class AuthServiceImpl implements AuthService {
 
 
     private UserResponseDto toResponseDto(UserEntity userEntity) {
-      return UserResponseDto.builder()
+        Set<String> roleNames = userEntity.getRoles() != null
+                ? userEntity.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())
+                : Set.of();
+        return UserResponseDto.builder()
                 .userId(userEntity.getId())
                 .fullName(userEntity.getFullName())
                 .email(userEntity.getEmail())
                 .phoneNumber(String.valueOf(userEntity.getPhoneNumber()))
-                .role(userEntity.getRole())
+                .roles(roleNames)
                 .isActive(userEntity.isActive())
                 .createdAt(userEntity.getCreatedAt())
                 .build();
@@ -114,7 +121,13 @@ public class AuthServiceImpl implements AuthService {
         newUser.setFullName(registerRequestDto.fullName());
         newUser.setEmail(email);
         newUser.setPhoneNumber(phone);
-        newUser.setRole(Role.USER); //Mặc định luồng đăng ký này là user bình thường
+
+        RoleEntity defaultRole = roleRepository.findByName("ROLE_USER")
+                .orElseGet(() -> roleRepository.findByName("USER").orElse(null));
+        if (defaultRole != null) {
+            newUser.getRoles().add(defaultRole);
+        }
+
         newUser.setEmailVerified(false);
         newUser.setActive(true); // Mặc định tạo sẽ đang hoạt động - Nếu có thay update cờ này về false
         newUser.setPassword(hashedPassword);
@@ -223,11 +236,23 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidRefreshTokenException(genericErrorMessage);
         }
         UserEntity user = refreshTokenEntity.getUser();
+        Set<String> roles = user.getRoles() != null
+                ? user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())
+                : Set.of();
+        Set<String> permissions = user.getRoles() != null
+                ? user.getRoles().stream()
+                .filter(r -> r.getPermissions() != null)
+                .flatMap(r -> r.getPermissions().stream())
+                .map(PermissionEntity::getCode)
+                .collect(Collectors.toSet())
+                : Set.of();
+
         UserPrincipal userPrincipal = UserPrincipal.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
                 .password(user.getPassword())
-                .role(user.getRole().name())
+                .roles(roles)
+                .permissions(permissions)
                 .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
                 .build();
@@ -302,11 +327,23 @@ public class AuthServiceImpl implements AuthService {
         user.setEmailVerified(true);
         userRepository.save(user);
 
+        Set<String> roles = user.getRoles() != null
+                ? user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())
+                : Set.of();
+        Set<String> permissions = user.getRoles() != null
+                ? user.getRoles().stream()
+                .filter(r -> r.getPermissions() != null)
+                .flatMap(r -> r.getPermissions().stream())
+                .map(PermissionEntity::getCode)
+                .collect(Collectors.toSet())
+                : Set.of();
+
         UserPrincipal userPrincipal = UserPrincipal.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
                 .password(user.getPassword())
-                .role(user.getRole().name())
+                .roles(roles)
+                .permissions(permissions)
                 .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
                 .build();

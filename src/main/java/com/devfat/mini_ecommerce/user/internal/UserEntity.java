@@ -1,24 +1,14 @@
 package com.devfat.mini_ecommerce.user.internal;
 
 import com.devfat.mini_ecommerce.shared.base.BaseEntity;
-import com.devfat.mini_ecommerce.user.Role;
-
-
-
-
-
-
-
-
-
-
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.UpdateTimestamp;
-import java.time.LocalDateTime;
+
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Getter @Setter
 @Entity
@@ -50,16 +40,17 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
-
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_roles", joinColumns =
+    @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<RoleEntity> roles = new HashSet<>();
 
 
     @Override

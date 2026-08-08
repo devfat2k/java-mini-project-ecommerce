@@ -12,6 +12,8 @@ import com.devfat.mini_ecommerce.auth.dto.VerifyOtpRequestDto;
 import com.devfat.mini_ecommerce.auth.dto.VerifyOtpResponseDto;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
+import com.devfat.mini_ecommerce.shared.ratelimit.RateLimit;
+import com.devfat.mini_ecommerce.shared.ratelimit.RateLimitType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -43,6 +45,7 @@ public class AuthController {
         ));
     }
 
+    @RateLimit(type = RateLimitType.LOGIN, byIp = true)
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponseDto>> login(
             @Valid @RequestBody LoginRequestDto loginRequestDto
@@ -72,6 +75,7 @@ public class AuthController {
         return ResponseEntity.ok().body(ApiResponse.success(null, "Logout Successfully!"));
     }
 
+    @RateLimit(type = RateLimitType.OTP, byIp = true)
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<VerifyOtpResponseDto>> verifyOtp(@Valid @RequestBody VerifyOtpRequestDto dto) {
         return ResponseEntity.ok(ApiResponse.success(
@@ -89,6 +93,7 @@ public class AuthController {
         ));
     }
 
+    @RateLimit(type = RateLimitType.OTP, byIp = true)
     @PostMapping("/resend-otp")
     public ResponseEntity<ApiResponse<ResendOtpResponseDto>> resendOtp(@Valid @RequestBody ResendOtpRequestDto dto) {
         return ResponseEntity.ok(ApiResponse.success(

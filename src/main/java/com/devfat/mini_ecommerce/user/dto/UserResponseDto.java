@@ -1,19 +1,9 @@
 package com.devfat.mini_ecommerce.user.dto;
 
-import com.devfat.mini_ecommerce.user.Role;
-
-
-
-
-
-
-
-
-
 import lombok.*;
 
 import java.time.LocalDateTime;
-
+import java.util.Set;
 
 @Getter
 @AllArgsConstructor
@@ -25,7 +15,7 @@ public class UserResponseDto {
     private String avatarUrl;
     private String email;
     private String phoneNumber;
-    private Role role;
+    private Set<String> roles;
     private Boolean isActive;
     private LocalDateTime createdAt;
 }

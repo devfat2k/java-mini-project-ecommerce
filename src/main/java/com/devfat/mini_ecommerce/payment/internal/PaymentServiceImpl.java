@@ -46,7 +46,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final EmailService emailService;
 
 
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(cron = "${app.scheduler.payment-expired.cron}")
     @Transactional
     public void expiredPayment() {
         // Bước A: tính mốc thời gian "15 phút trước tính từ bây giờ"

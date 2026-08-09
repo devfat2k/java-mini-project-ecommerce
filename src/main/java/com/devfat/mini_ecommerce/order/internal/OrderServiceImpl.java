@@ -11,6 +11,7 @@ import com.devfat.mini_ecommerce.order.exception.InvalidStatusTransitionExceptio
 import com.devfat.mini_ecommerce.product.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.product.internal.ProductEntity;
 import com.devfat.mini_ecommerce.product.internal.ProductRepository;
+import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
 import com.devfat.mini_ecommerce.user.internal.UserEntity;
@@ -27,6 +28,8 @@ import com.devfat.mini_ecommerce.user.internal.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import static com.devfat.mini_ecommerce.order.OrderStatus.*;
@@ -203,5 +206,18 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
 //        return toOrderResponse(orderRepository.save(order));
         return orderMapper.toResponseDto(orderRepository.save(order));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<OrderResponseDto> getAllByUserId(Long userId, Pageable pageable) {
+
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+        Page<OrderResponseDto> page = orderRepository.findAllByUserId(userId, pageable)
+                .map(orderMapper::toResponseDto);
+
+        return PageResponse.of(page);
+
     }
 }

@@ -4,20 +4,15 @@ import com.devfat.mini_ecommerce.order.dto.CreateOrderRequestDto;
 import com.devfat.mini_ecommerce.order.dto.OrderResponseDto;
 import com.devfat.mini_ecommerce.order.dto.UpdateOrderStatusRequestDto;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
+import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
 
 
-
-
-
-
-
-
-
-
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +28,24 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+
+
+    @Operation(
+            summary = "Get all order"
+    )
+    @GetMapping()
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponseDto>>> getAllOrders(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            Pageable pageable
+    ) {
+        PageResponse<OrderResponseDto> orderResponse = orderService.getAllByUserId(userPrincipal.getUserId(), pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                orderResponse,
+                "Get all order successfully"
+        ));
+    }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getOrderResponse(

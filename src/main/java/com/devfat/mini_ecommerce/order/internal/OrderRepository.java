@@ -3,14 +3,9 @@ package com.devfat.mini_ecommerce.order.internal;
 import com.devfat.mini_ecommerce.order.OrderStatus;
 
 
-
-
-
-
-
-
-
-
+import com.devfat.mini_ecommerce.order.dto.OrderResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,7 +18,7 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     //tìm orders theo userId
-    List<OrderEntity> findAllByUserId(Long userId);
+    Page<OrderEntity> findAllByUserId(Long userId, Pageable pageable);
 
     OrderEntity findByUserId(Long userId);
     //tìm orders theo status

@@ -2,6 +2,7 @@ package com.devfat.mini_ecommerce.product.internal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -34,11 +35,37 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Page<ProductEntity> findByStockGreaterThan(int stock, Pageable pageable);
 
     // Pageable - "Lấy sản phẩm có phân trang, có search theo tên sản phầm"
+//    @Query(
+//            value = "SELECT p FROM ProductEntity p " +
+//                    "LEFT JOIN FETCH p.category c " +
+//                    "WHERE p.isActive = true " +
+//                    "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+//                    "AND (:categoryId IS NULL OR c.id = :categoryId)",
+//            countQuery = "SELECT COUNT(p) " +
+//                    "FROM ProductEntity p " +
+//                    "LEFT JOIN  p.category c " +
+//                    "WHERE p.isActive = true " +
+//                    "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+//                    "AND (:categoryId IS NULL OR c.id = :categoryId)"
+//    )
+//    Page<ProductEntity> findByNameAndCategoryIdContainsIgnoreCase(
+//            @Param("search") String search,
+//            @Param("categoryId") Long categoryId,
+//            Pageable pageable
+//    );
+    @EntityGraph(attributePaths = {"category"})
     @Query(
-            value = "SELECT p FROM ProductEntity p JOIN FETCH p.category WHERE p.isActive = true AND LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))",
-            countQuery = "SELECT COUNT(p) FROM ProductEntity p WHERE p.isActive = true AND LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))"
+            "SELECT p FROM ProductEntity p " +
+                    "WHERE p.isActive = true " +
+                    "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+                    "AND (:categoryId IS NULL OR p.category.id = :categoryId)"
     )
-    Page<ProductEntity> findByNameContainsIgnoreCase(@Param("search") String search, Pageable pageable);
+    Page<ProductEntity> findByNameAndCategoryIdContainsIgnoreCase(
+            @Param("search") String search,
+            @Param("categoryId") Long categoryId,
+            Pageable pageable
+    );
+
 
 
 //    @EntityGraph(attributePaths = {"category"}) // Hoạt động y hệt JOIN FETCH

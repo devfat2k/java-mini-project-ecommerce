@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ProductService {
-    PageResponse<ProductResponseDto> getProductsWithSearch(String search, Pageable pageable);
+    PageResponse<ProductResponseDto> getProductsWithSearch(String search, Long categoryId, Pageable pageable);
     ProductResponseDto findById(Long id);
     ProductResponseDto create(CreateProductRequestDto createProductRequestDto);
     ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequestDto);

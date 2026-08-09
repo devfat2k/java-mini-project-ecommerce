@@ -60,9 +60,10 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProductResponseDto>>> getAll(
             @RequestParam(required = false, defaultValue = "") String search,
+            @RequestParam(required = false) Long categoryId,
             Pageable pageable) {
 
-        PageResponse<ProductResponseDto> pageResponse = productService.getProductsWithSearch(search, pageable);
+        PageResponse<ProductResponseDto> pageResponse = productService.getProductsWithSearch(search, categoryId, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(
                 pageResponse,

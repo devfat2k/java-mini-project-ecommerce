@@ -72,12 +72,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Cacheable(value = "products",
-            key = "#search + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+            key = "#search + #categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponseDto> getProductsWithSearch(String search, Pageable pageable) {
-        Page<ProductResponseDto> page = productRepository.findByNameContainsIgnoreCase(search, pageable)
+    public PageResponse<ProductResponseDto> getProductsWithSearch(String search, Long categoryId, Pageable pageable) {
+        Page<ProductResponseDto> product = productRepository.findByNameAndCategoryIdContainsIgnoreCase(search, categoryId, pageable)
                 .map(productMapper::toResponseDto);
-        return PageResponse.of(page);
+        return PageResponse.of(product);
     }
 
     @Override

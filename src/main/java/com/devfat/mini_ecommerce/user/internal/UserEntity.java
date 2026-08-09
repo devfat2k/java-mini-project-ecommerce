@@ -41,7 +41,7 @@ public class UserEntity extends BaseEntity {
     private String password;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    private boolean active;
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;

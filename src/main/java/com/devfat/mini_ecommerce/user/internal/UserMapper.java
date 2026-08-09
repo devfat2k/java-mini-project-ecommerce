@@ -38,7 +38,7 @@ public interface UserMapper {
     // 3. Register DTO -> Entity (Đăng ký tài khoản)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true) // Set mặc định ROLE_USER trong Service
-    @Mapping(target = "isActive", ignore = true)
+    @Mapping(target = "active", ignore = true)
     @Mapping(target = "emailVerified", ignore = true)
     @Mapping(target = "avatarUrl", ignore = true)
     UserEntity toEntity(RegisterRequestDto registerDto);

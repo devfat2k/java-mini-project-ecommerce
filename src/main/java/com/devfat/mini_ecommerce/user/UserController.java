@@ -49,15 +49,6 @@ public class UserController {
     }
 
 
-    @PatchMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @Valid @RequestBody ChangePasswordRequestDto requestDto
-            ) {
-        Long userId = userPrincipal.getUserId();
-        userService.changePassword(userId, requestDto);
-        return ResponseEntity.noContent().build();
-    }
 
     @PatchMapping("/me/update")
     public ResponseEntity<ApiResponse<Void>> updateProfile(
@@ -105,6 +96,21 @@ public class UserController {
                 ApiResponse.success(
                         userService.uploadUserImage(userId, file),
                         "Upload User Successfully!"
+                )
+        );
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Valid @RequestBody ChangePasswordRequestDto changePasswordRequestDto
+    ){
+        Long userId = userPrincipal.getUserId();
+        userService.changePassword(userId, changePasswordRequestDto);
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        null,
+                        "Change Password Successfully!"
                 )
         );
     }

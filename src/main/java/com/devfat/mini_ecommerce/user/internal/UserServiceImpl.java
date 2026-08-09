@@ -75,21 +75,21 @@ public class UserServiceImpl implements UserService {
     }
     
 
+
+
     @Override
     @Transactional
-    public void changePassword(Long id, ChangePasswordRequestDto changePasswordRequestDto) {
-        String passwordOld = changePasswordRequestDto.oldPassword().trim();
-        String newPassword = changePasswordRequestDto.newPassword().trim();
+    public void changePassword(Long userId, ChangePasswordRequestDto dto) {
+        String oldPassword = dto.oldPassword().trim();
+        String newPassword = dto.newPassword().trim();
 
-        UserEntity user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String hashedNewPassword = passwordEncoder.encode(newPassword);
 
-        boolean isMatch = passwordEncoder.matches(passwordOld, user.getPassword());
-        if(!isMatch) {
-            throw new BadRequestException("Old password not match");
-        }
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+        if(!(passwordEncoder.matches(oldPassword, user.getPassword()))) throw new ResourceNotFoundException("Old password does not match!");
+
+        user.setPassword(hashedNewPassword);
     }
 
     @Override

@@ -16,6 +16,7 @@ public class UserResponseDto {
     private String email;
     private String phoneNumber;
     private Set<String> roles;
-    private Boolean isActive;
+    private boolean active;
     private LocalDateTime createdAt;
+    private Boolean emailVerified;
 }

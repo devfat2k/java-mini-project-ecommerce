@@ -68,7 +68,7 @@ public class RateLimitingAspect {
             log.warn("Rate limit exceeded for key: {}. Retry after {}s", identifierKey, retryAfterSeconds);
 
             throw new TooManyRequestsException(
-                    "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau " + retryAfterSeconds + " giây.",
+                    "Rate limit exceeded. Please try again after " + retryAfterSeconds + " giây.",
                     retryAfterSeconds
             );
         }

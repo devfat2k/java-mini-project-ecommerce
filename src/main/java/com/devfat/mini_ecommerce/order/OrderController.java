@@ -36,10 +36,9 @@ public class OrderController {
     @GetMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<OrderResponseDto>>> getAllOrders(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
             Pageable pageable
     ) {
-        PageResponse<OrderResponseDto> orderResponse = orderService.getAllByUserId(userPrincipal.getUserId(), pageable);
+        PageResponse<OrderResponseDto> orderResponse = orderService.getAllOrder(pageable);
 
         return ResponseEntity.ok(ApiResponse.success(
                 orderResponse,

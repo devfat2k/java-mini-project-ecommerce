@@ -210,14 +210,22 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderResponseDto> getAllByUserId(Long userId, Pageable pageable) {
+    public PageResponse<OrderResponseDto> getAllOrder(Pageable pageable) {
 
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
-        Page<OrderResponseDto> page = orderRepository.findAllByUserId(userId, pageable)
+        Page<OrderResponseDto> page = orderRepository.findAll(pageable)
                 .map(orderMapper::toResponseDto);
 
         return PageResponse.of(page);
 
+    }
+
+    @Override
+    public PageResponse<OrderResponseDto> getMyOrder(Long userId, Pageable pageable) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+       Page<OrderResponseDto> orders = orderRepository.findAllByUserId(userId, pageable)
+               .map(orderMapper::toResponseDto);
+       return PageResponse.of(orders);
     }
 }

@@ -16,5 +16,6 @@ public interface OrderService {
     OrderResponseDto findById(Long id, Long userIdInToken, String role) throws AccessDeniedException;
     OrderResponseDto create(Long userId, CreateOrderRequestDto createOrderRequestDto);
     OrderResponseDto changeStatus(Long id, UpdateOrderStatusRequestDto updateOrderStatusRequestDto);
-    PageResponse<OrderResponseDto> getAllByUserId(Long userId, Pageable pageable);
+    PageResponse<OrderResponseDto> getAllOrder( Pageable pageable);
+    PageResponse<OrderResponseDto> getMyOrder(Long userId, Pageable pageable);
 }

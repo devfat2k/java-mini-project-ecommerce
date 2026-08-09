@@ -28,20 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-    private  CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
     private final CategoryMapper categoryMapper;
 
     public boolean existsByName(String categoryName) {
         return categoryRepository.existsByNameIgnoreCase(categoryName);
     }
-
-//    public CategoryResponseDto toCategoryResponseDto(CategoryEntity categoryEntity) {
-//        return CategoryResponseDto.builder()
-//                .id(categoryEntity.getId())
-//                .categoryName(categoryEntity.getName())
-//                .build();
-//    }
 
     @Override
     @CacheEvict(value = "categories", allEntries = true)
@@ -53,7 +46,6 @@ public class CategoryServiceImpl implements CategoryService {
         }
         CategoryEntity categoryEntity = new CategoryEntity();
         categoryEntity.setName(createCategoryRequestDto.name());
-//        return toCategoryResponseDto(categoryRepository.save(categoryEntity));
         return  categoryMapper.toResponseDto(categoryRepository.save(categoryEntity));
 
     }
@@ -81,7 +73,6 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponseDto update(Long id,CreateCategoryRequestDto createCategoryRequestDto) {
         CategoryEntity categoryEntity = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category is not found. id = " + id));
         categoryEntity.setName(createCategoryRequestDto.name());
-//        return toCategoryResponseDto(categoryRepository.save(categoryEntity));
         return  categoryMapper.toResponseDto(categoryRepository.save(categoryEntity));
     }
 

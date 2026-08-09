@@ -75,6 +75,8 @@ public class ProductController {
             summary = "Get product by ID",
             description = "Retrieve a product by its ID."
     )
+    @SecurityRequirements({})
+    @RateLimit(type = RateLimitType.PUBLIC_API, byIp = true)
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponseDto>> getById(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(

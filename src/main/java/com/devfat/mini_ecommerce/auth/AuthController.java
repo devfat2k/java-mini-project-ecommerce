@@ -83,7 +83,7 @@ public class AuthController {
                 "Verify Otp Successfully!"
         ));
     }
-
+    @RateLimit(type = RateLimitType.PUBLIC_API, byIp = true)
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto dto) {
         authService.forgotPassword(dto);

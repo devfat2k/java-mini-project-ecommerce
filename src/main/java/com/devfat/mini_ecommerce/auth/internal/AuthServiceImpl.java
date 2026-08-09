@@ -3,16 +3,7 @@ package com.devfat.mini_ecommerce.auth.internal;
 import com.devfat.mini_ecommerce.auth.AuthService;
 import com.devfat.mini_ecommerce.auth.OtpPurpose;
 import com.devfat.mini_ecommerce.auth.OtpService;
-import com.devfat.mini_ecommerce.auth.dto.AuthResponseDto;
-import com.devfat.mini_ecommerce.auth.dto.ForgotPasswordRequestDto;
-import com.devfat.mini_ecommerce.auth.dto.LoginRequestDto;
-import com.devfat.mini_ecommerce.auth.dto.RefreshTokenRequestDto;
-import com.devfat.mini_ecommerce.auth.dto.RefreshTokenResponseDto;
-import com.devfat.mini_ecommerce.auth.dto.RegisterRequestDto;
-import com.devfat.mini_ecommerce.auth.dto.ResendOtpRequestDto;
-import com.devfat.mini_ecommerce.auth.dto.ResendOtpResponseDto;
-import com.devfat.mini_ecommerce.auth.dto.VerifyOtpRequestDto;
-import com.devfat.mini_ecommerce.auth.dto.VerifyOtpResponseDto;
+import com.devfat.mini_ecommerce.auth.dto.*;
 import com.devfat.mini_ecommerce.auth.exception.InvalidRefreshTokenException;
 import com.devfat.mini_ecommerce.auth.exception.ResendCooldownException;
 import com.devfat.mini_ecommerce.shared.exception.AccountNotVerifiedException;
@@ -20,20 +11,9 @@ import com.devfat.mini_ecommerce.shared.exception.DuplicateResourceException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.shared.security.JwtProvider;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
+import com.devfat.mini_ecommerce.user.dto.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
-import com.devfat.mini_ecommerce.user.internal.PermissionEntity;
-import com.devfat.mini_ecommerce.user.internal.RoleEntity;
-import com.devfat.mini_ecommerce.user.internal.RoleRepository;
-import com.devfat.mini_ecommerce.user.internal.UserEntity;
-import com.devfat.mini_ecommerce.user.internal.UserRepository;
-
-
-
-
-
-
-
-
+import com.devfat.mini_ecommerce.user.internal.*;
 
 
 import lombok.RequiredArgsConstructor;
@@ -72,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenGenerator refreshTokenGenerator;
 
     private final OtpService otpService;
+    private final UserMapper userMapper;
 
     @Value("${app.jwt.refresh-expiration-days}")
     private long refreshTokenExpirationDays;
@@ -98,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(userEntity.getEmail())
                 .phoneNumber(String.valueOf(userEntity.getPhoneNumber()))
                 .roles(roleNames)
-                .isActive(userEntity.isActive())
+                .active(userEntity.isActive())
                 .createdAt(userEntity.getCreatedAt())
                 .build();
     }
@@ -139,8 +120,9 @@ public class AuthServiceImpl implements AuthService {
                 OtpPurpose.REGISTER_VERIFICATION
         );
 
-        return toResponseDto(savedUser);
+        return userMapper.toResponseDto(savedUser);
     }
+
 
     /**
      * 1. Tạo UsernamePasswordAuthenticationToken(email, password) — token "thô" chưa xác thực
@@ -179,9 +161,6 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtProvider.generateToken(userPrincipal);
 
-        if (!userPrincipal.isEmailVerified()) {
-            throw new AccountNotVerifiedException("Account not verified! Please check your email address and try again.");
-        }
 
         refreshTokenRepository.deleteExpiredOrRevokedByUserId(userPrincipal.getUserId(), LocalDateTime.now()); // clear
 
@@ -320,6 +299,20 @@ public class AuthServiceImpl implements AuthService {
                 .message("New verification code has been sent!")
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDto dto) {
+        String password = dto.newPassword();
+        String hashedPassword = passwordEncoder.encode(password);
+
+        Long userId = jwtProvider.validateActionTokenAndGetUserId(dto.actionToken(), OtpPurpose.RESET_PASSWORD.name());
+
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+        user.setPassword(hashedPassword);
+    }
+
 
 
 

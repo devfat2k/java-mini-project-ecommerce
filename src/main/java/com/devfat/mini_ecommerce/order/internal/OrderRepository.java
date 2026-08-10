@@ -3,7 +3,6 @@ package com.devfat.mini_ecommerce.order.internal;
 import com.devfat.mini_ecommerce.order.OrderStatus;
 
 
-import com.devfat.mini_ecommerce.order.dto.OrderResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Repository
@@ -32,7 +30,11 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     @Query("SELECT DISTINCT o FROM OrderEntity o " +
             "JOIN FETCH o.user " +
             "LEFT JOIN FETCH o.items " +
-            "WHERE o.user.id = :userId")
-    List<OrderEntity> findByUserIdWithDetails(@Param("userId") Long userId);
+            "WHERE o.user.id = :userId" +
+            " AND o.status = :status")
+    Page<OrderEntity> findByUserIdAndStatusWithDetails(@Param("userId") Long userId, @Param("status") OrderStatus status, Pageable pageable);
+
+
+    Page<OrderEntity> findByUserId(Long userId, Pageable pageable);
 
 }

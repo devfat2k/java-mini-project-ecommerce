@@ -1,27 +1,16 @@
 package com.devfat.mini_ecommerce.order.internal;
 
 import com.devfat.mini_ecommerce.order.OrderStatus;
+import com.devfat.mini_ecommerce.payment.PaymentMethod;
 import com.devfat.mini_ecommerce.shared.base.BaseEntity;
+import com.devfat.mini_ecommerce.user.address.internal.UserAddressEntity;
 import com.devfat.mini_ecommerce.user.internal.UserEntity;
-
-
-
-
-
-
-
-
-
-
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,9 +52,19 @@ public class OrderEntity extends BaseEntity {
     private List<OrderItemEntity> items = new ArrayList<>();
 
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipping_address_id")
+    private UserAddressEntity shippingAddress;
+
+    @Column(name = "shipping_address_snapshot", columnDefinition = "TEXT")
+    private String shippingAddressSnapshot;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
+
     @Version
     private Integer version;
-
 
     @Override
     public boolean equals(Object o) {

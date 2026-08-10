@@ -4,7 +4,6 @@ import com.devfat.mini_ecommerce.notification.EmailService;
 import com.devfat.mini_ecommerce.order.OrderService;
 import com.devfat.mini_ecommerce.order.OrderStatus;
 import com.devfat.mini_ecommerce.order.dto.CreateOrderRequestDto;
-import com.devfat.mini_ecommerce.order.dto.OrderItemResponseDto;
 import com.devfat.mini_ecommerce.order.dto.OrderResponseDto;
 import com.devfat.mini_ecommerce.order.dto.UpdateOrderStatusRequestDto;
 import com.devfat.mini_ecommerce.order.exception.InvalidStatusTransitionException;
@@ -13,19 +12,14 @@ import com.devfat.mini_ecommerce.product.internal.ProductEntity;
 import com.devfat.mini_ecommerce.product.internal.ProductRepository;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
-import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
+import com.devfat.mini_ecommerce.user.address.internal.AddressRepository;
+import com.devfat.mini_ecommerce.user.address.internal.UserAddressEntity;
 import com.devfat.mini_ecommerce.user.internal.UserEntity;
 import com.devfat.mini_ecommerce.user.internal.UserRepository;
 
 
-
-
-
-
-
-
-
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,9 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.devfat.mini_ecommerce.order.OrderStatus.*;
 import java.math.BigDecimal;
 import org.springframework.security.access.AccessDeniedException;
-import java.util.List;
+
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -48,9 +43,11 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final AddressRepository addressRepository;
     private final EmailService emailService;
 
-    private final OrderMapper  orderMapper;
+    private final OrderMapper orderMapper;
+    private final ObjectMapper objectMapper;
 
 
 
@@ -61,51 +58,28 @@ public class OrderServiceImpl implements OrderService {
             // DONE, CANCELLED không có entry -> get() trả null -> exception -> đúng vì đây là trạng thái kết thúc
     );
 
-//    private OrderResponseDto toOrderResponse(OrderEntity orderEntity) {
-//        return OrderResponseDto.builder()
-//                .id(orderEntity.getId())
-//                .status(orderEntity.getStatus())
-//                .totalAmount(orderEntity.getTotalAmount())
-//                .createdAt(orderEntity.getCreatedAt())
-//                .orderItems(
-//                        orderEntity.getItems().stream()
-//                                .map(item -> OrderItemResponseDto.builder()
-//                                        .productName(item.getProduct().getName())
-//                                        .quantity(item.getQuantity())
-//                                        .unitPrice(item.getUnitPrice())
-//                                        .build()
-//                                ).toList()
-//                ).build();
-//    }
-
 
     /**
      * 1. Lấy userId hiện tại từ @AuthenticationPrincipal (giống trên)
      * 2. Lấy role hiện tại từ userPrincipal (dùng lại getAuthorities() đã có, hoặc thêm getRole() nếu UserPrincipal đã có sẵn từ C3)
      * 3. Nếu role là ADMIN -> cho phép xem bất kỳ userId nào trong path (không cần so sánh)
      * 4. Nếu role là USER -> so sánh userId trong path với userId hiện tại:
-     *      - Khớp -> cho qua
-     *      - Không khớp -> throw AccessDeniedException (dùng đúng class Spring Security,
-     *        để rơi vào đúng handler đã có sẵn từ D2 -> tự động trả 403 đúng format)
+     * - Khớp -> cho qua
+     * - Không khớp -> throw AccessDeniedException (dùng đúng class Spring Security,
+     * để rơi vào đúng handler đã có sẵn từ D2 -> tự động trả 403 đúng format)
      */
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponseDto> findByUserIdWithDetails(Long userIdPath, Long userIdInToken, String userRole) throws AccessDeniedException {
-        if(userIdPath == null && userIdInToken == null) {
-            throw new ResourceNotFoundException("User id is required!");
-        }
-        if(userRepository.findById(Objects.requireNonNull(userIdPath)).isEmpty() || userRepository.findById(userIdInToken).isEmpty()) {
+    public PageResponse<OrderResponseDto> getOrderByUserIdAndStatusWithDetails(Long userId, OrderStatus status, Pageable pageable)  {
+        if(userId == null) throw new ResourceNotFoundException("User id is required!");
+        if(userRepository.findById(Objects.requireNonNull(userId)).isEmpty() || userRepository.findById(userId).isEmpty()) {
             throw new ResourceNotFoundException("User not found!");
         }
 
-        if(userRole.equalsIgnoreCase("USER") && !(userIdInToken.equals(userIdPath))) {
-            throw new AccessDeniedException("Access denied!. User ID is invalid or does not belong to you!");
-        }
-
-        return orderRepository.findByUserIdWithDetails(userIdPath)
-                .stream()
-                .map(orderMapper::toResponseDto)
-                .toList();
+        Page<OrderResponseDto> order = orderRepository.findByUserIdAndStatusWithDetails(userId, status, pageable).map(
+                orderMapper::toResponseDto
+        );
+        return PageResponse.of(order);
     }
 
 
@@ -132,21 +106,42 @@ public class OrderServiceImpl implements OrderService {
             throw new AccessDeniedException("Access denied. This order does not belong to you!");
         }
 
-//        return toOrderResponse(order);
         return orderMapper.toResponseDto(order);
     }
 
 
     @Override
     @Transactional
-    public OrderResponseDto create(Long userId, CreateOrderRequestDto createOrderRequestDto) {
+    public OrderResponseDto create(Long userId, CreateOrderRequestDto createOrderRequestDto) throws JsonProcessingException {
         // b1. Tìm User theo user id
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        // Bổ sung: Tìm địa chỉ giao hàng
+        //Tìm địa chỉ giao hàng
+//       UserAddressEntity address = addressRepository.findById(createOrderRequestDto.shippingAddressId()).orElseThrow(() -> new ResourceNotFoundException("Address not found!"));
+        //Kiểm tra địa chỉ có thuộc user đó không
+        Optional<UserAddressEntity> defaultAddress = addressRepository.findByUserIdAndDefaultAddressIsTrue(userId);
+        if(defaultAddress.isEmpty()) {
+            throw new ResourceNotFoundException("Address not found!");
+        }
+        //Tạo Json địa chỉ
+        String snapShotAddress = objectMapper.writeValueAsString(Map.of(
+                "recipientName", defaultAddress.get().getRecipientName(),
+                "phone",         defaultAddress.get().getPhone(),
+                "province",      defaultAddress.get().getProvince(),
+                "district",      defaultAddress.get().getDistrict(),
+                "ward",          defaultAddress.get().getWard(),
+                "addressDetail", defaultAddress.get().getAddressDetail()
+        ));
+
         // b2. Tạo đơn hàng rỗng - có total amount =0
         OrderEntity order = new OrderEntity();
         order.setUser(Objects.requireNonNull(user));
         order.setStatus(OrderStatus.PENDING); // Bước này tôi nghĩ rằng vừa đúng vừa sai vì tạo đơn hàng rỗng thì nó sẽ PENDING -> lúc tạo thành công sẽ cặp nhât DONE Hoặc Logic nghiệp vụ khác sau này
         order.setTotalAmount(BigDecimal.ZERO);
+        order.setShippingAddress(defaultAddress.get());
+        order.setShippingAddressSnapshot(snapShotAddress);
+        order.setPaymentMethod(createOrderRequestDto.paymentMethod());
+
         /**
          * Lặp qua từng item trong request.items()
          * Tìm Product theo productId — không thấy → exception
@@ -212,7 +207,6 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public PageResponse<OrderResponseDto> getAllOrder(Pageable pageable) {
 
-
         Page<OrderResponseDto> page = orderRepository.findAll(pageable)
                 .map(orderMapper::toResponseDto);
 
@@ -222,10 +216,30 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public PageResponse<OrderResponseDto> getMyOrder(Long userId, Pageable pageable) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+       userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
        Page<OrderResponseDto> orders = orderRepository.findAllByUserId(userId, pageable)
                .map(orderMapper::toResponseDto);
+
        return PageResponse.of(orders);
+    }
+
+    @Override
+    public void cancelOrder(Long orderId, Long userId, UpdateOrderStatusRequestDto updateOrderStatusRequestDto) throws AccessDeniedException {
+        userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+
+        OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found!"));
+        Set<OrderStatus> allowedNext = ALLOWED_ORDERS.get(order.getStatus());
+        if (allowedNext == null || !allowedNext.contains(updateOrderStatusRequestDto.orderStatus())) {
+            throw new InvalidStatusTransitionException("Do not change from " + order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
+        }
+        if(updateOrderStatusRequestDto.orderStatus().equals(PENDING)) {
+            order.getItems().forEach(item -> {
+                int quantityInOrderCancel = item.getQuantity();
+                item.getProduct().setStock(item.getProduct().getStock() + quantityInOrderCancel);
+            });
+        }
+        order.setStatus(updateOrderStatusRequestDto.orderStatus());
+        orderMapper.toResponseDto(orderRepository.save(order));
     }
 }

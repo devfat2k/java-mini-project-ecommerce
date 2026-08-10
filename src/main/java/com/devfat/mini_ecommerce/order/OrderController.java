@@ -47,15 +47,14 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getOrderResponse(
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponseDto>>> getOrderResponse(
             @PathVariable Long userId,
-            @AuthenticationPrincipal UserPrincipal userPrincipal
+            @RequestParam OrderStatus status,
+            Pageable pageable
     )  {
-        String role = userPrincipal.getRole();
-        Long userIdInToken = userPrincipal.getUserId();
         return ResponseEntity.ok().body(
                 ApiResponse.success(
-                        orderService.findByUserIdWithDetails(userId, userIdInToken, role),
+                        orderService.getOrderByUserIdAndStatusWithDetails(userId, status, pageable),
                         "Get Order By User ID Successfully!"
                 )
         );
@@ -98,6 +97,39 @@ public class OrderController {
         OrderResponseDto orderResponse = orderService.changeStatus(id, updateOrderStatusRequestDto);
         return ResponseEntity.ok().body(
                 ApiResponse.success(orderResponse, "Update Order Status Successfully!")
+        );
+    }
+
+    @Operation(
+            summary = "Get My Order"
+    )
+    @GetMapping("/my-orders")
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponseDto>>> getMyOrders(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            Pageable pageable
+    ){
+        Long userId = userPrincipal.getUserId();
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        orderService.getMyOrder(userId, pageable),
+                        "Get Your Order Successfully!"
+                )
+        );
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<OrderResponseDto>> cancelOrder(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Valid @RequestBody UpdateOrderStatusRequestDto updateOrderStatusRequestDto
+    ) {
+        Long userId = userPrincipal.getUserId();
+        orderService.cancelOrder(id, userId, updateOrderStatusRequestDto);
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        null,
+                        "Cancel Order Successfully"
+                )
         );
     }
 }

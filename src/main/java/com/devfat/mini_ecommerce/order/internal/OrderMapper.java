@@ -22,6 +22,7 @@ import java.util.List;
 public interface OrderMapper {
 
     @Mapping(source = "items", target = "orderItems")
+    @Mapping(source = "shippingAddressSnapshot", target = "shippingAddressSnapshot")
     OrderResponseDto toResponseDto(OrderEntity orderEntity);
 
     List<OrderResponseDto> toResponseDtoList(List<OrderEntity> orderEntities);

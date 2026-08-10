@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.order.dto;
 
+import com.devfat.mini_ecommerce.payment.PaymentMethod;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
 
 
@@ -19,11 +20,12 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record CreateOrderRequestDto(
-//        @NotNull  Long userId, -- KHÔNG SỬ DỤNG UserId mà sử dụng từ TOKEN lấy từ UserPrincipal
+        @NotNull PaymentMethod paymentMethod,
+        String note,
         @NotEmpty @Valid List<OrderItemRequest> items
 ) {
     public record OrderItemRequest(
-            @NotNull  Long productId,
-            @Min(1)  Integer quantity
+            @NotNull Long productId,
+            @Min(1) Integer quantity
     ) {}
 }

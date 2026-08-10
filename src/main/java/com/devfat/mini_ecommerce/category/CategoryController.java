@@ -24,6 +24,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/v1/categories")
@@ -44,19 +46,29 @@ public class CategoryController {
                 ));
     }
 
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<PageResponse<CategoryResponseDto>>> getCategories(
+//            @RequestParam(required = false, defaultValue = "") String search,
+//            Pageable pageable) {
+//
+//        Page<CategoryResponseDto> categoryResponse = categoryService.findByNameContainingIgnoreCase(search, pageable);
+//
+//        return ResponseEntity.ok(ApiResponse.success(
+//               PageResponse.of(categoryResponse),
+//                "Get Category Successfully!"
+//        ));
+//    }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<CategoryResponseDto>>> getCategories(
-            @RequestParam(required = false, defaultValue = "") String search,
-            Pageable pageable) {
-
-        Page<CategoryResponseDto> categoryResponse = categoryService.findByNameContainingIgnoreCase(search, pageable);
-
-        return ResponseEntity.ok(ApiResponse.success(
-               PageResponse.of(categoryResponse),
-                "Get Category Successfully!"
-        ));
-    }
+     @GetMapping()
+     public ResponseEntity<ApiResponse<List<CategoryResponseDto>>> getAllCategories(){
+        List<CategoryResponseDto> categoryResponse = categoryService.countActiveCategories();
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.success(
+                        categoryResponse,
+                        "Get All Categories Successfully!"
+                )
+        );
+     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponseDto>> getCategoriesById(@PathVariable Long id) {
@@ -90,4 +102,6 @@ public class CategoryController {
                 ApiResponse.success(isDeletedCategory, "Delete Category Successfully!")
         );
     }
+
+
 }

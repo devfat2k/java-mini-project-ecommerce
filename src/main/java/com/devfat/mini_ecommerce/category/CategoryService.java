@@ -15,6 +15,8 @@ import com.devfat.mini_ecommerce.category.dto.CreateCategoryRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 
 public interface CategoryService {
     CategoryResponseDto create(CreateCategoryRequestDto createCategoryRequestDto);
@@ -22,4 +24,5 @@ public interface CategoryService {
     CategoryResponseDto findById(Long id);
     CategoryResponseDto update(Long id, CreateCategoryRequestDto createCategoryRequestDto);
     Boolean deleteById(Long id);
+    List<CategoryResponseDto> countActiveCategories();
 }

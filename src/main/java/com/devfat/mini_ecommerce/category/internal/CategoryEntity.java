@@ -45,6 +45,6 @@ public class CategoryEntity extends BaseEntity {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+        return getClass().hashCode();
     }
 }

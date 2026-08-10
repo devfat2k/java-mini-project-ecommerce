@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -25,6 +26,8 @@ public class ProductResponseDto {
     private String imageUrl;
     private boolean active;
     private CategoryResponseDto category;
+    private String unit;
+    private List<String> tags;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

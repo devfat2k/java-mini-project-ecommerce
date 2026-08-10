@@ -49,15 +49,19 @@ public class UserController {
     }
 
 
-
     @PatchMapping("/me/update")
-    public ResponseEntity<ApiResponse<Void>> updateProfile(
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody UpdateProfileRequestDto requestDto
     ) {
         Long userId = userPrincipal.getUserId();
         userService.updateProfile(userId, requestDto);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        userService.updateProfile(userId, requestDto),
+                        "Update User Successfully!"
+                )
+        );
     }
 
     @GetMapping()

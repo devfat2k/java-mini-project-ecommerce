@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface UserService {
     UserResponseDto getMe(Long id);
     void changePassword(Long id, ChangePasswordRequestDto changePasswordRequestDto);
-    void updateProfile(Long id, UpdateProfileRequestDto updateProfileRequestDto);
+    UserResponseDto updateProfile(Long id, UpdateProfileRequestDto updateProfileRequestDto);
     //admin
     Page<UserResponseDto> getAllUsers(Pageable pageable);
     void updateStatusUser(Long id, Long idInToken, Boolean isActive);

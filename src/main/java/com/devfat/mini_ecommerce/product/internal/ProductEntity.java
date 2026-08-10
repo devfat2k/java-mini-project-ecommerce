@@ -3,25 +3,12 @@ package com.devfat.mini_ecommerce.product.internal;
 import com.devfat.mini_ecommerce.category.internal.CategoryEntity;
 import com.devfat.mini_ecommerce.order.internal.OrderItemEntity;
 import com.devfat.mini_ecommerce.shared.base.BaseEntity;
-
-
-
-
-
-
-
-
-
-
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import org.hibernate.annotations.*;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -63,14 +50,20 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
+
+    @Column(nullable = false)
+    private String unit;
+
+    @Column(name = "tags", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> tags;
+
+
     @OneToMany(mappedBy = "product")
     private List<OrderItemEntity> orderItems;
 
-
-
     @Version
     private Integer version;
-
 
     @Override
     public boolean equals(Object o) {
@@ -81,6 +74,6 @@ public class ProductEntity extends BaseEntity {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+        return getClass().hashCode();
     }
 }

@@ -75,8 +75,6 @@ public class UserServiceImpl implements UserService {
     }
     
 
-
-
     @Override
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequestDto dto) {
@@ -94,7 +92,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateProfile(Long id, UpdateProfileRequestDto updateProfileRequestDto) {
+    public UserResponseDto updateProfile(Long id, UpdateProfileRequestDto updateProfileRequestDto) {
         UserEntity user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if(updateProfileRequestDto.phoneNumber() != null) {
             user.setPhoneNumber(updateProfileRequestDto.phoneNumber());
@@ -103,6 +101,8 @@ public class UserServiceImpl implements UserService {
             user.setFullName(updateProfileRequestDto.fullName());
         }
         userRepository.save(user);
+
+        return userMapper.toResponseDto(user);
     }
 
     @Override

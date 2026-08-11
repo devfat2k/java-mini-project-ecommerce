@@ -11,7 +11,6 @@ import com.devfat.mini_ecommerce.shared.exception.DuplicateResourceException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.shared.security.JwtProvider;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
-import com.devfat.mini_ecommerce.user.dto.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
 import com.devfat.mini_ecommerce.user.internal.*;
 
@@ -66,22 +65,6 @@ public class AuthServiceImpl implements AuthService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Server error: Missing SHA-256 algorithm", e);
         }
-    }
-
-
-    private UserResponseDto toResponseDto(UserEntity userEntity) {
-        Set<String> roleNames = userEntity.getRoles() != null
-                ? userEntity.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())
-                : Set.of();
-        return UserResponseDto.builder()
-                .userId(userEntity.getId())
-                .fullName(userEntity.getFullName())
-                .email(userEntity.getEmail())
-                .phoneNumber(String.valueOf(userEntity.getPhoneNumber()))
-                .roles(roleNames)
-                .active(userEntity.isActive())
-                .createdAt(userEntity.getCreatedAt())
-                .build();
     }
 
     @Override

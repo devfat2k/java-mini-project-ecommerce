@@ -2,15 +2,6 @@ package com.devfat.mini_ecommerce.storage.internal;
 
 import com.devfat.mini_ecommerce.storage.StorageService;
 
-
-
-
-
-
-
-
-
-
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
@@ -20,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,10 +31,10 @@ public class StorageServiceImpl implements StorageService {
     @Value("${app.minio.endpoint}")
     private String endPoint;
 
-    private byte[] resizeImage(MultipartFile file, int maxDimension) throws IOException {
+    private byte[] resizeImage(MultipartFile file) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Thumbnails.of(file.getInputStream())
-                .size(maxDimension, maxDimension)
+                .size(800, 800)
                 .outputQuality(0.85)
                 .toOutputStream(outputStream);
         return outputStream.toByteArray();
@@ -59,7 +49,7 @@ public class StorageServiceImpl implements StorageService {
         String objectName = folder + "/" + UUID.randomUUID() + "." + extension;
        try {
            byte[] dataToUpload = resizeImage
-                   ? resizeImage(file, 800)
+                   ? resizeImage(file)
                    : file.getBytes();
 
            minioClient.putObject(

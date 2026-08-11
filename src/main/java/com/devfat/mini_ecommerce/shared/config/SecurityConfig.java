@@ -1,14 +1,8 @@
 package com.devfat.mini_ecommerce.shared.config;
 
-import com.devfat.mini_ecommerce.auth.AuthController;
-import com.devfat.mini_ecommerce.auth.AuthService;
 import com.devfat.mini_ecommerce.shared.security.JwtAccessDeniedHandler;
 import com.devfat.mini_ecommerce.shared.security.JwtAuthenticationEntryPoint;
 import com.devfat.mini_ecommerce.shared.security.JwtAuthenticationFilter;
-import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
-import com.devfat.mini_ecommerce.user.internal.CustomUserDetailsService;
-import com.devfat.mini_ecommerce.user.internal.UserEntity;
-
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -45,8 +39,14 @@ public class SecurityConfig {
             "/api/v1/payments/vnpay-ipn"
     };
     private static final String[] PUBLIC_GET_URLS = {
-            "/api/v1/products/**",
-            "/api/v1/categories/**"
+            "/api/v1/products",
+            "/api/v1/categories",
+            "/api/v1/home"
+    };
+    private static final String[] PUBLIC_GET_WITH_ID_URLS = {
+            "/api/v1/products/{id}",
+            "/api/v1/categories/{id}",
+            "/api/v1/products/{id}/reviews"
     };
 
     private static final String[] SWAGGER_URLS = {
@@ -76,15 +76,14 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Permitted Public Endpoints
+                        // 1. Public
                         .requestMatchers(PUBLIC_AUTH_URLS).permitAll()
                         .requestMatchers(SWAGGER_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_URLS).permitAll()
-
-                        // 2. Admin Security Zone
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_WITH_ID_URLS).permitAll()
+                        // 2. Admin
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-
-                        // 3. All other endpoints require Authentication
+                        // 3. Other
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

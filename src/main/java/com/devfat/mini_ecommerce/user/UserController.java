@@ -48,49 +48,22 @@ public class UserController {
         );
     }
 
-
-    @PatchMapping("/me/update")
+    @PatchMapping("/update-profile")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody UpdateProfileRequestDto requestDto
     ) {
         Long userId = userPrincipal.getUserId();
-        userService.updateProfile(userId, requestDto);
+        UserResponseDto result = userService.updateProfile(userId, requestDto);
         return ResponseEntity.ok().body(
                 ApiResponse.success(
-                        userService.updateProfile(userId, requestDto),
+                        result,
                         "Update User Successfully!"
                 )
         );
     }
 
-    @GetMapping()
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<PageResponse<UserResponseDto>>> getAllUsers(
-            Pageable pageable
-    ) {
-        Page<UserResponseDto> userResponse = userService.getAllUsers(pageable);
-        return ResponseEntity.ok().body(
-                ApiResponse.success(
-                        PageResponse.of(userResponse),
-                        "Get All User Successfully!"
-                )
-        );
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{userId}/status")
-    public ResponseEntity<ApiResponse<Void>> changeStatus(
-            @PathVariable Long userId,
-            @RequestParam boolean isActive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal
-    ) {
-        Long idInToken = userPrincipal.getUserId();
-        userService.updateStatusUser(userId, idInToken, isActive);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping(value="/me/avatar", consumes = "multipart/form-data")
+    @PostMapping(value="/upload-avatar", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<UserResponseDto>> uploadAvatar(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam("file") MultipartFile file

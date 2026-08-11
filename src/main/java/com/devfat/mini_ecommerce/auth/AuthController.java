@@ -7,6 +7,7 @@ import com.devfat.mini_ecommerce.user.dto.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
 import com.devfat.mini_ecommerce.shared.ratelimit.RateLimit;
 import com.devfat.mini_ecommerce.shared.ratelimit.RateLimitType;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,11 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @AllArgsConstructor
 @SecurityRequirements({})
-@Tag(name = "Auth")
+@Tag(name = "Auth", description = "Authentication & Password Management")
 public class AuthController {
     private final AuthService authService;
 
-
+    @Operation(summary = "Register user", description = "Register a new user account.")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> register(
             @Valid @RequestBody RegisterRequestDto registerRequestDto)
@@ -41,6 +42,7 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "Login user", description = "Authenticate user credentials and return JWT tokens.")
     @RateLimit(type = RateLimitType.LOGIN, byIp = true)
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponseDto>> login(
@@ -53,6 +55,7 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "Refresh token", description = "Obtain a new access token using a valid refresh token.")
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse<RefreshTokenResponseDto>>  refreshToken(
             @Valid @RequestBody RefreshTokenRequestDto refreshTokenRequestDto
@@ -64,13 +67,14 @@ public class AuthController {
         ));
     }
 
-
+    @Operation(summary = "Logout user", description = "Invalidate user refresh token and logout.")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody RefreshTokenRequestDto request) {
         authService.logout(request);
         return ResponseEntity.ok().body(ApiResponse.success(null, "Logout Successfully!"));
     }
 
+    @Operation(summary = "Verify OTP", description = "Verify one-time password for account activation.")
     @RateLimit(type = RateLimitType.OTP, byIp = true)
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<VerifyOtpResponseDto>> verifyOtp(@Valid @RequestBody VerifyOtpRequestDto dto) {
@@ -79,6 +83,8 @@ public class AuthController {
                 "Verify Otp Successfully!"
         ));
     }
+
+    @Operation(summary = "Forgot password", description = "Request password reset OTP code.")
     @RateLimit(type = RateLimitType.PUBLIC_API, byIp = true)
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto dto) {
@@ -89,6 +95,7 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "Resend OTP", description = "Resend a new verification OTP code.")
     @RateLimit(type = RateLimitType.OTP, byIp = true)
     @PostMapping("/resend-otp")
     public ResponseEntity<ApiResponse<ResendOtpResponseDto>> resendOtp(@Valid @RequestBody ResendOtpRequestDto dto) {
@@ -98,6 +105,7 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "Reset password", description = "Reset user password using valid token or OTP.")
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequestDto resetPasswordRequest

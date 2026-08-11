@@ -5,26 +5,14 @@ import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
 import com.devfat.mini_ecommerce.category.dto.CreateCategoryRequestDto;
 import com.devfat.mini_ecommerce.category.exception.CategoryHasProductsException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
-
-
-
-
-
-
-
-
-
-
-import lombok.AllArgsConstructor;
+import com.devfat.mini_ecommerce.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -32,8 +20,8 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-
     private final CategoryMapper categoryMapper;
+    private final StorageService storageService;
 
     public boolean existsByName(String categoryName) {
         return categoryRepository.existsByNameIgnoreCase(categoryName);
@@ -52,14 +40,6 @@ public class CategoryServiceImpl implements CategoryService {
         return  categoryMapper.toResponseDto(categoryRepository.save(categoryEntity));
 
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CategoryResponseDto> findByNameContainingIgnoreCase(String name, Pageable pageable) {
-        return categoryRepository.findByNameContainingIgnoreCase(name, pageable)
-                .map(categoryMapper::toResponseDto);
-    }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -96,5 +76,14 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public List<CategoryResponseDto> countActiveCategories() {
         return categoryRepository.countActiveCategories();
+    }
+
+    @Override
+    public CategoryResponseDto uploadCategoryImage(Long id, MultipartFile file) {
+        CategoryEntity category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category is not found. id = " + id));
+
+        String url = storageService.uploadFile(file, "categoryImage", true);
+        category.setImageUrl(url);
+        return categoryMapper.toResponseDto(categoryRepository.save(category));
     }
 }

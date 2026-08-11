@@ -2,16 +2,6 @@ package com.devfat.mini_ecommerce.category.internal;
 
 import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
 import com.devfat.mini_ecommerce.category.dto.CreateCategoryRequestDto;
-
-
-
-
-
-
-
-
-
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

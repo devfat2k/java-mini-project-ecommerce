@@ -54,6 +54,22 @@ public class AdminCategoryController {
         );
     }
 
+    // TODO: Upload image category
+    @Operation(summary = "Upload category image", description = "Upload an image file for a category.")
+    @PostMapping(value = "/{id}/image", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<CategoryResponseDto>> updateCategoryImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        CategoryResponseDto categoryResponse = categoryService.uploadCategoryImage(id, file);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.success(
+                        categoryResponse,
+                        "Upload Category Image Successfully!"
+                )
+        );
+    }
+
     // TODO: Category Config - Home
     @Operation(summary = "Configure category feature", description = "Configure category settings for homepage display.")
     @PatchMapping("/{id}")
@@ -61,10 +77,5 @@ public class AdminCategoryController {
         return null;
     }
 
-    // TODO: Upload image category
-    @Operation(summary = "Upload category image", description = "Upload an image file for a category.")
-    @PostMapping("/{id}/image")
-    public ResponseEntity<ApiResponse<Void>> updateCategoryImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-        return null;
-    }
+
 }

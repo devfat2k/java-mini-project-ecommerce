@@ -13,17 +13,18 @@ import java.util.List;
 @Repository
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
 
+
     Page<CategoryEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     boolean existsByNameIgnoreCase(String name);
 
 
     @Query("""
-        SELECT new com.devfat.mini_ecommerce.category.dto.CategoryResponseDto(
-            c.id, c.name, COUNT(p.id))
+        SELECT CategoryResponseDto(
+            c.id, c.name, COUNT(p.id), c.imageUrl)
         FROM CategoryEntity c
         LEFT JOIN c.products p ON p.isActive = true
-        GROUP BY c.id, c.name
+        GROUP BY c.id, c.name, c.imageUrl
         """)
     List<CategoryResponseDto> countActiveCategories();
 }

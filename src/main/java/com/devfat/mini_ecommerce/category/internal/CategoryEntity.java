@@ -1,16 +1,11 @@
 package com.devfat.mini_ecommerce.category.internal;
 
 import com.devfat.mini_ecommerce.product.internal.ProductEntity;
-
-
 import com.devfat.mini_ecommerce.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -31,6 +26,11 @@ public class CategoryEntity extends BaseEntity {
 
     @Column(nullable = false, unique = true , length = 50)
     private String name;
+
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
     private List<ProductEntity> products;

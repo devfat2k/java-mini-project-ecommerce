@@ -1,8 +1,8 @@
 package com.devfat.mini_ecommerce.product.internal;
 
 import com.devfat.mini_ecommerce.category.internal.CategoryEntity;
-import com.devfat.mini_ecommerce.category.internal.CategoryRepository;
 import com.devfat.mini_ecommerce.product.ProductService;
+import com.devfat.mini_ecommerce.category.internal.CategoryRepository;
 import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
 import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;

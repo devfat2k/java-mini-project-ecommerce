@@ -1,0 +1,158 @@
+package com.devfat.mini_ecommerce.product;
+
+import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
+import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
+import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
+import com.devfat.mini_ecommerce.product.internal.ProductRepository;
+import com.devfat.mini_ecommerce.shared.base.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/admin/products")
+@RequiredArgsConstructor
+@Tag(name = "Admin - Product", description = "Admin: Quản lý sản phẩm")
+public class AdminProductController {
+    private final ProductService productService;
+
+    @Operation(
+            summary = "Admin - Create product",
+            description = "Create a new product using the request body."
+    )
+    @PreAuthorize("hasAuthority('product:create')")
+    @PostMapping()
+    public ResponseEntity<ApiResponse<ProductResponseDto>> createProduct(
+            @Valid @RequestBody() CreateProductRequestDto createProductRequest
+    ) {
+        ProductResponseDto productResponseDto = productService.create(createProductRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+                productResponseDto,
+                "Create Product Successfully!"
+        ));
+    }
+
+    @Operation(
+            summary = "Admin - Update product",
+            description = "Update one or more product fields. Only provided fields will be updated."
+    )
+    @PreAuthorize("hasAuthority('product:update')")
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProductRequestDto updateProductRequest
+    ) {
+        ProductResponseDto productResponse = productService.update(id, updateProductRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productResponse,
+                "Update Product Successfully!"
+        ));
+    }
+
+    @Operation(
+            summary = "Admin - Soft delete product",
+            description = "Mark the product as inactive."
+    )
+    @PreAuthorize("hasAuthority('product:delete')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteProduct(
+            @PathVariable Long id
+    ) {
+
+        boolean isSoftDelete = productService.softDelete(id);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                isSoftDelete,
+                "Delete product successfully!"
+        ));
+    }
+
+    @Operation(
+            summary = "Admin - Increase product stock",
+            description = "Increase the stock quantity of a product."
+    )
+    @PatchMapping("/increase/{id}")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> increaseStock(
+            @PathVariable Long id,
+            @RequestParam int quantity
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.increaseStock(id, quantity),
+                "Increase Stock Successfully!"
+        ));
+    }
+
+    @Operation(
+            summary = "Admin - Get Top Product",
+            description = "Get Top Product Buy For Admin Dashboard"
+    )
+    @GetMapping("/top-buy")
+    public ResponseEntity<ApiResponse<List<ProductRepository.TopProductView>>> getTopBuyProduct(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok().body(ApiResponse.success(
+                productService.getTopProducts(limit),
+                "Get Top Product Successfully!"
+        ));
+    }
+
+    @Operation(
+            summary = "Admin - Get Top Product By Category",
+            description = "Get Top Product Buy By Category For Admin Dashboard"
+    )
+    @GetMapping("/revenue-by-category")
+    public ResponseEntity<ApiResponse<List<ProductRepository.CategoryRevenueView>>> getRevenueByCategory() {
+        return ResponseEntity.ok().body(ApiResponse.success(
+                productService.getCategoryRevenue(PageRequest.of(0, 10)),
+                "Get Revenue By Category Success!"
+        ));
+    }
+
+    @Operation(
+            summary = "Admin - Get Top Revenue Product",
+            description = "Get Top Revenue Product Buy For Admin Dashboard"
+    )
+    @GetMapping("/revenue-in-month")
+    public ResponseEntity<ApiResponse<List<ProductRepository.MonthlyRevenueView>>> getMonthlyRevenue() {
+        return ResponseEntity.ok().body(
+                ApiResponse.success(
+                        productService.getMonthlyRevenue(),
+                        "Get Monthly Revenue Success!"
+                ));
+    }
+
+    @Operation(
+            summary = "Admin - Upload Product Image",
+            description = "Upload Product Image For Admin"
+    )
+    @PostMapping(value="/{id}/image", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> uploadProductImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return  ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.uploadProductImage(id, file),
+                "Upload Image Product Successfully!"
+        ));
+    }
+
+    //    TODO: Toggle Feature in Home
+    @PatchMapping("/{id}/featured")
+    public ResponseEntity<ApiResponse<Void>> updateFeatured() {
+        return null;
+    }
+
+    //    TODO: Combo Config in Home
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/combo-config")
+    public ResponseEntity<ApiResponse<Void>> setComboConfig() {
+        return null;
+    }
+}

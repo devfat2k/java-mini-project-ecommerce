@@ -31,7 +31,9 @@ spring:
       ddl-auto: validate       # luôn validate, KHÔNG auto-generate — Flyway là nguồn sự thật duy nhất, giống nhau cả 2 môi trường
     properties:
       hibernate:
+        show-sql: true
         format_sql: true
+        default_batch_fetch_size: 20
 
   flyway:
     enabled: true
@@ -68,6 +70,21 @@ app:
       cron: "${OTP_CLEANUP_CRON:0 0 * * * *}"
     payment-expired:
       cron: "${PAYMENT_EXPIRED_CRON:0 */2 * * * *}"
+  rate-limit:
+    enabled: true
+    rules:
+      login:
+        capacity: 5
+        refill-tokens: 5
+        duration-minutes: 15
+      otp:
+        capacity: 3
+        refill-tokens: 3
+        duration-minutes: 5
+      public-api:
+        capacity: 60
+        refill-tokens: 60
+        duration-minutes: 1
 
 vnpay:
   pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}

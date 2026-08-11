@@ -73,28 +73,35 @@
     └── docker-compose.yml
     ```
 
-#### 3. Phân nhóm Controller theo URL Prefix & Security Control Group
-* **Vấn đề cũ:** Gom chung API Admin và User trong cùng Controller file, phân quyền rải rác.
-* **Chuẩn hóa kỹ thuật (Spring Security 6 + Java 21 Records):**
-  * Chia tách gói Controller theo phạm vi truy cập:
-    * `com.devfat.mini_ecommerce.product.controller.public_api` -> `/api/v1/public/products/**` (Permit All)
-    * `com.devfat.mini_ecommerce.product.controller.user_api` -> `/api/v1/user/products/**` (Requires Authenticated User)
-    * `com.devfat.mini_ecommerce.product.controller.admin_api` -> `/api/v1/admin/products/**` (Requires ADMIN Role/Authority)
-  * Cấu hình tập trung tại `SecurityFilterChain`:
+#### 3. Mô-đun hóa Cấu trúc Thư mục (Spring Modulith Convention & Package-by-Feature)
+* **Vấn đề cũ:** Gom chung tất cả Controller, Service, Repository, Entity vào các thư mục kỹ thuật phẳng (`controller/`, `service/`, `entity/`, `repository/`, `dto/`).
+* **Chuẩn hóa kỹ thuật (Spring Modulith Convention):**
+  * Tách toàn bộ ứng dụng thành các **Application Modules** theo miền nghiệp vụ (`auth/`, `category/`, `product/`, `order/`, `payment/`, `user/`, `storage/`, `notification/`).
+  * Áp dụng quy chuẩn đóng gói nghiêm ngặt:
+    * **Root Package của Module** (VD: `com.devfat.mini_ecommerce.product`): Đóng vai trò là **Public API** (chứa Controller, Service Interface, Public DTOs, `package-info.java`).
+    * **Package `internal/`** (VD: `com.devfat.mini_ecommerce.product.internal`): Giấu kín phần implementation (`ServiceImpl`, `Repository`, `Entity`, `Mapper`).
+    * **Package `exception/`** (VD: `com.devfat.mini_ecommerce.product.exception`): Chứa các Exception nghiệp vụ riêng của từng domain.
+    * **Package `shared/`**: Chứa hạ tầng dùng chung dạng **Open Module** (`@ApplicationModule(type = OPEN)`). Chứa `base/`, `config/`, `exception/`, `security/`, `util/` và `PingController.java`.
+  * **Định hướng Phụ thuộc 100% Sạch (Clean Dependency Direction):**
+    1. **`BusinessException` (Shared Exception Base):** `shared/exception/BusinessException.java` đóng vai trò là class cha của mọi Exception. `GlobalExceptionHandler` chỉ phụ thuộc `BusinessException` (0 import về Domain).
+    2. **Khắc phục Circular Dependency (`shared` ↔ `user`):** `CustomUserDetailsService` đưa vào `user/internal/`. `UserPrincipal` trong `shared/security/` là **Security DTO thuần túy** (không phụ thuộc `UserEntity`). `JwtAuthenticationFilter` sử dụng `UserDetailsService` abstraction từ Spring Security.
+    3. **Domain Config về đúng Module:** `VNPayConfig` ở `payment/internal/`, `MinioConfig` ở `storage/internal/`.
+  * **Cấu hình Spring Security 6:**
     ```java
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/public/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/user/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**").permitAll()
+                .requestMatchers("/api/v1/auth/**", "/api/v1/payments/vnpay-return", "/api/v1/payments/vnpay-ipn").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();
     }
     ```
-  * **Tích hợp SpringDoc OpenAPI 2.8.17:** Khai báo 3 `GroupedOpenApi` Beans để tự động chia tab API Doc trên Swagger UI.
+
+
 
 #### 4. BaseEntity & JPA Auditing (`createdAt`, `updatedAt`, `createdBy`, `updatedBy`)
 * **Vấn đề cũ:** Mỗi Entity tự định nghĩa field timestamp riêng, thiếu thông tin vết người tạo/sửa.

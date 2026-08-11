@@ -1,5 +1,6 @@
 -- ============================================================
--- MINI SHOP — Consolidated Schema V1
+-- MINI SHOP — Consolidated Schema V1 (Standardized Baseline)
+-- Complete schema for Users, Roles, Categories, Products, Orders, Reviews, Banners, Payments
 -- Dynamic validation compliant: every table has created_at, updated_at, created_by, updated_by
 -- ============================================================
 
@@ -22,7 +23,7 @@ CREATE TABLE users (
 );
 
 -- ============================================================
--- 2. ROLE
+-- 2. ROLES
 -- ============================================================
 CREATE TABLE roles (
                       id             BIGSERIAL PRIMARY KEY,
@@ -70,7 +71,7 @@ CREATE TABLE role_permissions (
 );
 
 -- ============================================================
--- 6. USER_ADDRESSES (Sổ địa chỉ giao hàng - Đặt trước Orders)
+-- 6. USER_ADDRESSES (Sổ địa chỉ giao hàng)
 -- ============================================================
 CREATE TABLE user_addresses (
                                 id             BIGSERIAL PRIMARY KEY,
@@ -90,38 +91,60 @@ CREATE TABLE user_addresses (
 );
 
 -- ============================================================
--- 7. CATEGORIES
+-- 7. CATEGORIES (Standardized with Home Display Config)
 -- ============================================================
 CREATE TABLE categories (
-                            id         BIGSERIAL PRIMARY KEY,
-                            name       VARCHAR(50) UNIQUE NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                            updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                            created_by VARCHAR(150),
-                            updated_by VARCHAR(150)
+                            id                 BIGSERIAL PRIMARY KEY,
+                            name               VARCHAR(50) UNIQUE NOT NULL,
+                            description        TEXT,
+                            slug               VARCHAR(100) UNIQUE,
+                            image_url          VARCHAR(500),
+                            badge              VARCHAR(100),
+                            badge_type         VARCHAR(20) CHECK (badge_type IN ('hot', 'number', 'fresh', 'dry')),
+                            icon_name          VARCHAR(50),
+                            home_display_style VARCHAR(10) CHECK (home_display_style IN ('main', 'card', 'icon')),
+                            home_sort_order    INTEGER NOT NULL DEFAULT 0,
+                            home_is_active     BOOLEAN NOT NULL DEFAULT FALSE,
+                            created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
+                            updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
+                            created_by         VARCHAR(150),
+                            updated_by         VARCHAR(150)
 );
 
 -- ============================================================
--- 8. PRODUCTS
+-- 8. PRODUCTS (Standardized with Rating, Search & Home Combo Fields)
 -- ============================================================
 CREATE TABLE products (
-                          id             BIGSERIAL PRIMARY KEY,
-                          name           VARCHAR(150) NOT NULL,
-                          description    TEXT,
-                          price          NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
-                          stock          INTEGER        NOT NULL DEFAULT 0 CHECK (stock >= 0),
-                          category_id    BIGINT REFERENCES categories(id),
-                          is_active      BOOLEAN        NOT NULL DEFAULT TRUE,
-                          image_url      VARCHAR(500),
-                          unit           VARCHAR(20),
-                          tags           TEXT[],
-                          average_rating NUMERIC(2, 1)  NOT NULL DEFAULT 0.0,
-                          review_count   INTEGER        NOT NULL DEFAULT 0,
-                          version        INTEGER        NOT NULL DEFAULT 0,
-                          created_at     TIMESTAMP      NOT NULL DEFAULT NOW(),
-                          updated_at     TIMESTAMP      NOT NULL DEFAULT NOW(),
-                          created_by     VARCHAR(150),
-                          updated_by     VARCHAR(150)
+                          id               BIGSERIAL PRIMARY KEY,
+                          name             VARCHAR(150) NOT NULL,
+                          description      TEXT,
+                          price            NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
+                          stock            INTEGER        NOT NULL DEFAULT 0 CHECK (stock >= 0),
+                          category_id      BIGINT REFERENCES categories(id),
+                          is_active        BOOLEAN        NOT NULL DEFAULT TRUE,
+                          image_url        VARCHAR(500),
+                          unit             VARCHAR(20),
+                          tags             TEXT[],
+                          average_rating   NUMERIC(2, 1)  NOT NULL DEFAULT 0.0,
+                          review_count     INTEGER        NOT NULL DEFAULT 0,
+                          is_featured      BOOLEAN        NOT NULL DEFAULT FALSE,
+                          original_price   NUMERIC(12, 2) CHECK (original_price >= 0),
+                          spec             VARCHAR(255),
+                          origin           VARCHAR(255),
+                          weight_options   TEXT[],
+                          product_type     VARCHAR(20)    NOT NULL DEFAULT 'REGULAR' CHECK (product_type IN ('REGULAR', 'COMBO')),
+                          combo_category   VARCHAR(50),
+                          combo_theme      VARCHAR(20)    CHECK (combo_theme IN ('light', 'dark')),
+                          combo_tag        VARCHAR(50),
+                          combo_cta_text   VARCHAR(100),
+                          combo_href       VARCHAR(255),
+                          is_breakout      BOOLEAN        NOT NULL DEFAULT FALSE,
+                          combo_sort_order INTEGER        NOT NULL DEFAULT 0,
+                          version          INTEGER        NOT NULL DEFAULT 0,
+                          created_at       TIMESTAMP      NOT NULL DEFAULT NOW(),
+                          updated_at       TIMESTAMP      NOT NULL DEFAULT NOW(),
+                          created_by       VARCHAR(150),
+                          updated_by       VARCHAR(150)
 );
 
 -- ============================================================
@@ -171,20 +194,21 @@ CREATE TABLE order_items (
 );
 
 -- ============================================================
--- 12. PRODUCT_REVIEWS (Đánh giá & Bình luận sản phẩm)
+-- 12. PRODUCT_REVIEWS (Standardized with Home Featured Flag)
 -- ============================================================
 CREATE TABLE product_reviews (
-                                 id          BIGSERIAL PRIMARY KEY,
-                                 product_id  BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-                                 user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                                 order_id    BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-                                 rating      SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-                                 comment     TEXT,
-                                 is_visible  BOOLEAN NOT NULL DEFAULT TRUE,
-                                 created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-                                 updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-                                 created_by  VARCHAR(150),
-                                 updated_by  VARCHAR(150),
+                                 id               BIGSERIAL PRIMARY KEY,
+                                 product_id       BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                                 user_id          BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                                 order_id         BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                                 rating           SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+                                 comment          TEXT,
+                                 is_visible       BOOLEAN NOT NULL DEFAULT TRUE,
+                                 is_featured_home BOOLEAN NOT NULL DEFAULT FALSE,
+                                 created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+                                 updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+                                 created_by       VARCHAR(150),
+                                 updated_by       VARCHAR(150),
                                  CONSTRAINT uk_user_order_product_review UNIQUE (user_id, order_id, product_id)
 );
 
@@ -239,9 +263,12 @@ CREATE TABLE otp_verifications (
 );
 
 -- ============================================================
--- 16. INDEXES
+-- 16. INDEXES & COMPOSITE SEARCH INDEXES
 -- ============================================================
 CREATE INDEX idx_products_category         ON products(category_id);
+CREATE INDEX idx_products_status_category  ON products(is_active, category_id);
+CREATE INDEX idx_products_price            ON products(price);
+CREATE INDEX idx_products_created_at       ON products(created_at DESC);
 CREATE INDEX idx_orders_user               ON orders(user_id);
 CREATE INDEX idx_orders_status             ON orders(status);
 CREATE INDEX idx_orders_shipping_addr      ON orders(shipping_address_id);
@@ -256,3 +283,4 @@ CREATE INDEX idx_user_addresses_user       ON user_addresses(user_id);
 CREATE INDEX idx_order_status_hist_order   ON order_status_history(order_id);
 CREATE INDEX idx_product_reviews_product   ON product_reviews(product_id);
 CREATE INDEX idx_product_reviews_user      ON product_reviews(user_id);
+CREATE INDEX idx_product_reviews_featured  ON product_reviews(is_featured_home) WHERE is_featured_home = TRUE;

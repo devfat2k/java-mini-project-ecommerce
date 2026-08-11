@@ -6,17 +6,7 @@ import com.devfat.mini_ecommerce.payment.internal.PaymentRepository;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
-
-
-
-
-
-
-
-
-
-
-
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +20,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/payments")
 @RestController
-@Tag(name = "Payment", description = "Payment manager")
+@Tag(name = "Payment", description = "Payment Processing APIs")
 public class PaymentController {
 
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
 
 
+    @Operation(summary = "Create VNPay payment", description = "Generate a VNPay payment URL for an order.")
     @PostMapping("/{orderId}/create")
     public ResponseEntity<ApiResponse<CreatePaymentResponseDto>> createPayment(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
@@ -52,6 +43,7 @@ public class PaymentController {
         );
     }
 
+    @Operation(summary = "VNPay return callback", description = "Handle user redirect return from VNPay payment gateway.")
     @GetMapping("/vnpay-return")
     public ResponseEntity<?> vnPayReturn(
             @RequestParam Map<String, String> allParams
@@ -70,6 +62,7 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.FOUND).header("Location", redirectUrl).body(payment);
     }
 
+    @Operation(summary = "VNPay IPN webhook", description = "Process Instant Payment Notification (IPN) from VNPay.")
     @GetMapping("/vnpay-ipn")
     public ResponseEntity<Map<String, String>> vnpayIpn(@RequestParam Map<String, String> allParams) {
         try {

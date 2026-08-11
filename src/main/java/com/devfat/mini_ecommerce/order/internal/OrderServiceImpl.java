@@ -49,15 +49,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final ObjectMapper objectMapper;
 
-
-
     private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_ORDERS = Map.of(
             PENDING,   Set.of(CONFIRMED, CANCELLED),
             CONFIRMED, Set.of(SHIPPED, CANCELLED),
             SHIPPED,   Set.of(DONE)
             // DONE, CANCELLED không có entry -> get() trả null -> exception -> đúng vì đây là trạng thái kết thúc
     );
-
 
     /**
      * 1. Lấy userId hiện tại từ @AuthenticationPrincipal (giống trên)
@@ -117,7 +114,6 @@ public class OrderServiceImpl implements OrderService {
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
         // Bổ sung: Tìm địa chỉ giao hàng
         //Tìm địa chỉ giao hàng
-//       UserAddressEntity address = addressRepository.findById(createOrderRequestDto.shippingAddressId()).orElseThrow(() -> new ResourceNotFoundException("Address not found!"));
         //Kiểm tra địa chỉ có thuộc user đó không
         Optional<UserAddressEntity> defaultAddress = addressRepository.findByUserIdAndDefaultAddressIsTrue(userId);
         if(defaultAddress.isEmpty()) {
@@ -172,7 +168,6 @@ public class OrderServiceImpl implements OrderService {
 
         emailService.sendPaymentSuccessEmail(order.getUser().getEmail(), order.getId());
 
-//        return toOrderResponse(orderRepository.save(order));
         return orderMapper.toResponseDto(order);
     }
 
@@ -199,7 +194,6 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setStatus(updateOrderStatusRequestDto.orderStatus());
-//        return toOrderResponse(orderRepository.save(order));
         return orderMapper.toResponseDto(orderRepository.save(order));
     }
 
@@ -218,28 +212,27 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderResponseDto> getMyOrder(Long userId, Pageable pageable) {
        userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
-       Page<OrderResponseDto> orders = orderRepository.findAllByUserId(userId, pageable)
+        Page<OrderResponseDto> orders = orderRepository.findAllByUserId(userId, pageable)
                .map(orderMapper::toResponseDto);
 
        return PageResponse.of(orders);
     }
 
     @Override
-    public void cancelOrder(Long orderId, Long userId, UpdateOrderStatusRequestDto updateOrderStatusRequestDto) throws AccessDeniedException {
+    public void cancelOrder(Long orderId, Long userId) throws AccessDeniedException {
         userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
         OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found!"));
-        Set<OrderStatus> allowedNext = ALLOWED_ORDERS.get(order.getStatus());
-        if (allowedNext == null || !allowedNext.contains(updateOrderStatusRequestDto.orderStatus())) {
-            throw new InvalidStatusTransitionException("Do not change from " + order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
+
+        if(!order.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Access denied");
         }
-        if(updateOrderStatusRequestDto.orderStatus().equals(PENDING)) {
-            order.getItems().forEach(item -> {
-                int quantityInOrderCancel = item.getQuantity();
-                item.getProduct().setStock(item.getProduct().getStock() + quantityInOrderCancel);
-            });
+
+        if (order.getStatus().equals(PENDING)) {
+            throw new AccessDeniedException("Access denied! Only change with Pending order");
         }
-        order.setStatus(updateOrderStatusRequestDto.orderStatus());
+
+        order.setStatus(CANCELLED);
         orderMapper.toResponseDto(orderRepository.save(order));
     }
 }

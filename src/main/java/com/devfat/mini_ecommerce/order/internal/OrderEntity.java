@@ -51,7 +51,6 @@ public class OrderEntity extends BaseEntity {
     @Builder.Default
     private List<OrderItemEntity> items = new ArrayList<>();
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_address_id")
     private UserAddressEntity shippingAddress;
@@ -75,6 +74,6 @@ public class OrderEntity extends BaseEntity {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode(); // constant hashCode — đúng theo Vlad
+        return getClass().hashCode();
     }
 }

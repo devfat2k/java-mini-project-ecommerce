@@ -15,5 +15,5 @@ public interface OrderService {
     OrderResponseDto changeStatus(Long id, UpdateOrderStatusRequestDto updateOrderStatusRequestDto);
     PageResponse<OrderResponseDto> getAllOrder( Pageable pageable);
     PageResponse<OrderResponseDto> getMyOrder(Long userId, Pageable pageable);
-    void cancelOrder(Long orderId, Long userId,  UpdateOrderStatusRequestDto updateOrderStatusRequestDto) throws AccessDeniedException;
+    void cancelOrder(Long orderId, Long userId) throws AccessDeniedException;
 }

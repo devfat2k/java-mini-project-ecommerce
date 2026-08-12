@@ -46,11 +46,11 @@ public final class ProductSpecification {
 
     private static Specification<ProductEntity> isInStock(Boolean inStock) {
         if (inStock == null || !inStock) return null;
-        return (root, query, cb) -> cb.greaterThan(root.get("stockQuantity"), 0);
+        return (root, query, cb) -> cb.greaterThan(root.get("stock"), 0);
     }
 
     private static Specification<ProductEntity> isActive() {
-        return (root, query, cb) -> cb.equal(root.get("status"), true);
+        return (root, query, cb) -> cb.equal(root.get("isActive"), true);
     }
 
 }

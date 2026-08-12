@@ -9,6 +9,8 @@ import com.devfat.mini_ecommerce.product.dto.ProductSearchCriteria;
 import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
 import com.devfat.mini_ecommerce.product.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.product.specification.ProductSpecification;
+import com.devfat.mini_ecommerce.product.validation.ProductSearchCriteriaValidator;
+import com.devfat.mini_ecommerce.product.validation.ProductSortValidator;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import com.devfat.mini_ecommerce.shared.exception.BadRequestException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
@@ -34,6 +36,8 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final StorageService storageService;
     private final ProductMapper productMapper;
+    private final ProductSearchCriteriaValidator searchCriteriaValidator;
+    private final ProductSortValidator sortValidator;
 
     @Override
     @Transactional
@@ -52,8 +56,16 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
+    @Cacheable(
+            value = "product:category_browse",
+            keyGenerator = "productCategoryKeyGenerator",
+            condition = "#criteria != null && #criteria.search() == null && #criteria.minPrice() == null && #criteria.maxPrice() == null"
+    )
     @Transactional(readOnly = true)
     public PageResponse<ProductResponseDto> getProductsWithSearch(ProductSearchCriteria criteria, Pageable pageable) {
+        searchCriteriaValidator.validate(criteria);
+        sortValidator.validate(pageable.getSort());
+
         Page<ProductResponseDto> product =
                 productRepository.findAll(ProductSpecification.withCriteria(criteria), pageable)
                 .map(productMapper::toResponseDto);

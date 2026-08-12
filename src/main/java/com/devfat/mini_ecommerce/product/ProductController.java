@@ -34,7 +34,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProductResponseDto>>> getAll(
             @ParameterObject @ModelAttribute ProductSearchCriteria criteria,
-            @PageableDefault(size = 10, sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
             ) {
         PageResponse<ProductResponseDto> pageResponse = productService.getProductsWithSearch(criteria, pageable);
 

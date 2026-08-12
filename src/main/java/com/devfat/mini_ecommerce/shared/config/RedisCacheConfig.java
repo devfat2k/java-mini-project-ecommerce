@@ -29,8 +29,7 @@ public class RedisCacheConfig {
         redisObjectMapper.registerModule(new JavaTimeModule());
         redisObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // Quan trọng: nhúng thông tin class vào JSON để deserialize đúng kiểu cụ thể,
-        // thay vì Jackson mặc định trả về LinkedHashMap.
+        // Nhúng thông tin class vào JSON để deserialize đúng Record / DTO cụ thể
         redisObjectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL
@@ -39,6 +38,7 @@ public class RedisCacheConfig {
         GenericJackson2JsonRedisSerializer jsonSerializer =
                 new GenericJackson2JsonRedisSerializer(redisObjectMapper);
 
+        // Cấu hình mặc định có JSON Serializer
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
                 .disableCachingNullValues()
@@ -48,9 +48,21 @@ public class RedisCacheConfig {
                         .fromSerializer(jsonSerializer));
 
         Map<String, RedisCacheConfiguration> perCacheConfig = new HashMap<>();
+
+        // 1. Cấu hình Cache chung
         perCacheConfig.put("products", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         perCacheConfig.put("categories", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         perCacheConfig.put("analytics", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
+        // 2. Cấu hình Cache riêng cho Module HOME (Tái sử dụng defaultConfig đã có JSON Serializer)
+        perCacheConfig.put("home:heroSlides", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        perCacheConfig.put("home:featuredProductTabs", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        perCacheConfig.put("home:categories", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        perCacheConfig.put("home:dailyArrivals", defaultConfig.entryTtl(Duration.ofHours(6)));
+        perCacheConfig.put("home:featuredProducts", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        perCacheConfig.put("home:comboSets", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        perCacheConfig.put("home:featuredReviews", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        perCacheConfig.put("home:stats", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)

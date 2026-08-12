@@ -5,13 +5,14 @@ import com.devfat.mini_ecommerce.product.ProductService;
 import com.devfat.mini_ecommerce.category.internal.CategoryRepository;
 import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
+import com.devfat.mini_ecommerce.product.dto.ProductSearchCriteria;
 import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
 import com.devfat.mini_ecommerce.product.exception.InsufficientStockException;
+import com.devfat.mini_ecommerce.product.specification.ProductSpecification;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import com.devfat.mini_ecommerce.shared.exception.BadRequestException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.storage.StorageService;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -32,27 +32,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-
     private final StorageService storageService;
     private final ProductMapper productMapper;
-
-//    private ProductResponseDto toResponse(ProductEntity productEntity) {
-//        CategoryResponseDto categoryDto = productEntity.getCategory() != null
-//                ? CategoryResponseDto.builder()
-//                .id(productEntity.getCategory().getId())
-//                .categoryName(productEntity.getCategory().getName())
-//                .build()
-//                : null;
-//       return ProductResponseDto.builder()
-//               .id(productEntity.getId())
-//               .name(productEntity.getName())
-//               .imageUrl(productEntity.getImageUrl())
-//               .description(productEntity.getDescription())
-//               .active(productEntity.isActive())
-//               .price(productEntity.getPrice())
-//               .stock(productEntity.getStock())
-//               .category(categoryDto) .build();
-//    }
 
     @Override
     @Transactional
@@ -71,11 +52,10 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    @Cacheable(value = "products",
-            key = "#search + #categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponseDto> getProductsWithSearch(String search, Long categoryId, Pageable pageable) {
-        Page<ProductResponseDto> product = productRepository.findByNameAndCategoryIdContainsIgnoreCase(search, categoryId, pageable)
+    public PageResponse<ProductResponseDto> getProductsWithSearch(ProductSearchCriteria criteria, Pageable pageable) {
+        Page<ProductResponseDto> product =
+                productRepository.findAll(ProductSpecification.withCriteria(criteria), pageable)
                 .map(productMapper::toResponseDto);
         return PageResponse.of(product);
     }
@@ -99,12 +79,10 @@ public class ProductServiceImpl implements ProductService {
         if(updateProductRequest.description() != null)  product.setDescription(updateProductRequest.description());
         if(updateProductRequest.stock() != null) product.setStock(updateProductRequest.stock());
         if (updateProductRequest.isActive() != null) product.setActive(updateProductRequest.isActive());
-
         if(updateProductRequest.price() != null) {
             if(updateProductRequest.price().equals(BigDecimal.ZERO)) throw new ResourceNotFoundException("Price must be greater than 0");
             product.setPrice(updateProductRequest.price());
         }
-
         if(updateProductRequest.categoryId() != null) {
             CategoryEntity category = categoryRepository.findById(updateProductRequest.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
             product.setCategory(category);

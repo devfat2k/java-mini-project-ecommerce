@@ -90,6 +90,20 @@ public class AdminProductController {
     }
 
     @Operation(
+            summary = "Decrease product stock",
+            description = "Decrease the stock quantity of a product."
+    )
+    @PatchMapping("/decrease/{id}")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> decreaseStock(
+            @PathVariable Long id, @RequestParam int quantity
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.decreaseStock(id, quantity),
+                "Decrease Stock Successfully!"
+        ));
+    }
+
+    @Operation(
             summary = "Admin - Get Top Product",
             description = "Get Top Product Buy For Admin Dashboard"
     )

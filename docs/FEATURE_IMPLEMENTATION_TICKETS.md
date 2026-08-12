@@ -20,7 +20,7 @@
                             ┌─────────────────────────────────┴─────────────────────────────────┐
                             ▼                                                                   ▼
              【TASK GROUP 1】SEARCH & FILTER ENGINE                              【TASK GROUP 2】HOME & CONTENT MODULE
-             • 6 Tickets (SEARCH-001 ➔ 006)                                      • 16 Tickets (HOME-001 ➔ 016)
+             • 7 Tickets (SEARCH-001 ➔ 007)                                      • 16 Tickets (HOME-001 ➔ 016)
              • ProductSearchCriteria & Validators                                • 4 New Java Packages: home, herobanner,
              • ProductSpecification (JPA Criteria API)                             dailyarrival, review
              • Sort Field Whitelist                                              • Baseline V1 Standardized for Core Tables
@@ -64,16 +64,17 @@ Theo đúng nguyên tắc phát triển module sạch sẽ:
 
 ### Task Group 1: Product Search & Dynamic Filter Engine
 
-| Ticket ID | Ticket Name | Type | Priority | Estimate | Dependencies |
-|---|---|:---:|:---:|:---:|---|
-| `SEARCH-001` | Criteria DTO & Normalization Logic | ✨ Feature | 🔴 HIGH | 1.0h | — |
-| `SEARCH-002` | SearchCriteriaValidator & SortValidator | 🔒 Security | 🔴 HIGH | 1.5h | SEARCH-001 |
-| `SEARCH-003` | ProductSpecification Engine (JPA Criteria) | ⚙️ Core | 🔴 HIGH | 2.5h | SEARCH-001 |
-| `SEARCH-004` | JpaSpecificationExecutor & Service Refactor | 🔧 Refactor | 🔴 HIGH | 1.5h | SEARCH-002, 003 |
-| `SEARCH-005` | Controller Endpoint & Swagger Integration | 🌐 API | 🔴 HIGH | 1.0h | SEARCH-004 |
-| `SEARCH-006` | Native Composite Indexes Verification & Spec Tests | 🗄️ Database | 🟡 MEDIUM | 1.0h | SEARCH-004 |
+| Ticket ID | Ticket Name | Type | Priority | Estimate | Status | Dependencies |
+|---|---|:---:|:---:|:---:|:---:|---|
+| `SEARCH-001` | Criteria DTO & Normalization Logic | ✨ Feature | 🔴 HIGH | 1.0h | ✅ **PASS** | — |
+| `SEARCH-002` | SearchCriteriaValidator & SortValidator | 🔒 Security | 🔴 HIGH | 1.5h | ✅ **PASS** | SEARCH-001 |
+| `SEARCH-003` | ProductSpecification Engine (JPA Criteria) | ⚙️ Core | 🔴 HIGH | 2.5h | ✅ **PASS** | SEARCH-001 |
+| `SEARCH-004` | JpaSpecificationExecutor & Service Refactor | 🔧 Refactor | 🔴 HIGH | 1.5h | ✅ **PASS** | SEARCH-002, 003 |
+| `SEARCH-005` | Controller Endpoint & Swagger Integration | 🌐 API | 🔴 HIGH | 1.0h | ✅ **PASS** | SEARCH-004 |
+| `SEARCH-006` | Native Composite Indexes Verification & Spec Tests | 🗄️ Database | 🟡 MEDIUM | 1.0h | ✅ **PASS** | SEARCH-004 |
+| `SEARCH-007` | Selective Category Caching & Custom KeyGenerator | 💾 Cache | 🟡 MEDIUM | 1.5h | ✅ **PASS** | SEARCH-004 |
 
-**Subtotal Search/Filter**: 6 Tickets — **8.5 giờ**
+**Subtotal Search/Filter**: 7 Tickets — **10.0 giờ (100% COMPLETED)**
 
 ---
 
@@ -107,7 +108,7 @@ Theo đúng nguyên tắc phát triển module sạch sẽ:
 
 ---
 
-### 📌 [SEARCH-001] Criteria DTO & Normalization Logic
+### ✅ [SEARCH-001] Criteria DTO & Normalization Logic (PASS)
 
 | Field | Value |
 |---|---|
@@ -147,7 +148,7 @@ Tạo `ProductSearchCriteria` làm Data Transfer Object chứa toàn bộ tham s
 
 ---
 
-### 📌 [SEARCH-002] SearchCriteriaValidator & SortValidator
+### ✅ [SEARCH-002] SearchCriteriaValidator & SortValidator (PASS)
 
 | Field | Value |
 |---|---|
@@ -178,7 +179,7 @@ Xây dựng 2 validator độc lập:
 
 ---
 
-### 📌 [SEARCH-003] ProductSpecification Engine (JPA Criteria)
+### ✅ [SEARCH-003] ProductSpecification Engine (JPA Criteria) (PASS)
 
 | Field | Value |
 |---|---|
@@ -218,7 +219,7 @@ Viết class `ProductSpecification` bằng JPA Criteria API. Mỗi điều kiệ
 
 ---
 
-### 📌 [SEARCH-004] JpaSpecificationExecutor & Service Refactor
+### ✅ [SEARCH-004] JpaSpecificationExecutor & Service Refactor (PASS)
 
 | Field | Value |
 |---|---|
@@ -231,7 +232,8 @@ Viết class `ProductSpecification` bằng JPA Criteria API. Mỗi điều kiệ
 
 #### Mô tả
 1. Cập nhật `ProductRepository` kế thừa `JpaSpecificationExecutor<ProductEntity>`.
-2. Refactor `ProductServiceImpl.searchProducts()` để thực thi `Specification`, đồng thời **loại bỏ `@Cacheable`** trên API search động.
+2. Refactor `ProductServiceImpl.searchProducts()` để thực thi `Specification`.
+3. **Bỏ hoàn toàn Caching động cho Search Full-text** (High-cardinality, low reuse ➔ Bỏ `@Cacheable` để chống Cache Pollution & lãng phí RAM).
 
 #### Các bước thực hiện
 1. Thay đổi interface `ProductRepository.java`:
@@ -241,16 +243,69 @@ Viết class `ProductSpecification` bằng JPA Criteria API. Mỗi điều kiệ
    ```
 2. Cập nhật `ProductServiceImpl.java`:
    - Validate `ProductSearchCriteria` và `Pageable.getSort()`.
-   - Thay thế câu query cũ bằng `productRepository.findAll(spec, pageable)`.
-   - Gỡ bỏ annotation `@Cacheable` trên method search động.
+   - Thay thế câu query tĩnh cũ bằng `productRepository.findAll(spec, pageable)`.
+   - Tách riêng nhánh Category Browsing thuần túy để áp dụng Caching chọn lọc (Xem ticket `SEARCH-007`).
 
 #### Definition of Done
 - ✅ Service gọi validator và ném lỗi 400 trước khi query DB.
+- ✅ Search động từ khóa full-text trực tiếp từ DB qua Composite Index, không lưu cache rác vào Redis.
 - ✅ Trả về `PageResponse<ProductResponseDto>` đầy đủ thông tin phân trang.
 
 ---
 
-### 📌 [SEARCH-005] Controller Endpoint & Swagger Integration
+### ✅ [SEARCH-007] Selective Category Caching & Custom KeyGenerator (PASS)
+
+| Field | Value |
+|---|---|
+| **ID** | `SEARCH-007` |
+| **Type** | 💾 Caching & Infrastructure |
+| **Priority** | 🟡 MEDIUM |
+| **Estimate** | **1.5 giờ** |
+| **Package** | `com.devfat.mini_ecommerce.product.config` |
+| **Dependencies** | SEARCH-004 |
+
+#### Mô tả
+Tối ưu chiến lược Cache theo gợi ý kiến trúc:
+1. **Bỏ Caching cho Search Full-text**: Không cache các câu search động (`search != null`, filter khoảng giá phức tạp) vì tỷ lệ trùng lặp cực thấp (Low Reuse, High Cardinality) gây lãng phí RAM.
+2. **Áp dụng Cache chọn lọc cho Category Browsing**: Chỉ cache kết quả xem danh sách sản phẩm theo danh mục thuần túy (`search == null`, `minPrice == null`, `maxPrice == null`), vì đây là hành vi phổ biến có Tỷ lệ Hit Cache cực cao (High Reuse).
+3. **Custom `KeyGenerator`**: Xây dựng `ProductCategoryKeyGenerator` build key tường minh, tránh rủi ro NullPointer hoặc lỗi SpEL khi `sort` hoặc fields thay đổi.
+
+#### Các bước thực hiện
+1. Tạo class `ProductCategoryKeyGenerator.java` triển khai `org.springframework.cache.interceptor.KeyGenerator`:
+   ```java
+   @Component("productCategoryKeyGenerator")
+   public class ProductCategoryKeyGenerator implements KeyGenerator {
+       @Override
+       public Object generate(Object target, Method method, Object... params) {
+           ProductSearchCriteria c = (ProductSearchCriteria) params[0];
+           Pageable p = (Pageable) params[1];
+           
+           String categoryIds = (c.categoryId() != null) ? c.categoryId().toString() : "all";
+           int page = p.isPaged() ? p.getPageNumber() : 0;
+           int size = p.isPaged() ? p.getPageSize() : 20;
+           String sort = (p.isPaged() && p.getSort().isSorted()) ? p.getSort().toString() : "default";
+
+           return String.format("cat:%s_p:%d_s:%d_sort:%s", categoryIds, page, size, sort);
+       }
+   }
+   ```
+2. Đánh annotation Caching có điều kiện (Conditional `@Cacheable`) tại Service:
+   ```java
+   @Cacheable(
+       value = "product:category_browse", 
+       keyGenerator = "productCategoryKeyGenerator",
+       condition = "#criteria.search() == null && #criteria.minPrice() == null && #criteria.maxPrice() == null"
+   )
+   ```
+
+#### Definition of Done
+- ✅ API Search từ khóa full-text / filter giá **bỏ qua Cache** (query trực tiếp DB qua Index).
+- ✅ API Xem danh mục sản phẩm thuần túy (`categoryId` only) **Hit Redis Cache** phản hồi < 5ms.
+- ✅ Key Redis được sinh tường minh qua `ProductCategoryKeyGenerator`, không bị lỗi SpEL hay NullPointer khi `sort` null.
+
+---
+
+### ✅ [SEARCH-005] Controller Endpoint & Swagger Integration (PASS)
 
 | Field | Value |
 |---|---|
@@ -285,7 +340,7 @@ Cập nhật endpoint `GET /api/v1/products` tại `ProductController` để nh�
 
 ---
 
-### 📌 [SEARCH-006] Native Composite Indexes Verification & Spec Tests
+### ✅ [SEARCH-006] Native Composite Indexes Verification & Spec Tests (PASS)
 
 | Field | Value |
 |---|---|

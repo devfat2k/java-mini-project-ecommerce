@@ -1,8 +1,6 @@
 package com.devfat.mini_ecommerce.order.internal;
 
 import com.devfat.mini_ecommerce.order.OrderStatus;
-
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,9 +16,6 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     //tìm orders theo userId
     Page<OrderEntity> findAllByUserId(Long userId, Pageable pageable);
 
-    //tìm orders theo status
-    List<OrderEntity> findAllByStatus(OrderStatus status);
-
     //Tìm orders theo userId VÀ status
     //@Query JPQL: lấy orders kèm user và items (JOIN FETCH cả 2), lọc theo userId
     @Query("SELECT o from OrderEntity o JOIN FETCH o.user where o.user.id = :userId AND o.status = :status")
@@ -35,6 +30,9 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     Page<OrderEntity> findByUserIdAndStatusWithDetails(@Param("userId") Long userId, @Param("status") OrderStatus status, Pageable pageable);
 
 
-    Page<OrderEntity> findByUserId(Long userId, Pageable pageable);
+
+    // ĐẾM SỐ ĐƠN GIAO HÀNG THÀNH CÔNG
+    // @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.status = OrderStatus.DONE")
+    long countByStatus(OrderStatus status);
 
 }

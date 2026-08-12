@@ -1,9 +1,6 @@
 package com.devfat.mini_ecommerce.product;
 
-import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
-import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
-import com.devfat.mini_ecommerce.product.dto.ProductSearchCriteria;
-import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
+import com.devfat.mini_ecommerce.product.dto.*;
 import com.devfat.mini_ecommerce.product.internal.ProductEntity;
 import com.devfat.mini_ecommerce.product.internal.ProductRepository;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
@@ -25,4 +22,7 @@ public interface ProductService {
     List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue();
 
     ProductResponseDto uploadProductImage(Long id, MultipartFile file);
+
+    void toggleFeaturedProduct(Long id);
+    ProductResponseDto configureCombo(Long id, ConfigureProductComboRequestDto request);
 }

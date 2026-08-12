@@ -68,4 +68,16 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long>, J
             " GROUP BY DATE_TRUNC('month', o.createdAt)" +
             " ORDER BY DATE_TRUNC('month', o.createdAt) DESC")
     List<MonthlyRevenueView> getMonthlyRevenue();
+
+
+    @Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.category " +
+            "WHERE p.isFeatured = true AND p.isActive = true")
+    List<ProductEntity> findFeaturedActiveProducts();
+
+    @Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.category " +
+            "WHERE p.productType = 'COMBO' AND p.isActive = true " +
+            "ORDER BY p.comboSortOrder ASC")
+    List<ProductEntity> findActiveComboProducts();
 }

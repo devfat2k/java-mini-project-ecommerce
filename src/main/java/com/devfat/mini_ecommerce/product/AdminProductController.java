@@ -1,5 +1,6 @@
 package com.devfat.mini_ecommerce.product;
 
+import com.devfat.mini_ecommerce.product.dto.ConfigureProductComboRequestDto;
 import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
 import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
 import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
@@ -157,16 +158,26 @@ public class AdminProductController {
         ));
     }
 
-    //    TODO: Toggle Feature in Home
     @PatchMapping("/{id}/featured")
-    public ResponseEntity<ApiResponse<Void>> updateFeatured() {
-        return null;
+    public ResponseEntity<ApiResponse<Void>> updateFeatured(
+            @PathVariable("id") Long id
+    ) {
+        productService.toggleFeaturedProduct(id);
+        return  ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                null,
+                "Featured Product Successfully!"
+        ));
     }
 
-    //    TODO: Combo Config in Home
-    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Configure product combo for home page", description = "Admin API — Upgrade product to COMBO type and set home combo card properties.")
     @PatchMapping("/{id}/combo-config")
-    public ResponseEntity<ApiResponse<Void>> setComboConfig() {
-        return null;
+    public ResponseEntity<ApiResponse<ProductResponseDto>> configureCombo(
+            @PathVariable Long id,
+            @Valid @RequestBody ConfigureProductComboRequestDto request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                productService.configureCombo(id, request),
+                "Configure product combo successfully"
+        ));
     }
 }

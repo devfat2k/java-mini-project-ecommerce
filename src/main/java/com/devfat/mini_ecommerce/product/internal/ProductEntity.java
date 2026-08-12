@@ -62,6 +62,58 @@ public class ProductEntity extends BaseEntity {
     @OneToMany(mappedBy = "product")
     private List<OrderItemEntity> orderItems;
 
+
+    @Column(name = "average_rating")
+    private BigDecimal averageRating;
+
+    @Column(name = "review_count")
+    private Integer reviewCount = 0;
+
+    @Column(name = "is_featured", nullable = false)
+    private boolean isFeatured = false;
+
+    @Column(name = "original_price", precision = 12, scale = 2)
+    BigDecimal originalPrice;
+
+    @Column(length = 255)
+    private String spec;
+
+    @Column(length = 255)
+    private String origin;
+
+    @Column(name = "weight_options", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> weightOptions;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false, length = 20)
+    private ProductType productType = ProductType.REGULAR;
+
+    @Column(name = "combo_category", length = 50)
+    private String comboCategory;
+
+    @Column(name = "combo_theme", length = 20)
+    private String comboTheme;
+
+    @Column(name = "combo_tag", length = 50)
+    private String comboTag;
+
+    @Column(name = "combo_cta_text", length = 100)
+    private String comboCtaText;
+
+    @Column(name = "combo_href", length = 255)
+    private String comboHref;
+
+    @Builder.Default
+    @Column(name = "is_breakout", nullable = false)
+    private boolean isBreakout = false;
+
+    @Builder.Default
+    @Column(name = "combo_sort_order", nullable = false)
+    private Integer comboSortOrder = 0;
+
+
     @Version
     private Integer version;
 

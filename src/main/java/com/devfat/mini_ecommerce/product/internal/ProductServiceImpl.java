@@ -3,10 +3,7 @@ package com.devfat.mini_ecommerce.product.internal;
 import com.devfat.mini_ecommerce.category.internal.CategoryEntity;
 import com.devfat.mini_ecommerce.product.ProductService;
 import com.devfat.mini_ecommerce.category.internal.CategoryRepository;
-import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
-import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
-import com.devfat.mini_ecommerce.product.dto.ProductSearchCriteria;
-import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
+import com.devfat.mini_ecommerce.product.dto.*;
 import com.devfat.mini_ecommerce.product.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.product.specification.ProductSpecification;
 import com.devfat.mini_ecommerce.product.validation.ProductSearchCriteriaValidator;
@@ -183,5 +180,30 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
 
         return  productMapper.toResponseDto(product);
+    }
+
+    @Override
+    public void toggleFeaturedProduct(Long id) {
+        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+        if(!(product.isActive())) throw new ResourceNotFoundException("Product is inactive");
+
+        product.setFeatured(!product.isFeatured());
+        productRepository.save(product);
+    }
+
+    @Override
+    public ProductResponseDto configureCombo(Long id, ConfigureProductComboRequestDto request) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id = " + id));
+        // Chuyển loại sản phẩm sang COMBO
+        product.setProductType(ProductType.COMBO);
+        if (request.comboCategory() != null) product.setComboCategory(request.comboCategory());
+        if (request.comboTheme() != null) product.setComboTheme(request.comboTheme());
+        if (request.comboTag() != null) product.setComboTag(request.comboTag());
+        if (request.comboCtaText() != null) product.setComboCtaText(request.comboCtaText());
+        if (request.comboHref() != null) product.setComboHref(request.comboHref());
+        if (request.isBreakout() != null) product.setBreakout(request.isBreakout());
+        if (request.comboSortOrder() != null) product.setComboSortOrder(request.comboSortOrder());
+        return productMapper.toResponseDto(productRepository.save(product));
     }
 }

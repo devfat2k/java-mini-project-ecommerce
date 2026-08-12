@@ -1,6 +1,7 @@
 package com.devfat.mini_ecommerce.category;
 
 import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
+import com.devfat.mini_ecommerce.category.dto.ConfigureCategoryHomeRequestDto;
 import com.devfat.mini_ecommerce.category.dto.CreateCategoryRequestDto;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,7 +55,6 @@ public class AdminCategoryController {
         );
     }
 
-    // TODO: Upload image category
     @Operation(summary = "Upload category image", description = "Upload an image file for a category.")
     @PostMapping(value = "/{id}/image", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<CategoryResponseDto>> updateCategoryImage(
@@ -70,12 +70,15 @@ public class AdminCategoryController {
         );
     }
 
-    // TODO: Category Config - Home
-    @Operation(summary = "Configure category feature", description = "Configure category settings for homepage display.")
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> configCategory(@PathVariable Long id) {
-        return null;
+    @Operation(summary = "Configure category home display", description = "Admin API — Set bento style, badge, icon, and sort order for home page category.")
+    @PatchMapping("/{id}/home-config")
+    public ResponseEntity<ApiResponse<CategoryResponseDto>> configureHome(
+            @PathVariable Long id,
+            @Valid @RequestBody ConfigureCategoryHomeRequestDto request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                categoryService.configureHome(id, request),
+                "Configure category home display successfully"
+        ));
     }
-
-
 }

@@ -8,13 +8,12 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import java.util.List;
 
-
+@Getter @Setter
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicUpdate
 @DynamicInsert
-@Entity
-@Getter @Setter
 @Builder
 @Table(name = "categories")
 public class CategoryEntity extends BaseEntity {
@@ -24,17 +23,41 @@ public class CategoryEntity extends BaseEntity {
     @Column(nullable = false)
     private Long id;
 
-    @Column(nullable = false, unique = true , length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(unique = true, length = 100)
+    private String slug;
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    @Column(length = 100)
+    private String badge; // Ví dụ: "TOP 1", "HOT", "TƯƠI SỐNG"
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
+    @Column(name = "badge_type", length = 20)
+    private String badgeType; // Giá trị: "hot" | "number" | "fresh" | "dry"
+
+    @Column(name = "icon_name", length = 50)
+    private String iconName; // Tên icon Lucide cho FE (ví dụ: "fish", "utensils")
+
+    @Column(name = "home_display_style", length = 10)
+    private String homeDisplayStyle; // Style hiển thị FE: "main" | "card" | "icon"
+
+    @Builder.Default
+    @Column(name = "home_sort_order", nullable = false)
+    private Integer homeSortOrder = 0; // Thứ tự ưu tiên sắp xếp trên trang chủ
+
+    @Builder.Default
+    @Column(name = "home_is_active", nullable = false)
+    private boolean homeIsActive = false; // Bật/tắt hiển thị category này trên trang chủ
+
+
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<ProductEntity> products;
-
 
     @Override
     public boolean equals(Object o) {

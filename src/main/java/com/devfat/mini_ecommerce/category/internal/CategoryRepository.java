@@ -27,4 +27,6 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
         GROUP BY c.id, c.name, c.imageUrl
         """)
     List<CategoryResponseDto> countActiveCategories();
+
+    List<CategoryEntity> findByHomeIsActiveTrueOrderByHomeSortOrderAsc();
 }

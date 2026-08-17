@@ -2,18 +2,9 @@ package com.devfat.mini_ecommerce.notification.internal;
 
 import com.devfat.mini_ecommerce.notification.EmailService;
 import com.devfat.mini_ecommerce.notification.dto.EmailRequestDto;
-
-
-
-
-
-
-
-
-
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +14,10 @@ import org.springframework.stereotype.Service;
 public class EmailServiceImpl implements EmailService {
 
     private final MailTransport mailTransport;
+    private final EmailTemplateHelper emailTemplateHelper;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @Override
     @Async("emailTaskExecutor")
@@ -58,10 +53,13 @@ public class EmailServiceImpl implements EmailService {
     public void sendOrderConfirmation(String toEmail, Long orderId) {
         log.info("Bắt đầu gửi email xác nhận đơn {}, thread: {}", orderId, Thread.currentThread().getName());
         try {
-            mailTransport.sendTextEmail(
+            String baseUrl = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
+            String actionUrl = baseUrl + "/en/orders/" + orderId;
+            String html = emailTemplateHelper.buildOrderEmailHtml(OrderEmailType.ORDER_PLACED, orderId, actionUrl);
+            mailTransport.sendHtmlEmail(
                     toEmail,
-                    "Xác nhận đơn hàng #" + orderId,
-                    "Cảm ơn bạn đã đặt hàng! Đơn hàng #" + orderId + " đang được xử lý."
+                    "Đặt hàng thành công - Đơn hàng #" + orderId,
+                    html
             );
         } catch (Exception e) {
             log.error("Gửi email xác nhận đơn hàng {} thất bại: {}", orderId, e.getMessage());
@@ -73,10 +71,13 @@ public class EmailServiceImpl implements EmailService {
     public void sendPaymentSuccessEmail(String toEmail, Long orderId) {
         log.info("Bắt đầu gửi email thanh toán đơn {}, thread: {}", orderId, Thread.currentThread().getName());
         try {
-            mailTransport.sendTextEmail(
+            String baseUrl = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
+            String actionUrl = baseUrl + "/en/orders/" + orderId;
+            String html = emailTemplateHelper.buildOrderEmailHtml(OrderEmailType.PAYMENT_SUCCESS, orderId, actionUrl);
+            mailTransport.sendHtmlEmail(
                     toEmail,
                     "Thanh toán thành công - Đơn hàng #" + orderId,
-                    "Đơn hàng #" + orderId + " đã được thanh toán thành công. Chúng tôi sẽ sớm giao hàng!"
+                    html
             );
         } catch (Exception e) {
             log.error("Gửi email thanh toán đơn {} thất bại: {}", orderId, e.getMessage());

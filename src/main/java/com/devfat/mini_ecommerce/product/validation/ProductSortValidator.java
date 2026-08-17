@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Component
 public class ProductSortValidator {
-    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("price", "createdAt", "name", "stock");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("price", "createdAt", "name", "stock", "id");
 
     public void validate(Sort sort) {
         if(sort == null || sort.isUnsorted()) return;

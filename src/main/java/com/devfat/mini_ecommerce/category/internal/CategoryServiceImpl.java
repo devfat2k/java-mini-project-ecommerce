@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -76,7 +77,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryResponseDto> countActiveCategories() {
-        return categoryRepository.countActiveCategories();
+       return categoryRepository.countActiveCategories().stream()
+               .map(categoryMapper::toResponseDto)
+               .collect(Collectors.toList());
     }
 
     @Override

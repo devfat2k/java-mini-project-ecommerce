@@ -1,55 +1,55 @@
 # 📘 HƯỚNG DẪN TÍCH HỢP & MAPPING API TOÀN BỘ DỰ ÁN (FOR FRONTEND FE)
 
-> **Dành cho**: Đội ngũ thiết kế & phát triển Frontend (ReactJS / Next.js / Vue.js / Mobile App)  
-> **Phiên bản API**: `v1.2.0` | **Base URL**: `http://localhost:8085` (Hoặc cấu hình qua `.env`)  
-> **Tỷ lệ bao phủ**: 100% Endpoints hiện có trong 16 Controllers backend.
+> **Dành cho**: Đội ngũ phát triển Frontend (ReactJS / Next.js / Vue.js / Mobile App)  
+> **Phiên bản Backend**: `v1.2.0` | **Base URL**: `http://localhost:8085` (Cấu hình qua `NEXT_PUBLIC_API_URL` hoặc `VITE_API_URL`)  
+> **Độ bao phủ**: 100% Endpoints thực tế thuộc **16 Controllers** Backend.
 
 ---
 
 ## 1. 📌 QUY CHUẨN KỸ THUẬT CHUNG & BẢO MẬT
 
 ### 1.1 Headers Chuẩn Mỗi Request
-- **Mặc định**: `Content-Type: application/json`
-- **Tệp tin Upload**: `Content-Type: multipart/form-data`
-- **Xác thực JWT**: `Authorization: Bearer <accessToken>` (Bắt buộc với các API bảo mật).
+- **Mặc định Request Body JSON**: `Content-Type: application/json`
+- **Upload File**: `Content-Type: multipart/form-data`
+- **Xác thực JWT**: `Authorization: Bearer <accessToken>` (Bắt buộc với các API có yêu cầu đăng nhập).
 
 ---
 
 ### 1.2 Cấu Trúc Khung Trả Về Chuẩn (`ApiResponse<T>`)
 
-Mọi Response từ Backend (dù Thành công hay Thất bại) đều được đóng gói trong một JSON Object duy nhất:
+Mọi API Response từ Backend (Dù thành công hay thất bại) đều được bọc trong khung JSON duy nhất:
 
-#### ✅ Response Thành Công (`HTTP 200 OK` / `201 Created` / `200 OK with Data`):
+#### ✅ Response Thành Công (`HTTP 200 OK` / `201 Created`):
 ```json
 {
   "success": true,
   "message": "Mô tả thông điệp thành công",
-  "data": { ... }, // Dữ liệu trả về (Object, Array, hoặc Record)
-  "timestamp": "2026-08-13T01:45:00.123456"
+  "data": { ... }, // Dữ liệu trả về (Object, Array, hoặc PageResponse)
+  "timestamp": "2026-08-13T23:45:00.123456"
 }
 ```
 
-#### ❌ Response Thất Bại / Lỗi (`HTTP 400` / `401` / `403` / `404` / `409` / `500`):
+#### ❌ Response Thất Bại / Lỗi Hệ Thống (`HTTP 401` / `403` / `404` / `409` / `500`):
 ```json
 {
   "success": false,
   "message": "Mô tả nguyên nhân lỗi chi tiết từ Server",
   "data": null,
-  "timestamp": "2026-08-13T01:45:00.123456"
+  "timestamp": "2026-08-13T23:45:00.123456"
 }
 ```
 
-#### ⚠️ Response Lỗi Validation Dữ Liệu (`HTTP 400 Bad Request`):
-Khi gửi Request Body không thỏa mãn ràng buộc Validation (ví dụ: vi phạm `@NotBlank`, `@Email`, `@Min`), server sẽ trả về danh sách các trường bị lỗi chi tiết trong thuộc tính `data`:
+#### ⚠️ Response Lỗi Validation Dữ Liệu Form (`HTTP 400 Bad Request`):
+Khi gửi Request Body vi phạm Validation (ví dụ: vi phạm `@NotBlank`, `@Email`, `@Min`), thuộc tính `data` sẽ chứa Map các trường bị lỗi:
 ```json
 {
   "success": false,
   "message": "Validation failed",
   "data": {
     "email": "Email format is invalid",
-    "password": "Password must be at least 8 characters"
+    "password": "Password is min 8 and max 100 character!"
   },
-  "timestamp": "2026-08-13T01:45:00"
+  "timestamp": "2026-08-13T23:45:00"
 }
 ```
 
@@ -57,33 +57,58 @@ Khi gửi Request Body không thỏa mãn ràng buộc Validation (ví dụ: vi 
 
 ### 1.3 Cấu Trúc Phân Trang Chuẩn (`PageResponse<T>`)
 
-Nằm bên trong thuộc tính `data` của `ApiResponse<PageResponse<T>>` đối với các API danh sách (Sản phẩm, Đơn hàng, Người dùng):
+Xuất hiện ở thuộc tính `data` của các API trả về danh sách phân trang (Sản phẩm, Đơn hàng, Người dùng):
 
 ```json
 {
   "success": true,
-  "message": "Get list successfully",
+  "message": "Get products successfully",
   "data": {
     "content": [ ... ],       // Danh sách phần tử của trang hiện tại
     "page": 0,               // Trang hiện tại (0-indexed)
     "size": 10,              // Kích thước trang
-    "totalElements": 45,     // Tổng số phần tử tìm thấy trong DB
+    "totalElements": 45,     // Tổng số bản ghi trong DB
     "totalPages": 5,         // Tổng số trang
-    "last": false            // Boolean: Đã là trang cuối cùng chưa
+    "last": false            // Đã đến trang cuối chưa
   },
-  "timestamp": "2026-08-13T01:45:00"
+  "timestamp": "2026-08-13T23:45:00"
 }
 ```
 
 ---
 
-## 2. 🔐 MODULE 1: AUTHENTICATION & SECURITY (`/api/v1/auth`)
+### 1.4 Luồng Tự Động Refresh Token (Axios Interceptor Lỗi 401)
+1. Lưu `accessToken` trong Memory / State và `refreshToken` trong Storage / Cookie.
+2. Khi gọi API bị trả về `401 Unauthorized`:
+   - Bắt lỗi qua Interceptor và gọi `POST /api/v1/auth/refresh-token` với `{ "refreshToken": "..." }`.
+   - Nhận về `accessToken` mới (và `refreshToken` mới), cập nhật lại Storage.
+   - Thử lại (retry) Request ban đầu bị thất bại.
 
 ---
 
+### 1.5 Quy Trình Xác Thực OTP (OTP Flow for FE)
+- **Khi Đăng ký (`REGISTER_VERIFICATION`)**:
+  1. Người dùng Đăng ký thành công (`POST /api/v1/auth/register`).
+  2. Mã OTP 6 chữ số tự động gửi tới Email.
+  3. Người dùng nhập mã OTP (`POST /api/v1/auth/verify-otp` với `purpose: "REGISTER_VERIFICATION"`).
+  4. Response trả về ngay `accessToken` & `refreshToken` $\rightarrow$ FE tự động đăng nhập người dùng mà không cần bắt đăng nhập lại.
+- **Khi Quên Mật Khẩu (`RESET_PASSWORD`)**:
+  1. Gửi yêu cầu quên mật khẩu (`POST /api/v1/auth/forgot-password`).
+  2. Người dùng nhập OTP xác nhận (`POST /api/v1/auth/verify-otp` với `purpose: "RESET_PASSWORD"`).
+  3. Response trả về `actionToken`.
+  4. FE dùng `actionToken` này gửi kèm mật khẩu mới tới `POST /api/v1/auth/reset-password`.
+
+---
+
+### 1.6 Điều Kiện Bắt Bắt Tạo Đơn Hàng (Checkout Requirement)
+> ⚠️ **LƯU Ý QUAN TRỌNG KHI TẠO ĐƠN**: Khi gọi `POST /api/v1/orders`, backend sẽ lấy **Địa chỉ mặc định (`defaultAddress = true`)** của người dùng hiện tại để lưu Snapshot cho đơn hàng. Nếu tài khoản người dùng chưa có địa chỉ mặc định nào, backend sẽ trả lỗi `404 - Address not found!`. FE cần nhắc người dùng thêm/thiết lập địa chỉ mặc định trước khi Checkout.
+
+---
+
+## 2. 🔐 MODULE 1: AUTHENTICATION & SECURITY (`/api/v1/auth`)
+
 ### 1. Đăng Ký Tài Khoản (Register)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/register`
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/register`
 - **Security**: Public
 - **Request Body**:
   ```json
@@ -94,27 +119,13 @@ Nằm bên trong thuộc tính `data` của `ApiResponse<PageResponse<T>>` đố
     "password": "Password123@"
   }
   ```
-- **Response (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "message": "User registered successfully. Please verify your email with OTP.",
-    "data": {
-      "userId": 1,
-      "fullName": "Nguyễn Văn A",
-      "email": "user@example.com",
-      "emailVerified": false
-    }
-  }
-  ```
-- **FE UI Mapping**: Form đăng ký người dùng mới. Sau khi đăng ký thành công, chuyển màn hình sang nhập OTP xác thực.
+- **Response (201 Created)**: `ApiResponse<UserResponseDto>`
 
 ---
 
-### 2. Đăng Nhập System (Login)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/login`
-- **Security**: Public
+### 2. Đăng Nhập (Login)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/login`
+- **Security**: Public (Áp dụng Rate Limit Login)
 - **Request Body**:
   ```json
   {
@@ -126,12 +137,12 @@ Nằm bên trong thuộc tính `data` của `ApiResponse<PageResponse<T>>` đố
   ```json
   {
     "success": true,
-    "message": "Login successfully",
+    "message": "Login Successfully!",
     "data": {
       "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
       "refreshToken": "7f9a8b1c-3d2e-4f5a-6b7c-8d9e0f1a2b3c",
       "tokenType": "Bearer",
-      "expiresIn": 3600,
+      "expiresIn": 86400,
       "user": {
         "id": 1,
         "fullName": "Nguyễn Văn A",
@@ -141,13 +152,11 @@ Nằm bên trong thuộc tính `data` của `ApiResponse<PageResponse<T>>` đố
     }
   }
   ```
-- **FE UI Mapping**: Form đăng nhập. Lưu `accessToken` vào Memory / Secure State, lưu `refreshToken` vào Secure Cookie / LocalStorage.
 
 ---
 
 ### 3. Làm Mới Token (Refresh Token)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/refresh-token`
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/refresh-token`
 - **Security**: Public
 - **Request Body**:
   ```json
@@ -155,255 +164,389 @@ Nằm bên trong thuộc tính `data` của `ApiResponse<PageResponse<T>>` đố
     "refreshToken": "7f9a8b1c-3d2e-4f5a-6b7c-8d9e0f1a2b3c"
   }
   ```
-- **Response (200 OK)**: Trả về `accessToken` mới và `refreshToken` mới (Token Rotation).
-- **FE UI Mapping**: Axios Interceptor tự động bắt lỗi `401 Unauthorized` để âm thầm gọi API này refresh token trước khi gọi lại request cũ.
+- **Response (200 OK)**: Trả về `accessToken` và `refreshToken` mới.
 
 ---
 
 ### 4. Đăng Xuất (Logout)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/logout`
-- **Security**: Authenticated (`Bearer <accessToken>`)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/logout`
+- **Security**: Public / Authenticated
 - **Request Body**:
   ```json
   {
     "refreshToken": "7f9a8b1c-3d2e-4f5a-6b7c-8d9e0f1a2b3c"
   }
   ```
-- **Response (200 OK)**: Thu hồi Refresh Token trên DB.
-- **FE UI Mapping**: Nút Đăng xuất trên Navigation / Profile page.
+- **Response (200 OK)**: Xóa Refresh Token trong hệ thống.
 
 ---
 
-### 5. Gửi Mã OTP Qua Email (Send OTP)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/otp/send`
-- **Security**: Public (Áp dụng Rate Limit 3 requests / min)
-- **Request Body**:
-  ```json
-  {
-    "email": "user@example.com",
-    "purpose": "REGISTER_VERIFICATION" // "REGISTER_VERIFICATION" | "RESET_PASSWORD"
-  }
-  ```
-- **Response (200 OK)**: Mã OTP 6 chữ số gửi qua Email.
-
----
-
-### 6. Xác Thực Mã OTP (Verify OTP)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/otp/verify`
-- **Security**: Public
+### 5. Xác Thực Mã OTP (Verify OTP)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/verify-otp`
+- **Security**: Public (Rate Limit OTP)
 - **Request Body**:
   ```json
   {
     "email": "user@example.com",
     "otpCode": "123456",
-    "purpose": "REGISTER_VERIFICATION"
+    "purpose": "REGISTER_VERIFICATION" // Hoặc "RESET_PASSWORD"
   }
   ```
-- **Response (200 OK)**: Cập nhật trạng thái verified hoặc cấp Reset Token.
+- **Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Verify Otp Successfully!",
+    "data": {
+      "accessToken": "...",   // Trả về nếu REGISTER_VERIFICATION
+      "refreshToken": "...",  // Trả về nếu REGISTER_VERIFICATION
+      "actionToken": "..."    // Trả về nếu RESET_PASSWORD
+    }
+  }
+  ```
 
 ---
 
-### 7. Đặt Lại Mật Khẩu (Reset Password)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/auth/reset-password`
+### 6. Quên Mật Khẩu (Forgot Password)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/forgot-password`
 - **Security**: Public
 - **Request Body**:
   ```json
   {
+    "email": "user@example.com"
+  }
+  ```
+- **Response (200 OK)**: Gửi mã OTP khôi phục mật khẩu qua Email.
+
+---
+
+### 7. Gửi Lại Mã OTP (Resend OTP)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/resend-otp`
+- **Security**: Public (Rate Limit OTP)
+- **Request Body**:
+  ```json
+  {
     "email": "user@example.com",
-    "otpCode": "123456",
+    "purpose": "REGISTER_VERIFICATION" // Hoặc "RESET_PASSWORD"
+  }
+  ```
+
+---
+
+### 8. Đặt Lại Mật Khẩu (Reset Password)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/auth/reset-password`
+- **Security**: Public
+- **Request Body**:
+  ```json
+  {
+    "actionToken": "action_token_tu_verify_otp",
     "newPassword": "NewPassword123@"
   }
   ```
 
 ---
 
-## 👤 MODULE 2: USER PROFILE & ADDRESSES (`/api/v1/users`)
+## 3. 👤 MODULE 2: USER PROFILE & ADDRESS MANAGEMENT
 
----
+### 3.1 Profile Người Dùng (`/api/v1/users`)
 
-### 1. Lấy Thông Tin Profile
+#### 1. Lấy Thông Tin Cá Nhân Hiện Tại
 - **HTTP Method**: `GET` | **Endpoint**: `/api/v1/users/me`
-- **Security**: Authenticated (`ROLE_CUSTOMER` / `ROLE_ADMIN`)
-- **Response (200 OK)**: Trả về fullName, email, phoneNumber, avatarUrl, roles, permissions.
+- **Security**: Bearer Token
+- **Response (200 OK)**: Trả về chi tiết `UserResponseDto` (id, fullName, email, phoneNumber, avatarUrl, isActive, roles).
 
----
-
-### 2. Cập Nhật Thông Tin Profile
-- **HTTP Method**: `PUT` | **Endpoint**: `/api/v1/users/me`
-- **Request Body**: `{ "fullName": "Nguyễn Văn B", "phoneNumber": "0912345678" }`
-
----
-
-### 3. Upload Avatar
-- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/users/me/avatar`
-- **Content-Type**: `multipart/form-data`
-- **Form Data**: `file` (File ảnh PNG/JPEG, max 5MB).
-
----
-
-### 4. Đổi Mật Khẩu
-- **HTTP Method**: `PUT` | **Endpoint**: `/api/v1/users/change-password`
-- **Request Body**: `{ "oldPassword": "...", "newPassword": "..." }`
-
----
-
-### 5. Quản Lý Sổ Địa Chỉ (Addresses CRUD)
-- `GET /api/v1/users/addresses`: Lấy danh sách địa chỉ giao hàng của người dùng.
-- `POST /api/v1/users/addresses`: Tạo địa chỉ mới (Tỉnh/Thành, Quận/Huyện, Phường/Xã, Chi tiết, tag "Nhà riêng"/"Cơ quan").
-- `PUT /api/v1/users/addresses/{id}`: Cập nhật địa chỉ.
-- `DELETE /api/v1/users/addresses/{id}`: Xóa địa chỉ.
-- `PATCH /api/v1/users/addresses/{id}/default`: Đặt địa chỉ làm mặc định.
-
----
-
-## 🔍 MODULE 3: PRODUCTS & DYNAMIC SEARCH ENGINE (`/api/v1/products`)
-
----
-
-### 1. Tìm Kiếm & Lọc Động Sản Phẩm (Dynamic Criteria Search API)
-- **HTTP Method**: `GET`
-- **Endpoint**: `/api/v1/products`
-- **Security**: Public (Rate Limit 60 req/min)
-- **Query Parameters**:
-  - `search` *(String, Optional)*: Từ khóa tìm kiếm tên sản phẩm.
-  - `categoryId` *(List<Long>, Optional)*: Danh sách ID danh mục (Ví dụ: `?categoryId=1&categoryId=2`).
-  - `minPrice` *(BigDecimal, Optional)*: Giá tối thiểu.
-  - `maxPrice` *(BigDecimal, Optional)*: Giá tối đa.
-  - `inStock` *(Boolean, Optional)*: Lọc sản phẩm còn hàng (`stock > 0`).
-  - `page` *(Integer, default 0)*: Trang hiện tại.
-  - `size` *(Integer, default 10)*: Số lượng item/trang.
-  - `sort` *(String, default "createdAt,desc")*: Sắp xếp theo Whitelist (`price,asc`, `price,desc`, `name,asc`, `createdAt,desc`).
-- **FE UI Mapping**: Trang Tìm kiếm & Danh mục sản phẩm (Filter Bar bên trái + Danh sách Grid bên phải).
-
----
-
-### 2. Chi Tiết Sản Phẩm
-- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/products/{id}`
-- **Security**: Public
-- **Response (200 OK)**: Trả về thông tin sản phẩm, danh mục, hình ảnh, thông số (`spec`), xuất xứ (`origin`), mảng tùy chọn khối lượng (`weightOptions`).
-
----
-
-### 3. Admin Quản Lý Sản Phẩm (`/api/v1/admin/products`)
-- `POST /api/v1/admin/products`: Tạo sản phẩm mới.
-- `PUT /api/v1/admin/products/{id}`: Cập nhật thông tin sản phẩm.
-- `DELETE /api/v1/admin/products/{id}`: Xóa sản phẩm.
-- `POST /api/v1/admin/products/{id}/image`: Upload ảnh sản phẩm lên MinIO.
-- `PATCH /api/v1/admin/products/{id}/toggle-featured`: Bật/tắt cờ Nổi bật trang chủ.
-
----
-
-## 🏠 MODULE 4: PUBLIC HOME & CONTENT MANAGEMENT (`/api/v1/home`)
-
----
-
-### 1. Lấy Toàn Bộ Dữ Liệu Trang Chủ (Aggregate Home Data)
-- **HTTP Method**: `GET`
-- **Endpoint**: `/api/v1/home`
-- **Security**: Public
-- **Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "message": "Get home page data successfully",
-    "data": {
-      "heroSlides": [
-        {
-          "id": 1,
-          "badgeText": "HẢI SẢN TƯƠI SỐNG",
-          "badgeIcon": "Sparkles",
-          "titlePrefix": "Đặc Sản",
-          "titleHighlight": "Cua Cà Mau",
-          "titleSuffix": "Thượng Hạng",
-          "description": "Cua thịt chắc, ngọt, giao sống tận nơi...",
-          "primaryCtaLabel": "Mua Ngay",
-          "primaryCtaHref": "/products?search=cua",
-          "primaryCtaIcon": "ShoppingBag",
-          "cardImageUrl": "https://minio.domain.com/banners/cua.jpg",
-          "cardOriginalPrice": 550000,
-          "cardSalePrice": 450000,
-          "cardTitle": "Cua Gạch Đất Mũi",
-          "cardSubtitle": "Size 2-3 con/kg"
-        }
-      ],
-      "categories": [
-        {
-          "id": 1,
-          "name": "Tôm & Cua",
-          "slug": "tom-cua",
-          "imageUrl": "...",
-          "badge": "TOP 1",
-          "badgeType": "hot",
-          "iconName": "utensils",
-          "homeDisplayStyle": "main"
-        }
-      ],
-      "dailyArrivals": [...],
-      "featuredProducts": [...],
-      "featuredProductTabs": [
-        { "slug": "all", "label": "Tất cả", "sortOrder": 0 },
-        { "slug": "tom-cua", "label": "Tôm & Cua", "sortOrder": 1 },
-        { "slug": "muc-bach-tuoc", "label": "Mực & Bạch tuộc", "sortOrder": 2 },
-        { "slug": "sot-tiec", "label": "Sốt Tiệc", "sortOrder": 3 },
-        { "slug": "so-oc", "label": "Sò & Ốc", "sortOrder": 4 }
-      ],
-      "comboSets": [...],
-      "featuredReviews": [],
-      "stats": {
-        "totalOrdersDelivered": 1250,
-        "averageRating": 5.0,
-        "totalReviews": 0
-      }
-    }
-  }
-  ```
-- **FE UI Mapping**: Trang chủ (`HomePage`). Map 8 phần dữ liệu tương ứng vào các UI Components (Hero Carousel, Category Grid, Daily Arrival Cards, Featured Products Grid, Combo Banner, Stats Footer).
-
----
-
-### 2. Admin Quản Lý Hero Banner (`/api/v1/admin/hero-banners`)
-- `GET /api/v1/admin/hero-banners`: Lấy tất cả banner (Active & Inactive).
-- `POST /api/v1/admin/hero-banners`: Tạo banner slide mới.
-- `PATCH /api/v1/admin/hero-banners/{id}`: Cập nhật thông tin banner.
-- `DELETE /api/v1/admin/hero-banners/{id}`: Xóa banner.
-- `PATCH /api/v1/admin/hero-banners/{id}/toggle`: Bật/Tắt hiển thị banner.
-- `POST /api/v1/admin/hero-banners/{id}/image`: Upload hình ảnh banner slide.
-
----
-
-### 3. Admin Quản Lý Hải Sản Cập Bến Ngày (`/api/v1/admin/daily-arrivals`)
-- `GET /api/v1/admin/daily-arrivals?date=yyyy-MM-dd`: Lấy danh sách hải sản cập bến theo ngày.
-- `POST /api/v1/admin/daily-arrivals`: Thêm sản phẩm vào danh sách cập bến (`productId`, `date`, `badge`, `title`, `description`...).
-- `PATCH /api/v1/admin/daily-arrivals/{id}`: Cập nhật thông tin cập bến.
-- `DELETE /api/v1/admin/daily-arrivals/{id}`: Xóa sản phẩm khỏi cập bến.
-
----
-
-### 4. Admin Evict Home Redis Cache (`/api/v1/admin/home/cache/evict`)
-- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/home/cache/evict`
-- **Security**: Admin (`ROLE_ADMIN`)
-- **Mục đích**: Làm mới/xóa sạch toàn bộ Redis Cache trang chủ để nội dung cập nhật ngay lập tức.
-
----
-
-## 🛒 MODULE 5: ORDERS & CHECKOUT (`/api/v1/orders`)
-
----
-
-### 1. Tạo Đơn Hàng Mới (Checkout)
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/orders`
-- **Security**: Authenticated (`ROLE_CUSTOMER`)
+#### 2. Cập Nhật Thông Tin Profile
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/users/update-profile`
+- **Security**: Bearer Token
 - **Request Body**:
   ```json
   {
-    "shippingAddressId": 1,
+    "fullName": "Nguyễn Văn B",
+    "phoneNumber": "0912345678"
+  }
+  ```
+
+#### 3. Upload Ảnh Đại Diện (Avatar)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/users/upload-avatar`
+- **Content-Type**: `multipart/form-data`
+- **Form Data**: `file` (File hình ảnh PNG/JPG/WEBP).
+
+#### 4. Đổi Mật Khẩu
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/users/change-password`
+- **Security**: Bearer Token
+- **Request Body**:
+  ```json
+  {
+    "oldPassword": "OldPassword123@",
+    "newPassword": "NewPassword123@"
+  }
+  ```
+
+---
+
+### 3.2 Sổ Địa Chỉ Giao Hàng (`/api/v1/addresses`)
+
+#### 1. Danh Sách Địa Chỉ Cá Nhân
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/addresses/me`
+- **Security**: Bearer Token
+- **Response (200 OK)**: `ApiResponse<List<AddressResponseDto>>`
+
+#### 2. Thêm Địa Chỉ Mới
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/addresses`
+- **Security**: Bearer Token
+- **Request Body**:
+  ```json
+  {
+    "recipientName": "Nguyễn Văn A",
+    "phone": "0987654321",
+    "province": "Thành phố Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": "Phường Bến Nghé",
+    "addressDetail": "123 Đường Lê Lợi",
+    "defaultAddress": true,
+    "tag": "Nhà Riêng" // "Nhà Riêng" | "Văn Phòng"
+  }
+  ```
+
+#### 3. Cập Nhật Địa Chỉ
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/addresses/{id}`
+- **Security**: Bearer Token
+- **Request Body**: Tương tự như DTO tạo mới địa chỉ.
+
+#### 4. Xóa Địa Chỉ
+- **HTTP Method**: `DELETE` | **Endpoint**: `/api/v1/addresses/delete/{id}`
+- **Security**: Bearer Token
+
+#### 5. Đặt Địa Chỉ Mặc Định
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/addresses/change-address-default/{id}`
+- **Security**: Bearer Token
+- **Request Body**:
+  ```json
+  {
+    "defaultAddress": true
+  }
+  ```
+
+---
+
+### 3.3 Quản Trị Người Dùng & RBAC Admin (`/api/v1/admin/users` & `/api/v1/admin/rbac`)
+
+#### 1. Danh Sách Người Dùng (Admin)
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/admin/users?page=0&size=10&sort=createdAt,desc`
+- **Security**: Admin (`ROLE_ADMIN`)
+
+#### 2. Khóa / Kích Hoạt Tài Khoản
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/users/{id}/status?isActive=false`
+- **Security**: Admin (`ROLE_ADMIN`)
+
+#### 3. Lấy Danh Sách Roles
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/admin/rbac/roles`
+- **Security**: `rbac:manage` hoặc `ROLE_ADMIN`
+
+#### 4. Tạo Role Mới
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/rbac/roles`
+- **Request Body**: `{ "name": "ROLE_STAFF", "description": "Nhân viên hỗ trợ" }`
+
+#### 5. Lấy Danh Sách Permissions
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/admin/rbac/permissions`
+
+#### 6. Cập Nhật Permission Cho Role
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/rbac/roles/{roleId}/permissions`
+- **Request Body**: `{ "permissionIds": [1, 2, 3] }`
+
+#### 7. Gán Role Cho Người Dùng
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/rbac/users/{userId}/roles`
+- **Request Body**: `{ "roleIds": [1, 2] }`
+
+---
+
+## 4. 🏷️ MODULE 3: CATEGORIES (`/api/v1/categories` & `/api/v1/admin/categories`)
+
+### 4.1 Public APIs
+
+#### 1. Lấy Danh Sách Danh Mục Đang Hoạt Động
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/categories`
+- **Security**: Public
+
+#### 2. Chi Tiết Danh Mục Theo ID
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/categories/{id}`
+- **Security**: Public
+
+---
+
+### 4.2 Admin Management APIs
+
+#### 1. Tạo Danh Mục Mới
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/categories`
+- **Request Body**:
+  ```json
+  {
+    "name": "Tôm & Cua",
+    "description": "Các loại tôm cua tươi sống",
+    "active": true
+  }
+  ```
+
+#### 2. Cập Nhật Danh Mục
+- **HTTP Method**: `PUT` | **Endpoint**: `/api/v1/admin/categories/{id}`
+
+#### 3. Xóa Danh Mục
+- **HTTP Method**: `DELETE` | **Endpoint**: `/api/v1/admin/categories/{id}`
+
+#### 4. Upload Ảnh Danh Mục
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/categories/{id}/image`
+- **Content-Type**: `multipart/form-data` | Form Field: `file`
+
+#### 5. Cấu Hình Hiển Thị Bento / Trang Chủ Cho Danh Mục
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/categories/{id}/home-config`
+- **Request Body**:
+  ```json
+  {
+    "badge": "TOP 1",
+    "badgeType": "hot", // "hot" | "new" | "sale"
+    "iconName": "utensils",
+    "homeDisplayStyle": "main", // "main" | "sub" | "banner"
+    "sortOrder": 1
+  }
+  ```
+
+---
+
+## 5. 📦 MODULE 4: PRODUCTS & SEARCH ENGINE (`/api/v1/products` & `/api/v1/admin/products`)
+
+### 5.1 Public APIs
+
+#### 1. Tìm Kiếm & Lọc Động Sản Phẩm (Dynamic Criteria Search)
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/products`
+- **Security**: Public (Rate Limit Public API)
+- **Query Parameters**:
+  - `search` *(String, optional)*: Từ khóa tìm kiếm theo tên.
+  - `categoryId` *(List<Long>, optional)*: Lọc theo 1 hoặc nhiều ID danh mục (`?categoryId=1&categoryId=2`).
+  - `minPrice` *(BigDecimal, optional)*: Giá tối thiểu.
+  - `maxPrice` *(BigDecimal, optional)*: Giá tối đa.
+  - `inStock` *(Boolean, optional)*: Lọc sản phẩm còn hàng (`stock > 0`).
+  - `page` *(Integer, default 0)*: Trang số.
+  - `size` *(Integer, default 10)*: Số lượng/trang.
+  - `sort` *(String, default "createdAt,desc")*: Sắp xếp (`price,asc`, `price,desc`, `name,asc`, `createdAt,desc`).
+- **Response (200 OK)**: `ApiResponse<PageResponse<ProductResponseDto>>`
+
+#### 2. Chi Tiết Sản Phẩm
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/products/{id}`
+- **Security**: Public
+
+---
+
+### 5.2 Admin Product Management & Dashboard Analytics
+
+#### 1. Tạo Sản Phẩm Mới
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/products`
+- **Security**: Permission `product:create`
+- **Request Body**:
+  ```json
+  {
+    "name": "Cua Gạch Cà Mau Premium",
+    "description": "Cua thịt chắc, ngọt, nhiều gạch...",
+    "price": 450000,
+    "stock": 50,
+    "categoryId": 1,
+    "spec": "Size 2-3 con/kg",
+    "origin": "Cà Mau, Việt Nam",
+    "weightOptions": ["1kg", "2kg", "5kg"]
+  }
+  ```
+
+#### 2. Cập Nhật Sản Phẩm
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/products/{id}`
+- **Security**: Permission `product:update`
+
+#### 3. Xóa Mềm Sản Phẩm (Soft Delete)
+- **HTTP Method**: `DELETE` | **Endpoint**: `/api/v1/admin/products/{id}`
+- **Security**: Permission `product:delete`
+
+#### 4. Tăng / Giảm Tồn Kho
+- `PATCH /api/v1/admin/products/increase/{id}?quantity=10`
+- `PATCH /api/v1/admin/products/decrease/{id}?quantity=5`
+
+#### 5. Upload Ảnh Sản Phẩm
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/products/{id}/image`
+- **Content-Type**: `multipart/form-data` | Form Field: `file`
+
+#### 6. Bật / Tắt Cờ Nổi Bật (Featured Product)
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/products/{id}/featured`
+
+#### 7. Cấu Hình Gói Combo Nổi Bật Trang Chủ
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/products/{id}/combo-config`
+- **Request Body**:
+  ```json
+  {
+    "isCombo": true,
+    "comboBadge": "COMBO TIẾC",
+    "comboTitle": "Set Hải Sản Hoàng Gia",
+    "comboSubtitle": "Dành cho 4-6 người ăn",
+    "comboOriginalPrice": 1200000,
+    "comboSaveText": "Tiết kiệm 200k",
+    "comboItems": ["1kg Cua Gạch", "500g Tôm Hùm", "1kg Sò Dương"]
+  }
+  ```
+
+#### 8. Thống Kê Dashboard Admin
+- `GET /api/v1/admin/products/top-buy?limit=10`: Top sản phẩm bán chạy nhất.
+- `GET /api/v1/admin/products/revenue-by-category`: Doanh thu phân chia theo danh mục.
+- `GET /api/v1/admin/products/revenue-in-month`: Doanh thu tổng hợp theo tháng.
+
+---
+
+## 6. 🏠 MODULE 5: HOME PAGE CONTENT MANAGEMENT (`/api/v1/home`)
+
+### 1. Lấy Toàn Bộ Dữ Liệu Trang Chủ Aggregated (Public API)
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/home`
+- **Security**: Public
+- **Mô tả**: API gộp trả về **8 khối dữ liệu hoàn chỉnh** cho Trang chủ (Được lưu Cache Redis tối ưu tốc độ < 20ms):
+  1. `heroSlides`: Danh sách banner chính trình chiếu.
+  2. `categories`: Danh mục hiển thị dạng Bento Grid.
+  3. `dailyArrivals`: Hải sản tươi mới cập bến trong ngày.
+  4. `featuredProducts`: Sản phẩm nổi bật.
+  5. `featuredProductTabs`: Danh sách tabs phân loại sản phẩm trang chủ.
+  6. `comboSets`: Danh sách các gói Combo ưu đãi.
+  7. `featuredReviews`: Đánh giá của khách hàng.
+  8. `stats`: Thống kê tổng số đơn delivered, rating trung bình.
+
+---
+
+### 2. Admin Quản Lý Nội Dung Trang Chủ & Redis Cache
+
+#### A. Xóa Clean Cache Trang Chủ (Evict Cache)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/admin/home/cache/evict`
+- **Security**: Admin (`ROLE_ADMIN`)
+
+#### B. Quản Lý Hero Banners (`/api/v1/admin/hero-banners`)
+- `GET /api/v1/admin/hero-banners`: Lấy tất cả banner slides.
+- `POST /api/v1/admin/hero-banners`: Tạo banner slide mới.
+- `PATCH /api/v1/admin/hero-banners/{id}`: Cập nhật banner slide.
+- `DELETE /api/v1/admin/hero-banners/{id}`: Xóa banner slide.
+- `PATCH /api/v1/admin/hero-banners/{id}/toggle`: Bật/Tắt trạng thái hiển thị banner.
+- `POST /api/v1/admin/hero-banners/{id}/image`: Upload ảnh banner (Multipart `file`).
+
+#### C. Quản Lý Hải Sản Cập Bến Ngày (`/api/v1/admin/daily-arrivals`)
+- `GET /api/v1/admin/daily-arrivals?date=YYYY-MM-DD`: Danh sách hải sản cập bến theo ngày.
+- `POST /api/v1/admin/daily-arrivals`: Thêm sản phẩm vào danh sách cập bến (`productId`, `date`, `badge`, `title`, `description`...).
+- `PATCH /api/v1/admin/daily-arrivals/{id}`: Cập nhật thông tin cập bến.
+- `DELETE /api/v1/admin/daily-arrivals/{id}`: Xóa khỏi danh sách cập bến.
+
+---
+
+## 7. 🛒 MODULE 6: ORDERS & CHECKOUT (`/api/v1/orders` & `/api/v1/admin/orders`)
+
+### 7.1 Customer Order APIs
+
+#### 1. Tạo Đơn Hàng Mới (Checkout)
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/orders`
+- **Security**: Bearer Token
+- **Request Body**:
+  ```json
+  {
     "paymentMethod": "VNPAY", // "COD" | "VNPAY" | "MOMO" | "ZALOPAY"
-    "note": "Giao hàng giờ hành chính",
+    "note": "Giao hàng giờ hành chính, gọi trước 15 phút",
     "items": [
       { "productId": 10, "quantity": 2 },
       { "productId": 15, "quantity": 1 }
@@ -412,66 +555,87 @@ Nằm bên trong thuộc tính `data` của `ApiResponse<PageResponse<T>>` đố
   ```
 - **Response (201 Created)**: Trả về thông tin đơn hàng với `status: "PENDING"`.
 
----
-
-### 2. Danh Sách Đơn Hàng Của Tôi
+#### 2. Danh Sách Đơn Hàng Của Tôi
 - **HTTP Method**: `GET` | **Endpoint**: `/api/v1/orders/my-orders?page=0&size=10`
-- **Response (200 OK)**: Trả về danh sách đơn hàng phân trang kèm chi tiết từng sản phẩm trong đơn.
+- **Security**: Bearer Token
+
+#### 3. Chi Tiết Đơn Hàng
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/orders/{id}`
+- **Security**: Bearer Token (Kiểm tra quyền sở hữu đơn hàng).
+
+#### 4. Hủy Đơn Hàng
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/orders/{id}/cancel-order`
+- **Security**: Bearer Token
+
+#### 5. Lọc Đơn Hàng Cá Nhân Theo Status
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/orders/me/{userId}?status=PENDING&page=0&size=10`
 
 ---
 
-### 3. Hủy Đơn Hàng
-- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/orders/{id}/cancel`
-- **Request Body**: `{ "reason": "Duyệt đổi sản phẩm khác" }`
+### 7.2 Admin Order Management
 
----
+#### 1. Lấy Toàn Bộ Đơn Hàng Hệ Thống
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/admin/orders?page=0&size=10`
 
-### 4. Admin Quản Lý Đơn Hàng (`/api/v1/admin/orders`)
-- `GET /api/v1/admin/orders`: Lấy toàn bộ đơn hàng hệ thống (hỗ trợ lọc status, user).
-- `PATCH /api/v1/admin/orders/{id}/status`: Cập nhật trạng thái đơn hàng (`PENDING` ➔ `CONFIRMED` ➔ `SHIPPED` ➔ `DONE` / `CANCELLED`).
+#### 2. Lọc Đơn Hàng Theo User / Status
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/admin/orders/{userId}?status=CONFIRMED`
 
----
-
-## 💳 MODULE 6: PAYMENT & VNPAY INTEGRATION (`/api/v1/payments`)
-
----
-
-### 1. Tạo URL Thanh Toán VNPay
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v1/payments/create-vnpay-url`
-- **Security**: Authenticated
+#### 3. Cập Nhật Trạng Thái Đơn Hàng
+- **HTTP Method**: `PATCH` | **Endpoint**: `/api/v1/admin/orders/{id}/update-status`
 - **Request Body**:
   ```json
   {
-    "orderId": 1001,
-    "bankCode": "NCB" // Optional: "NCB", "VISA", "VNPAYQR" hoặc null để khách tự chọn
+    "status": "CONFIRMED" // Trạng thái hợp lệ: PENDING -> CONFIRMED -> SHIPPED -> DONE (hoặc CANCELLED)
   }
   ```
+
+---
+
+## 8. 💳 MODULE 7: PAYMENT PROCESSING & VNPAY (`/api/v1/payments`)
+
+### 1. Tạo Đường Dẫn Thanh Toán VNPay
+- **HTTP Method**: `POST` | **Endpoint**: `/api/v1/payments/{orderId}/create`
+- **Security**: Bearer Token
 - **Response (200 OK)**:
   ```json
   {
     "success": true,
-    "message": "Create payment URL successfully",
-    "data": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=..."
+    "message": "Create Payment Successfully!",
+    "data": {
+      "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=..."
+    }
   }
   ```
-- **FE UI Mapping**: Redirect trình duyệt của người dùng sang đường dẫn `data` (VNPay Sandbox Page).
+- **FE Integration**: Redirect người dùng trực tiếp sang URL `paymentUrl` để thanh toán qua cổng VNPay.
 
 ---
 
-### 2. VNPay Return Callback Redirect (Trang kết quả thanh toán)
+### 2. VNPay Return Callback Redirect (Trang Kết Quả)
 - **HTTP Method**: `GET` | **Endpoint**: `/api/v1/payments/vnpay-return`
-- **FE UI Mapping**: Trang thông báo kết quả thanh toán (`/checkout/success` hoặc `/checkout/failed`). Backend xác thực chữ ký checksum và cập nhật đơn hàng.
+- **Mô tả**: Sau khi khách hoàn tất thanh toán trên VNPay, VNPay redirect về endpoint này. Backend kiểm tra chữ ký checksum và tự động 302 Redirect trình duyệt của khách hàng về trang Frontend:
+  `http://localhost:3000/payment-result?paymentId=...&status=SUCCESS&orderId=...`
+- **FE Integration**: Xây dựng Route `/payment-result` trên Frontend để đọc Query Parameters và hiển thị giao diện "Thanh toán thành công" hoặc "Thanh toán thất bại".
 
 ---
 
-## 📝 7. BẢNG MÃ LỖI CHI TIẾT (ERROR CODE REFERENCE)
+### 3. VNPay IPN Webhook
+- **HTTP Method**: `GET` | **Endpoint**: `/api/v1/payments/vnpay-ipn`
+- **Mô tả**: Webhook ngầm nhận thông báo từ server VNPay. FE không gọi API này.
 
-| Code | HTTP Status | Nguyên Nhân & Cách Xử Lý Ở Frontend |
-|---|:---:|---|
-| `VALIDATION_ERROR` | 400 | Dữ liệu Form không hợp lệ. Hiển thị thông báo dưới từng Input. |
-| `UNAUTHORIZED` | 401 | Token hết hạn hoặc không hợp lệ. Chuyển hướng về trang Đăng nhập. |
-| `FORBIDDEN` | 403 | Tài khoản không đủ quyền. Hiển thị thông báo "Truy cập bị từ chối". |
-| `RESOURCE_NOT_FOUND` | 404 | Không tìm thấy Sản phẩm / Đơn hàng / Banner ID. Hiển thị trang 404. |
-| `CONFLICT_ERROR` | 409 | Email/Phone đã tồn tại hoặc Xung đột tồn kho Optimistic Locking. |
-| `TOO_MANY_REQUESTS` | 429 | Spam gửi request quá nhanh. Hiển thị đếm ngược `Retry-After`. |
+---
+
+## 9. ⚠️ MODULE 8: ERROR HANDLING & HTTP STATUS CODES
+
+### Bảng Mã Lỗi & Cách Hướng Dẫn Xử Lý Tại Frontend:
+
+| Code / Exception | HTTP Status | Nguyên Nhân | Cách Xử Lý Chi Tiết Ở Frontend |
+|---|:---:|---|---|
+| `VALIDATION_ERROR` | `400 Bad Request` | Dữ liệu Form không đúng định dạng. | Hiển thị lỗi đỏ dưới từng ô Input tương ứng với key trong `data`. |
+| `UNAUTHORIZED` | `401 Unauthorized` | Token hết hạn / Chưa đăng nhập. | Tự động kích hoạt Refresh Token Interceptor hoặc redirect về `/login`. |
+| `FORBIDDEN` | `403 Forbidden` | Tài khoản không có quyền truy cập. | Hiển thị Toast Notification: "Bạn không có quyền thực hiện thao tác này". |
+| `RESOURCE_NOT_FOUND` | `404 Not Found` | Không tìm thấy ID / Thiếu địa chỉ mặc định. | Nếu thiếu địa chỉ: Nhắc chuyển sang trang Thêm Địa Chỉ. Nếu ID lỗi: Trang 404. |
+| `CONFLICT_ERROR` | `409 Conflict` | Email / Phone đã tồn tại trong DB. | Thông báo Email/Số điện thoại đã được đăng ký. |
+| `INSUFFICIENT_STOCK` | `400 Bad Request` | Số lượng tồn kho sản phẩm không đủ. | Thông báo sản phẩm đã hết hàng hoặc giảm số lượng trong giỏ. |
+| `TOO_MANY_REQUESTS` | `429 Too Many Requests` | Gửi request quá giới hạn Rate Limit. | Khóa tạm thời nút bấm và hiển thị đếm ngược 60 giây. |
+| `INTERNAL_SERVER_ERROR`| `500 Server Error` | Lỗi không mong muốn từ Backend. | Hiển thị thông báo "Hệ thống đang bảo trì, xin thử lại sau". |
+

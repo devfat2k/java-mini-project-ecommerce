@@ -3,6 +3,7 @@ package com.devfat.mini_ecommerce.category;
 import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @Operation(summary = "Get active categories", description = "Retrieve a list of all active categories.")
+    @SecurityRequirements({})
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoryResponseDto>>> getAllCategories(){
         List<CategoryResponseDto> categoryResponse = categoryService.countActiveCategories();
@@ -31,6 +33,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get category by ID", description = "Retrieve details of a specific category by ID.")
+    @SecurityRequirements({})
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponseDto>> getCategoriesById(@PathVariable Long id) {
         return ResponseEntity.ok().body(

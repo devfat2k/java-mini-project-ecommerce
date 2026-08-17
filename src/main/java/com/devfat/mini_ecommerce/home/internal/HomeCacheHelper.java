@@ -70,10 +70,13 @@ public class HomeCacheHelper {
     public List<FeaturedProductTabDto> getFeaturedProductTabs() {
         return List.of(
                 new FeaturedProductTabDto("all", "Tất cả", 0),
-                new FeaturedProductTabDto("tom-cua", "Tôm & Cua", 1),
-                new FeaturedProductTabDto("muc-bach-tuoc", "Mực & Bạch tuộc", 2),
-                new FeaturedProductTabDto("sot-tiec", "Sốt Tiệc", 3),
-                new FeaturedProductTabDto("so-oc", "Sò & Ốc", 4)
+                new FeaturedProductTabDto("ca-bien-tuoi", "Cá Biển Tươi", 1),
+                new FeaturedProductTabDto("tom", "Tôm Các Loại", 2),
+                new FeaturedProductTabDto("muc", "Mực Tươi", 3),
+                new FeaturedProductTabDto("cua-ghe", "Cua - Ghẹ", 4),
+                new FeaturedProductTabDto("so-ngheu-oc", "Sò - Nghêu - Ốc", 5),
+                new FeaturedProductTabDto("hai-san-kho", "Hải Sản Khô", 6),
+                new FeaturedProductTabDto("nuoc-mam-gia-vi-bien", "Nước Mắm & Gia Vị Biển", 7)
         );
     }
 

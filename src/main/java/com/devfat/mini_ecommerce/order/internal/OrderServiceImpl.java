@@ -164,9 +164,10 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(totalMoney);
 
-        emailService.sendPaymentSuccessEmail(order.getUser().getEmail(), order.getId());
+        OrderEntity savedOrder = orderRepository.save(order);
+        emailService.sendOrderConfirmation(savedOrder.getUser().getEmail(), savedOrder.getId());
 
-        return orderMapper.toResponseDto(order);
+        return orderMapper.toResponseDto(savedOrder);
     }
 
     // TODO (Optimize later): Xử lý Race Condition khi có nhiều request cùng update stock

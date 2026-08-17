@@ -79,6 +79,9 @@ public class PaymentServiceImpl implements PaymentService {
         if (!(order.getStatus().equals(OrderStatus.PENDING)))
             throw new BadRequestException("Order Not Pending!");
 
+        if (!order.getPaymentMethod().equals(PaymentMethod.VNPAY))
+            throw new BadRequestException("Payment method " + order.getPaymentMethod() + " does not require online payment.");
+
         if (paymentRepository.existsByOrderIdAndPaymentStatus(order.getId(), PaymentStatus.SUCCESS))
             throw new BadRequestException("Payment already success, cannot create new payment");
 

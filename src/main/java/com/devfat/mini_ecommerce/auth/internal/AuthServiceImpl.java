@@ -297,8 +297,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-
-
     private VerifyOtpResponseDto handleRegisterVerified(UserEntity user) {
         user.setEmailVerified(true);
         userRepository.save(user);

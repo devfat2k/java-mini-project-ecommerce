@@ -1,17 +1,11 @@
 package com.devfat.mini_ecommerce.category;
 
 import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
+import com.devfat.mini_ecommerce.category.dto.ConfigureCategoryHomeRequestDto;
 import com.devfat.mini_ecommerce.category.dto.CreateCategoryRequestDto;
 
 
-
-
-
-
-
-
-
-
+import com.devfat.mini_ecommerce.category.internal.CategoryEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,4 +21,5 @@ public interface CategoryService {
     List<CategoryResponseDto> countActiveCategories();
 
     CategoryResponseDto uploadCategoryImage(Long id, MultipartFile file);
+    CategoryResponseDto configureHome(Long id, ConfigureCategoryHomeRequestDto request);
 }

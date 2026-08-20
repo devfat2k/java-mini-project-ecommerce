@@ -70,7 +70,6 @@ public class RbacAdminServiceImpl implements RbacAdminService {
 
         RoleEntity updatedRole = roleRepository.save(role);
 
-        // Kích hoạt Evict toàn bộ user-permissions cache trong Redis
         userPermissionCacheService.evictAllUserPermissions();
 
         return mapToRoleResponseDto(updatedRole);

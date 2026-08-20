@@ -1,9 +1,6 @@
 package com.devfat.mini_ecommerce.product;
 
-import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
-import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
-import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
-import com.devfat.mini_ecommerce.product.internal.ProductRepository;
+import com.devfat.mini_ecommerce.product.dto.*;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,16 +8,19 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ProductService {
-    PageResponse<ProductResponseDto> getProductsWithSearch(String search, Long categoryId, Pageable pageable);
+    PageResponse<ProductResponseDto> getProductsWithSearch(ProductSearchCriteria criteria, Pageable pageable);
     ProductResponseDto findById(Long id);
     ProductResponseDto create(CreateProductRequestDto createProductRequestDto);
     ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequestDto);
     Boolean softDelete(Long id);
     ProductResponseDto decreaseStock(Long id, int quantity);
     ProductResponseDto increaseStock(Long id, int quantity);
-    List<ProductRepository.TopProductView> getTopProducts(int limit);
-    List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable);
-    List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue();
+    List<TopProductResponseDto> getTopProducts(int limit);
+    List<CategoryRevenueResponseDto> getCategoryRevenue(Pageable pageable);
+    List<MonthlyRevenueResponseDto> getMonthlyRevenue();
 
     ProductResponseDto uploadProductImage(Long id, MultipartFile file);
+
+    void toggleFeaturedProduct(Long id);
+    ProductResponseDto configureCombo(Long id, ConfigureProductComboRequestDto request);
 }

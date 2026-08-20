@@ -1,15 +1,5 @@
 package com.devfat.mini_ecommerce.auth.dto;
 
-
-
-
-
-
-
-
-
-
-
 import jakarta.validation.constraints.*;
 
 public record RegisterRequestDto(

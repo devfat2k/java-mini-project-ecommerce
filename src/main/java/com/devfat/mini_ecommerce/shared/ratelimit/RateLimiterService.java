@@ -22,24 +22,29 @@ public class RateLimiterService {
     private final RateLimitProperties rateLimitProperties;
 
     public ConsumptionProbe tryConsume(String key, RateLimitType type) {
-        Bandwidth bandwidth = resolveBandwidth(type);
+        try {
+            Bandwidth bandwidth = resolveBandwidth(type);
 
-        Supplier<BucketConfiguration> configSupplier = () -> BucketConfiguration.builder()
-                .addLimit(bandwidth)
-                .build();
+            Supplier<BucketConfiguration> configSupplier = () -> BucketConfiguration.builder()
+                    .addLimit(bandwidth)
+                    .build();
 
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        Bucket bucket = proxyManager.builder().build(keyBytes, configSupplier);
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            Bucket bucket = proxyManager.builder().build(keyBytes, configSupplier);
 
-        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+            ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
-        if (probe.isConsumed()) {
-            log.debug("RateLimit token consumed for key: {}. Remaining: {}", key, probe.getRemainingTokens());
-        } else {
-            log.warn("RateLimit exceeded for key: {}. Nanos to wait: {}", key, probe.getNanosToWaitForRefill());
+            if (probe.isConsumed()) {
+                log.debug("RateLimit token consumed for key: {}. Remaining: {}", key, probe.getRemainingTokens());
+            } else {
+                log.warn("RateLimit exceeded for key: {}. Nanos to wait: {}", key, probe.getNanosToWaitForRefill());
+            }
+
+            return probe;
+        } catch (Exception e) {
+            log.error("⚠️ RateLimit Redis check failed for key '{}': {}. Falling open (allowing request).", key, e.getMessage());
+            return ConsumptionProbe.consumed(1, 0);
         }
-
-        return probe;
     }
 
     private Bandwidth resolveBandwidth(RateLimitType type) {

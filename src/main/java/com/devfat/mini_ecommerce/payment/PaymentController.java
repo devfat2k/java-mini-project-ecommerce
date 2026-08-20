@@ -1,10 +1,7 @@
 package com.devfat.mini_ecommerce.payment;
 
 import com.devfat.mini_ecommerce.payment.dto.CreatePaymentResponseDto;
-import com.devfat.mini_ecommerce.payment.internal.PaymentEntity;
-import com.devfat.mini_ecommerce.payment.internal.PaymentRepository;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
-import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,8 +21,6 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final PaymentRepository paymentRepository;
-
 
     @Operation(summary = "Create VNPay payment", description = "Generate a VNPay payment URL for an order.")
     @PostMapping("/{orderId}/create")
@@ -45,21 +40,13 @@ public class PaymentController {
 
     @Operation(summary = "VNPay return callback", description = "Handle user redirect return from VNPay payment gateway.")
     @GetMapping("/vnpay-return")
-    public ResponseEntity<?> vnPayReturn(
+    public ResponseEntity<Void> vnPayReturn(
             @RequestParam Map<String, String> allParams
             ) {
-
-
-        // Bước 1: lấy vnp_TxnRef từ URL — đây là paymentId mình đã tự đặt lúc tạo Payment
-        Long paymentId = Long.parseLong(allParams.get("vnp_TxnRef"));
-
-        // Bước 2: dùng paymentId đó, query lại bảng payments trong DB
-        PaymentEntity payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment Not Found"));
-
-        String feUrl = "http://localhost:3000/";
-        String redirectUrl = feUrl + "/payment-result?paymentId=" + payment.getId() + "&status=" + payment.getPaymentStatus() + "&orderId=" + payment.getOrder().getId();
-        return ResponseEntity.status(HttpStatus.FOUND).header("Location", redirectUrl).body(payment);
+        String redirectUrl = paymentService.handleVnPayReturn(allParams);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", redirectUrl)
+                .build();
     }
 
     @Operation(summary = "VNPay IPN webhook", description = "Process Instant Payment Notification (IPN) from VNPay.")

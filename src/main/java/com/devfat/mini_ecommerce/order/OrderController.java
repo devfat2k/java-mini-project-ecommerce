@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +31,15 @@ public class OrderController {
     public ResponseEntity<ApiResponse<PageResponse<OrderResponseDto>>> getOrderResponse(
             @PathVariable Long userId,
             @RequestParam OrderStatus status,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             Pageable pageable
-    )  {
+    ) throws AccessDeniedException {
+
+        if (!userPrincipal.getUserId().equals(userId)
+                && !userPrincipal.hasRole("ADMIN")) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         return ResponseEntity.ok().body(
                 ApiResponse.success(
                         orderService.getOrderByUserIdAndStatusWithDetails(userId, status, pageable),

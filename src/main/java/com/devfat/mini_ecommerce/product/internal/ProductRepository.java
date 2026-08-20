@@ -2,57 +2,18 @@ package com.devfat.mini_ecommerce.product.internal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 @EnableJpaRepositories
-public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
+public interface ProductRepository extends JpaRepository<ProductEntity, Long>, JpaSpecificationExecutor<ProductEntity> {
 
-    //    Lấy tất cả sản phẩm còn hàng
-    List<ProductEntity> findByStockGreaterThan(int stock);
-
-    // Lấy sản phẩm theo category và còn hàng
-    List<ProductEntity> findByCategoryIdAndStockGreaterThan(Long categoryId, int stock);
-
-    // Lấy sản phẩm kèm category, lọc theo giá tối thiểu - @Query JPQL (JOIN 2 bảng, lấy category luôn, không N+1):
-    @Query("SELECT p FROM ProductEntity p JOIN FETCH p.category WHERE p.stock > 0")
-    List<ProductEntity> findAvailableWithCategory();
-
-    // Lấy sản phẩm kèm category, lọc theo giá tối thiểu
-    @Query("SELECT p from ProductEntity p JOIN FETCH p.category WHERE p.price >= :minPrice")
-    List<ProductEntity> findByMinPriceWithCategory(@Param("minPrice") BigDecimal minPrice);
-
-    // Pageable (phân trang, dùng cho API danh sách) - "Lấy sản phẩm còn hàng, có phân trang"
-    Page<ProductEntity> findByStockGreaterThan(int stock, Pageable pageable);
-
-    // Pageable - "Lấy sản phẩm có phân trang, có search theo tên sản phầm"
-//    @Query(
-//            value = "SELECT p FROM ProductEntity p " +
-//                    "LEFT JOIN FETCH p.category c " +
-//                    "WHERE p.isActive = true " +
-//                    "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-//                    "AND (:categoryId IS NULL OR c.id = :categoryId)",
-//            countQuery = "SELECT COUNT(p) " +
-//                    "FROM ProductEntity p " +
-//                    "LEFT JOIN  p.category c " +
-//                    "WHERE p.isActive = true " +
-//                    "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-//                    "AND (:categoryId IS NULL OR c.id = :categoryId)"
-//    )
-//    Page<ProductEntity> findByNameAndCategoryIdContainsIgnoreCase(
-//            @Param("search") String search,
-//            @Param("categoryId") Long categoryId,
-//            Pageable pageable
-//    );
     @EntityGraph(attributePaths = {"category"})
     @Query(
             "SELECT p FROM ProductEntity p " +
@@ -66,10 +27,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             Pageable pageable
     );
 
-
-
-//    @EntityGraph(attributePaths = {"category"}) // Hoạt động y hệt JOIN FETCH
-//    Page<ProductEntity> findByIsActiveTrueAndNameContainsIgnoreCase(String search, Pageable pageable);
 
     interface TopProductView {
         String getName();
@@ -86,7 +43,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             " ORDER BY  COALESCE(SUM(oi.quantity), 0) DESC")
     List<TopProductView> getTopViewProduct(Pageable pageable);
 
-    //Tổng doanh thu theo category
     interface CategoryRevenueView {
         String getName();
         BigDecimal getRevenue();
@@ -99,7 +55,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             " ORDER BY  COALESCE(SUM(oi.unitPrice * oi.quantity), 0) DESC")
     List<CategoryRevenueView> getCategoryRevenue(Pageable pageable);
 
-    //MonthlyRevenueView
     interface MonthlyRevenueView {
         LocalDateTime getMonth();
         BigDecimal getRevenue();
@@ -110,4 +65,25 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             " GROUP BY DATE_TRUNC('month', o.createdAt)" +
             " ORDER BY DATE_TRUNC('month', o.createdAt) DESC")
     List<MonthlyRevenueView> getMonthlyRevenue();
+
+
+    @Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.category " +
+            "WHERE p.isFeatured = true AND p.isActive = true")
+    List<ProductEntity> findFeaturedActiveProducts();
+
+    @Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.category " +
+            "WHERE p.productType = 'COMBO' AND p.isActive = true " +
+            "ORDER BY p.comboSortOrder ASC")
+    List<ProductEntity> findActiveComboProducts();
+
+
+    @Modifying
+    @Query("UPDATE ProductEntity p SET p.stock = p.stock - :qty WHERE p.id = :id AND p.stock >= :qty")
+    int decreaseStockAtomically(@Param("id") Long id, @Param("qty") int qty);
+
+    @Modifying
+    @Query("UPDATE ProductEntity p SET p.stock = p.stock + :qty WHERE p.id = :id")
+    int increaseStockAtomically(@Param("id") Long id, @Param("qty") int qty);
 }

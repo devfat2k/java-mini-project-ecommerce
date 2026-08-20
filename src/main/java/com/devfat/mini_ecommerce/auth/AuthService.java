@@ -1,9 +1,7 @@
 package com.devfat.mini_ecommerce.auth;
 
 import com.devfat.mini_ecommerce.auth.dto.*;
-import com.devfat.mini_ecommerce.user.dto.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
-
 
 
 public interface AuthService {
@@ -15,5 +13,4 @@ public interface AuthService {
     VerifyOtpResponseDto verifyOtp(VerifyOtpRequestDto dto);
     ResendOtpResponseDto resendOtp(ResendOtpRequestDto dto);
     void resetPassword(ResetPasswordRequestDto dto);
-
 }

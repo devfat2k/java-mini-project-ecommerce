@@ -198,26 +198,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidRefreshTokenException(genericErrorMessage);
         }
         UserEntity user = refreshTokenEntity.getUser();
-        Set<String> roles = user.getRoles() != null
-                ? user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())
-                : Set.of();
-        Set<String> permissions = user.getRoles() != null
-                ? user.getRoles().stream()
-                .filter(r -> r.getPermissions() != null)
-                .flatMap(r -> r.getPermissions().stream())
-                .map(PermissionEntity::getCode)
-                .collect(Collectors.toSet())
-                : Set.of();
-
-        UserPrincipal userPrincipal = UserPrincipal.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .roles(roles)
-                .permissions(permissions)
-                .active(user.isActive())
-                .emailVerified(user.isEmailVerified())
-                .build();
+        UserPrincipal userPrincipal = com.devfat.mini_ecommerce.shared.security.UserPrincipalFactory.fromEntity(user);
         String accessToken = jwtProvider.generateToken(userPrincipal);
         return RefreshTokenResponseDto.builder()
                 .accessToken(accessToken)
@@ -297,32 +278,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-
-
     private VerifyOtpResponseDto handleRegisterVerified(UserEntity user) {
         user.setEmailVerified(true);
         userRepository.save(user);
 
-        Set<String> roles = user.getRoles() != null
-                ? user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())
-                : Set.of();
-        Set<String> permissions = user.getRoles() != null
-                ? user.getRoles().stream()
-                .filter(r -> r.getPermissions() != null)
-                .flatMap(r -> r.getPermissions().stream())
-                .map(PermissionEntity::getCode)
-                .collect(Collectors.toSet())
-                : Set.of();
-
-        UserPrincipal userPrincipal = UserPrincipal.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .roles(roles)
-                .permissions(permissions)
-                .active(user.isActive())
-                .emailVerified(user.isEmailVerified())
-                .build();
+        UserPrincipal userPrincipal = com.devfat.mini_ecommerce.shared.security.UserPrincipalFactory.fromEntity(user);
         String accessToken = jwtProvider.generateToken(userPrincipal);
 
         refreshTokenRepository.deleteExpiredOrRevokedByUserId(user.getId(), LocalDateTime.now());

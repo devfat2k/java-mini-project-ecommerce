@@ -2,5 +2,7 @@ target/
 .git/
 .idea/
 *.iml
-.env
-.mvn/wrapper/maven-wrapper.jar
+.vscode/
+.env*
+!.env.example
+*.log

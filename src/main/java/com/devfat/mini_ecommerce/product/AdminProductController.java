@@ -1,9 +1,6 @@
 package com.devfat.mini_ecommerce.product;
 
-import com.devfat.mini_ecommerce.product.dto.CreateProductRequestDto;
-import com.devfat.mini_ecommerce.product.dto.ProductResponseDto;
-import com.devfat.mini_ecommerce.product.dto.UpdateProductRequestDto;
-import com.devfat.mini_ecommerce.product.internal.ProductRepository;
+import com.devfat.mini_ecommerce.product.dto.*;
 import com.devfat.mini_ecommerce.shared.base.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -90,11 +87,25 @@ public class AdminProductController {
     }
 
     @Operation(
+            summary = "Decrease product stock",
+            description = "Decrease the stock quantity of a product."
+    )
+    @PatchMapping("/decrease/{id}")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> decreaseStock(
+            @PathVariable Long id, @RequestParam int quantity
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                productService.decreaseStock(id, quantity),
+                "Decrease Stock Successfully!"
+        ));
+    }
+
+    @Operation(
             summary = "Admin - Get Top Product",
             description = "Get Top Product Buy For Admin Dashboard"
     )
     @GetMapping("/top-buy")
-    public ResponseEntity<ApiResponse<List<ProductRepository.TopProductView>>> getTopBuyProduct(
+    public ResponseEntity<ApiResponse<List<TopProductResponseDto>>> getTopBuyProduct(
             @RequestParam(defaultValue = "10") int limit
     ) {
         return ResponseEntity.ok().body(ApiResponse.success(
@@ -108,7 +119,7 @@ public class AdminProductController {
             description = "Get Top Product Buy By Category For Admin Dashboard"
     )
     @GetMapping("/revenue-by-category")
-    public ResponseEntity<ApiResponse<List<ProductRepository.CategoryRevenueView>>> getRevenueByCategory() {
+    public ResponseEntity<ApiResponse<List<CategoryRevenueResponseDto>>> getRevenueByCategory() {
         return ResponseEntity.ok().body(ApiResponse.success(
                 productService.getCategoryRevenue(PageRequest.of(0, 10)),
                 "Get Revenue By Category Success!"
@@ -120,7 +131,7 @@ public class AdminProductController {
             description = "Get Top Revenue Product Buy For Admin Dashboard"
     )
     @GetMapping("/revenue-in-month")
-    public ResponseEntity<ApiResponse<List<ProductRepository.MonthlyRevenueView>>> getMonthlyRevenue() {
+    public ResponseEntity<ApiResponse<List<MonthlyRevenueResponseDto>>> getMonthlyRevenue() {
         return ResponseEntity.ok().body(
                 ApiResponse.success(
                         productService.getMonthlyRevenue(),
@@ -143,16 +154,26 @@ public class AdminProductController {
         ));
     }
 
-    //    TODO: Toggle Feature in Home
     @PatchMapping("/{id}/featured")
-    public ResponseEntity<ApiResponse<Void>> updateFeatured() {
-        return null;
+    public ResponseEntity<ApiResponse<Void>> updateFeatured(
+            @PathVariable("id") Long id
+    ) {
+        productService.toggleFeaturedProduct(id);
+        return  ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
+                null,
+                "Featured Product Successfully!"
+        ));
     }
 
-    //    TODO: Combo Config in Home
-    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Configure product combo for home page", description = "Admin API — Upgrade product to COMBO type and set home combo card properties.")
     @PatchMapping("/{id}/combo-config")
-    public ResponseEntity<ApiResponse<Void>> setComboConfig() {
-        return null;
+    public ResponseEntity<ApiResponse<ProductResponseDto>> configureCombo(
+            @PathVariable Long id,
+            @Valid @RequestBody ConfigureProductComboRequestDto request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                productService.configureCombo(id, request),
+                "Configure product combo successfully"
+        ));
     }
 }

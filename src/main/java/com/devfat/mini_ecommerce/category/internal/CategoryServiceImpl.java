@@ -2,6 +2,7 @@ package com.devfat.mini_ecommerce.category.internal;
 
 import com.devfat.mini_ecommerce.category.CategoryService;
 import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
+import com.devfat.mini_ecommerce.category.dto.ConfigureCategoryHomeRequestDto;
 import com.devfat.mini_ecommerce.category.dto.CreateCategoryRequestDto;
 import com.devfat.mini_ecommerce.category.exception.CategoryHasProductsException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -75,7 +77,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryResponseDto> countActiveCategories() {
-        return categoryRepository.countActiveCategories();
+       return categoryRepository.countActiveCategories().stream()
+               .map(categoryMapper::toResponseDto)
+               .collect(Collectors.toList());
     }
 
     @Override
@@ -84,6 +88,21 @@ public class CategoryServiceImpl implements CategoryService {
 
         String url = storageService.uploadFile(file, "categoryImage", true);
         category.setImageUrl(url);
+        return categoryMapper.toResponseDto(categoryRepository.save(category));
+    }
+
+    @Override
+    @CacheEvict(value = "home:categories", key = "'all'")
+    @Transactional
+    public CategoryResponseDto configureHome(Long id, ConfigureCategoryHomeRequestDto request) {
+        CategoryEntity category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id = " + id));
+        if (request.badge() != null) category.setBadge(request.badge());
+        if (request.badgeType() != null) category.setBadgeType(request.badgeType());
+        if (request.iconName() != null) category.setIconName(request.iconName());
+        if (request.homeDisplayStyle() != null) category.setHomeDisplayStyle(request.homeDisplayStyle());
+        if (request.homeSortOrder() != null) category.setHomeSortOrder(request.homeSortOrder());
+        if (request.homeIsActive() != null) category.setHomeIsActive(request.homeIsActive());
         return categoryMapper.toResponseDto(categoryRepository.save(category));
     }
 }

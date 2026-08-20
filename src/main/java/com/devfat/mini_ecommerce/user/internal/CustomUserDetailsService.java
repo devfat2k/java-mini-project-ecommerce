@@ -24,29 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity user = userRepository.findByEmailWithRolesAndPermissions(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        Set<String> roleNames = new HashSet<>();
-        Set<String> permissionCodes = new HashSet<>();
-
-        if(user.getRoles() != null) {
-            for (RoleEntity role : user.getRoles()) {
-                roleNames.add(role.getName());
-
-                if(role.getPermissions() != null) {
-                    for (PermissionEntity permission : role.getPermissions()) {
-                        permissionCodes.add(permission.getCode());
-                    }
-                }
-            }
-        }
-
-        return UserPrincipal.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .roles(roleNames)
-                .permissions(permissionCodes)
-                .active(user.isActive())
-                .emailVerified(user.isEmailVerified())
-                .build();
+        return com.devfat.mini_ecommerce.shared.security.UserPrincipalFactory.fromEntity(user);
     }
 }

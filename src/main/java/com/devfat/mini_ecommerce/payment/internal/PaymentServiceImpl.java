@@ -37,7 +37,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final VNPayConfig vnPayConfig;
     private final EmailService emailService;
 
-    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    @org.springframework.beans.factory.annotation.Value("${app.frontend-url}")
     private String frontendUrl;
 
 

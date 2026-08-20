@@ -11,16 +11,6 @@ import com.devfat.mini_ecommerce.user.UserService;
 import com.devfat.mini_ecommerce.user.dto.ChangePasswordRequestDto;
 import com.devfat.mini_ecommerce.user.dto.UpdateProfileRequestDto;
 import com.devfat.mini_ecommerce.user.dto.UserResponseDto;
-
-
-
-
-
-
-
-
-
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 
 
@@ -46,18 +35,6 @@ public class UserServiceImpl implements UserService {
     private final OtpService otpService;
     private final UserMapper userMapper;
 
-//    public UserResponseDto toResponseDto(UserEntity userEntity) {
-//        return UserResponseDto.builder()
-//                .userId(userEntity.getId())
-//                .email(userEntity.getEmail())
-//                .fullName(userEntity.getFullName())
-//                .avatarUrl(userEntity.getAvatarUrl())
-//                .phoneNumber(userEntity.getPhoneNumber())
-//                .role(userEntity.getRole())
-//                .isActive(userEntity.isActive())
-//                .createdAt(userEntity.getCreatedAt())
-//                .build();
-//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -83,9 +60,12 @@ public class UserServiceImpl implements UserService {
 
         String hashedNewPassword = passwordEncoder.encode(newPassword);
 
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        if(!(passwordEncoder.matches(oldPassword, user.getPassword()))) throw new ResourceNotFoundException("Old password does not match!");
+        if (!(passwordEncoder.matches(oldPassword, user.getPassword()))) {
+            throw new BadRequestException("Old password does not match");
+        }
 
         user.setPassword(hashedNewPassword);
     }
@@ -130,6 +110,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDto uploadUserImage(Long id, MultipartFile file) {
         UserEntity user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
@@ -140,6 +121,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void requestChangePasswordOtp(Long currentUserId) {
         UserEntity user = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 

@@ -1,10 +1,15 @@
 package com.devfat.mini_ecommerce.home;
 
 import com.devfat.mini_ecommerce.home.dto.*;
+import com.devfat.mini_ecommerce.product.dto.CategoryRevenueResponseDto;
+import com.devfat.mini_ecommerce.product.dto.MonthlyRevenueResponseDto;
+import com.devfat.mini_ecommerce.product.dto.TopProductResponseDto;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -24,8 +29,21 @@ public class HomeCacheSerializationTest {
         redisObjectMapper.registerModule(new JavaTimeModule());
         redisObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+        redisObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        redisObjectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true);
+        redisObjectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
+
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfBaseType(Object.class)
+                .allowIfSubType("com.devfat.mini_ecommerce")
+                .allowIfSubType("java.util")
+                .allowIfSubType("java.time")
+                .allowIfSubType("java.math")
+                .allowIfSubType("org.springframework.data.domain")
+                .build();
+
         redisObjectMapper.activateDefaultTyping(
-                LaissezFaireSubTypeValidator.instance,
+                ptv,
                 ObjectMapper.DefaultTyping.EVERYTHING,
                 JsonTypeInfo.As.PROPERTY
         );
@@ -55,8 +73,6 @@ public class HomeCacheSerializationTest {
         List<DailyArrivalDto> list = new ArrayList<>(List.of(dto));
 
         byte[] bytes = serializer.serialize(list);
-        System.out.println("JavaTime List JSON: " + new String(bytes));
-
         Object deserialized = serializer.deserialize(bytes);
         assertNotNull(deserialized);
         List<?> deserializedList = (List<?>) deserialized;
@@ -65,23 +81,33 @@ public class HomeCacheSerializationTest {
     }
 
     @Test
-    void testListOfWithEverythingAndProperty() {
+    void testAnalyticsDtosSerialization() {
         GenericJackson2JsonRedisSerializer serializer = createSerializer();
 
-        List<FeaturedProductTabDto> tabs = List.of(
-                new FeaturedProductTabDto("all", "Tất cả", 0)
+        List<TopProductResponseDto> topProducts = List.of(
+                new TopProductResponseDto("Cua Hoàng Đế", new BigDecimal("1500000"), 25)
         );
+        byte[] topBytes = serializer.serialize(new ArrayList<>(topProducts));
+        Object topDes = serializer.deserialize(topBytes);
+        assertNotNull(topDes);
 
-        byte[] bytes = serializer.serialize(tabs);
-        System.out.println("List.of JSON: " + new String(bytes));
+        List<MonthlyRevenueResponseDto> monthly = List.of(
+                new MonthlyRevenueResponseDto(LocalDateTime.now(), new BigDecimal("50000000"))
+        );
+        byte[] monthlyBytes = serializer.serialize(new ArrayList<>(monthly));
+        Object monthlyDes = serializer.deserialize(monthlyBytes);
+        assertNotNull(monthlyDes);
 
-        Object deserialized = serializer.deserialize(bytes);
-        System.out.println("List.of Deserialized: " + deserialized);
-        assertNotNull(deserialized);
+        List<CategoryRevenueResponseDto> category = List.of(
+                new CategoryRevenueResponseDto("Tôm Cua Ghẹ", new BigDecimal("35000000"))
+        );
+        byte[] catBytes = serializer.serialize(new ArrayList<>(category));
+        Object catDes = serializer.deserialize(catBytes);
+        assertNotNull(catDes);
     }
 
     @Test
-    void testConfig2_DefaultConstructor_HomePageDataDto() {
+    void testHomePageDataDtoSerialization() {
         GenericJackson2JsonRedisSerializer serializer = createSerializer();
 
         HomePageDataDto homeData = new HomePageDataDto(
@@ -96,10 +122,8 @@ public class HomeCacheSerializationTest {
         );
 
         byte[] bytes = serializer.serialize(homeData);
-        System.out.println("Config 2 HomePageData JSON: " + new String(bytes));
-
         Object deserialized = serializer.deserialize(bytes);
-        System.out.println("Config 2 HomePageData Deserialized: " + deserialized);
+        assertNotNull(deserialized);
         assertEquals(HomePageDataDto.class, deserialized.getClass());
     }
 }

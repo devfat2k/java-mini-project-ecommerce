@@ -2,10 +2,7 @@ package com.devfat.mini_ecommerce.product.internal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -80,4 +77,13 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long>, J
             "WHERE p.productType = 'COMBO' AND p.isActive = true " +
             "ORDER BY p.comboSortOrder ASC")
     List<ProductEntity> findActiveComboProducts();
+
+
+    @Modifying
+    @Query("UPDATE ProductEntity p SET p.stock = p.stock - :qty WHERE p.id = :id AND p.stock >= :qty")
+    int decreaseStockAtomically(@Param("id") Long id, @Param("qty") int qty);
+
+    @Modifying
+    @Query("UPDATE ProductEntity p SET p.stock = p.stock + :qty WHERE p.id = :id")
+    int increaseStockAtomically(@Param("id") Long id, @Param("qty") int qty);
 }

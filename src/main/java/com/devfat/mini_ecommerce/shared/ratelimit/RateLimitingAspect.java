@@ -25,14 +25,17 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class RateLimitingAspect {
 
     private final RateLimiterService rateLimiterService;
+    private final RateLimitProperties rateLimitProperties;
+
 
     @Around("@annotation(rateLimit)")
     public Object enforceRateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes == null) {
+        if (!rateLimitProperties.isEnabled()) {
             return joinPoint.proceed();
         }
 
+        assert attributes != null;
         HttpServletRequest request = attributes.getRequest();
         HttpServletResponse response = attributes.getResponse();
 
@@ -68,7 +71,7 @@ public class RateLimitingAspect {
             log.warn("Rate limit exceeded for key: {}. Retry after {}s", identifierKey, retryAfterSeconds);
 
             throw new TooManyRequestsException(
-                    "Rate limit exceeded. Please try again after " + retryAfterSeconds + " giây.",
+                    "Rate limit exceeded. Please try again after " + retryAfterSeconds + " seconds.",
                     retryAfterSeconds
             );
         }

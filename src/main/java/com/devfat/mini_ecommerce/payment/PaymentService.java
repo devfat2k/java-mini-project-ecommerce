@@ -18,4 +18,5 @@ import java.util.Map;
 public interface PaymentService {
     CreatePaymentResponseDto createPayment(Long userId, Long orderId, HttpServletRequest request);
     void handleVnPayIpn(Map<String, String> params);
+    String handleVnPayReturn(Map<String, String> allParams);
 }

@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,7 +67,7 @@ public class HomeCacheHelper {
     @Cacheable(value = "home:featuredProductTabs", key = "'all'")
     @Transactional(readOnly = true)
     public List<FeaturedProductTabDto> getFeaturedProductTabs() {
-        return List.of(
+        return new java.util.ArrayList<>(List.of(
                 new FeaturedProductTabDto("all", "Tất cả", 0),
                 new FeaturedProductTabDto("ca-bien-tuoi", "Cá Biển Tươi", 1),
                 new FeaturedProductTabDto("tom", "Tôm Các Loại", 2),
@@ -77,7 +76,7 @@ public class HomeCacheHelper {
                 new FeaturedProductTabDto("so-ngheu-oc", "Sò - Nghêu - Ốc", 5),
                 new FeaturedProductTabDto("hai-san-kho", "Hải Sản Khô", 6),
                 new FeaturedProductTabDto("nuoc-mam-gia-vi-bien", "Nước Mắm & Gia Vị Biển", 7)
-        );
+        ));
     }
 
     @Cacheable(value = "home:comboSets", key = "'all'")
@@ -86,13 +85,13 @@ public class HomeCacheHelper {
         return productRepository.findActiveComboProducts()
                 .stream()
                 .map(homeMapper::toComboSetDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(java.util.ArrayList::new));
     }
 
     @Cacheable(value = "home:featuredReviews", key = "'all'")
     @Transactional(readOnly = true)
     public List<FeaturedReviewDto> getFeaturedReviews() {
-        return Collections.emptyList(); // Tạm — chờ module Review
+        return new java.util.ArrayList<>(); // Tạm — chờ module Review
     }
 
     @Cacheable(value = "home:stats", key = "'all'")

@@ -9,28 +9,20 @@ import com.devfat.mini_ecommerce.payment.PaymentProvider;
 import com.devfat.mini_ecommerce.payment.PaymentService;
 import com.devfat.mini_ecommerce.payment.PaymentStatus;
 import com.devfat.mini_ecommerce.payment.dto.CreatePaymentResponseDto;
+import com.devfat.mini_ecommerce.product.internal.ProductEntity;
+import com.devfat.mini_ecommerce.product.internal.ProductRepository;
 import com.devfat.mini_ecommerce.shared.exception.BadRequestException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
-
-
-
-
-
-
-
-
-
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -41,19 +33,18 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-
+    private final ProductRepository productRepository;
     private final VNPayConfig vnPayConfig;
     private final EmailService emailService;
+
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
 
     @Scheduled(cron = "${app.scheduler.payment-expired.cron}")
     @Transactional
     public void expiredPayment() {
-        // Bước A: tính mốc thời gian "15 phút trước tính từ bây giờ"
         LocalDateTime expireThreshold = LocalDateTime.now().minusMinutes(15);
-
-        // Bước B: tìm TẤT CẢ Payment còn PENDING mà được tạo TRƯỚC mốc đó
-        // (nghĩa là: đã tạo hơn 15 phút rồi mà vẫn chưa ai thanh toán)
         List<PaymentEntity> expiredPayments = paymentRepository
                 .findAllByPaymentStatusAndCreatedAtBefore(
                         PaymentStatus.PENDING, expireThreshold);
@@ -63,8 +54,13 @@ public class PaymentServiceImpl implements PaymentService {
             paymentRepository.save(payment);
 
             OrderEntity order = payment.getOrder();
-            order.setStatus(OrderStatus.CANCELLED);
-            orderRepository.save(order);
+            if (order != null && order.getStatus() == OrderStatus.PENDING) {
+                order.getItems().forEach(item -> {
+                    productRepository.increaseStockAtomically(item.getProduct().getId(), item.getQuantity());
+                });
+                order.setStatus(OrderStatus.CANCELLED);
+                orderRepository.save(order);
+            }
         }
     }
 
@@ -89,7 +85,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAmount(order.getTotalAmount());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setPaymentProvider(PaymentProvider.VNPAY);
-        payment.setPaymentMethod(PaymentMethod.WALLET);
+        payment.setPaymentMethod(PaymentMethod.VNPAY);
         payment.setOrder(order);
         payment = paymentRepository.save(payment);
 
@@ -112,12 +108,12 @@ public class PaymentServiceImpl implements PaymentService {
         // Các dòng dưới đây gọi VNPayUtil (HÀM XỬ LÝ), KHÔNG PHẢI vnPayConfig
         vnpParams.put("vnp_IpAddr", VNPayUtil.getIpAddress(request));
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        vnpParams.put("vnp_CreateDate", formatter.format(cld.getTime()));
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        vnpParams.put("vnp_CreateDate", now.format(fmt));
 
-        cld.add(Calendar.MINUTE, 15);   // hạn thanh toán 15 phút — hạt giống cho P8 sau này
-        vnpParams.put("vnp_ExpireDate", formatter.format(cld.getTime()));
+        vnpParams.put("vnp_ExpireDate", now.plusMinutes(15).format(fmt));
+
 
         // ─── 4. Build query + ký chữ ký — gọi VNPayUtil, truyền secretKey lấy từ vnPayConfig ───
         Map<String, String> result = VNPayUtil.buildQueryAndHash(vnpParams, vnPayConfig.getSecretKey());
@@ -167,6 +163,36 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setPaymentStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
         }
+    }
+
+    @Override
+    @Transactional
+    public String handleVnPayReturn(Map<String, String> allParams) {
+        String txnRef = allParams.get("vnp_TxnRef");
+        if (txnRef == null || txnRef.isBlank()) {
+            throw new BadRequestException("Missing vnp_TxnRef parameter");
+        }
+        Long paymentId = Long.parseLong(txnRef);
+
+        PaymentEntity payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment Not Found"));
+
+        String responseCode = allParams.getOrDefault("vnp_ResponseCode", "");
+        String status = "00".equals(responseCode) ? "success" : "failed";
+        String vnpTransactionNo = allParams.getOrDefault("vnp_TransactionNo", "");
+
+        String baseUrl = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
+        StringBuilder redirectUrl = new StringBuilder(baseUrl)
+                .append("/en/payment-result")
+                .append("?orderId=").append(payment.getOrder().getId())
+                .append("&status=").append(status)
+                .append("&paymentMethod=").append(payment.getPaymentMethod());
+
+        if (!vnpTransactionNo.isEmpty()) {
+            redirectUrl.append("&paymentId=").append(vnpTransactionNo);
+        }
+
+        return redirectUrl.toString();
     }
 }
 

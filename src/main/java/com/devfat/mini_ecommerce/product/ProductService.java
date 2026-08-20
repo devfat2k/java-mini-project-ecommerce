@@ -1,8 +1,6 @@
 package com.devfat.mini_ecommerce.product;
 
 import com.devfat.mini_ecommerce.product.dto.*;
-import com.devfat.mini_ecommerce.product.internal.ProductEntity;
-import com.devfat.mini_ecommerce.product.internal.ProductRepository;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,9 +15,9 @@ public interface ProductService {
     Boolean softDelete(Long id);
     ProductResponseDto decreaseStock(Long id, int quantity);
     ProductResponseDto increaseStock(Long id, int quantity);
-    List<ProductRepository.TopProductView> getTopProducts(int limit);
-    List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable);
-    List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue();
+    List<TopProductResponseDto> getTopProducts(int limit);
+    List<CategoryRevenueResponseDto> getCategoryRevenue(Pageable pageable);
+    List<MonthlyRevenueResponseDto> getMonthlyRevenue();
 
     ProductResponseDto uploadProductImage(Long id, MultipartFile file);
 

@@ -4,6 +4,7 @@ import com.devfat.mini_ecommerce.shared.security.JwtAccessDeniedHandler;
 import com.devfat.mini_ecommerce.shared.security.JwtAuthenticationEntryPoint;
 import com.devfat.mini_ecommerce.shared.security.JwtAuthenticationFilter;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +30,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private static final String[] PUBLIC_AUTH_URLS = {

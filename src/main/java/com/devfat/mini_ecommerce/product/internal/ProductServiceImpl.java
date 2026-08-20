@@ -37,9 +37,11 @@ public class ProductServiceImpl implements ProductService {
     private final ProductSortValidator sortValidator;
 
     @Override
+    @CacheEvict(value = {"products", "product:category_browse", "home:featuredProducts", "home:comboSets"}, allEntries = true)
     @Transactional
     public ProductResponseDto create(CreateProductRequestDto createProductRequestDto) {
-        CategoryEntity category = categoryRepository.findById(createProductRequestDto.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
+        CategoryEntity category = categoryRepository.findById(createProductRequestDto.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + createProductRequestDto.categoryId()));
         ProductEntity product = new ProductEntity();
         product.setName(createProductRequestDto.name());
         product.setCategory(category);
@@ -75,25 +77,27 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDto findById(Long id) {
         return productRepository.findById(id)
                 .map(productMapper::toResponseDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     @Override
-    @CacheEvict(value = "products", key = "#id")
+    @CacheEvict(value = {"products", "product:category_browse", "home:featuredProducts", "home:comboSets"}, allEntries = true)
     @Transactional
     public ProductResponseDto update(Long id, UpdateProductRequestDto updateProductRequest) {
-        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         if(updateProductRequest.name() != null) product.setName(updateProductRequest.name());
         if(updateProductRequest.description() != null)  product.setDescription(updateProductRequest.description());
         if(updateProductRequest.stock() != null) product.setStock(updateProductRequest.stock());
         if (updateProductRequest.isActive() != null) product.setActive(updateProductRequest.isActive());
         if(updateProductRequest.price() != null) {
-            if(updateProductRequest.price().equals(BigDecimal.ZERO)) throw new ResourceNotFoundException("Price must be greater than 0");
+            if(updateProductRequest.price().compareTo(BigDecimal.ZERO) <= 0) throw new BadRequestException("Price must be greater than 0");
             product.setPrice(updateProductRequest.price());
         }
         if(updateProductRequest.categoryId() != null) {
-            CategoryEntity category = categoryRepository.findById(updateProductRequest.categoryId()).orElseThrow(() -> new ResourceNotFoundException("Category id is not found"));
+            CategoryEntity category = categoryRepository.findById(updateProductRequest.categoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + updateProductRequest.categoryId()));
             product.setCategory(category);
         }
 
@@ -102,99 +106,105 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    @CacheEvict(value = "products", key = "#id")
+    @CacheEvict(value = {"products", "product:category_browse", "home:featuredProducts", "home:comboSets"}, allEntries = true)
     @Transactional
     public ProductResponseDto decreaseStock(Long id, int quantity) {
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Not found id = " + id));
-
-        // TODO: must add retry tại đây, để xử lý khi có lỗi hoặc đồng thời cao để tương tác sau đó ném lỗi ~ 3 lần retry
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         if(quantity <= 0) throw new BadRequestException("Quantity must be greater than 0");
-        if(product.getStock() < quantity) throw new IllegalArgumentException("The product is unavailable. Please try again or choose another product.");
+        if(product.getStock() < quantity) throw new InsufficientStockException("The product is unavailable. Please try again or choose another product.");
 
         product.setStock(product.getStock() - quantity);
-        productRepository.save(product);
-
         return productMapper.toResponseDto(product);
     }
 
 
     @Override
-    @CacheEvict(value = "products", key = "#id")
+    @CacheEvict(value = {"products", "product:category_browse", "home:featuredProducts", "home:comboSets"}, allEntries = true)
     @Transactional
     public ProductResponseDto increaseStock(Long id, int quantity) {
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
-        if(quantity <= 0) throw new InsufficientStockException("Quantity must than 0");
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        if(quantity <= 0) throw new BadRequestException("Quantity must be greater than 0");
 
         product.setStock(product.getStock() + quantity);
-        productRepository.save(product);
-
         return productMapper.toResponseDto(product);
     }
 
 
     @Override
-    @CacheEvict(value = "products", key = "#id")
+    @CacheEvict(value = {"products", "product:category_browse", "home:featuredProducts", "home:comboSets"}, allEntries = true)
     @Transactional
     public Boolean softDelete(Long id) {
-        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
-        if(!(product.isActive())) throw new ResourceNotFoundException("Products is unactive");
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        if(!(product.isActive())) throw new BadRequestException("Product is already inactive");
 
         product.setActive(false);
-        productRepository.save(product);
-
         return true;
     }
 
     @Override
     @Cacheable(value = "analytics", key = "'top-products'")
     @Transactional(readOnly = true)
-    public List<ProductRepository.TopProductView> getTopProducts(int limit) {
-        return productRepository.getTopViewProduct(PageRequest.of(0, limit));
+    public List<TopProductResponseDto> getTopProducts(int limit) {
+        return productRepository.getTopViewProduct(PageRequest.of(0, limit))
+                .stream()
+                .map(v -> new TopProductResponseDto(v.getName(), v.getPrice(), v.getMostBuy()))
+                .toList();
     }
 
     @Override
     @Cacheable(value = "analytics", key = "'category-revenue'")
     @Transactional(readOnly = true)
-    public List<ProductRepository.CategoryRevenueView> getCategoryRevenue(Pageable pageable) {
-        return productRepository.getCategoryRevenue(pageable);
+    public List<CategoryRevenueResponseDto> getCategoryRevenue(Pageable pageable) {
+        return productRepository.getCategoryRevenue(pageable)
+                .stream()
+                .map(v -> new CategoryRevenueResponseDto(v.getName(), v.getRevenue()))
+                .toList();
     }
 
     @Override
     @Cacheable(value = "analytics", key = "'monthly-revenue'")
     @Transactional(readOnly = true)
-    public List<ProductRepository.MonthlyRevenueView> getMonthlyRevenue() {
-        return productRepository.getMonthlyRevenue();
+    public List<MonthlyRevenueResponseDto> getMonthlyRevenue() {
+        return productRepository.getMonthlyRevenue()
+                .stream()
+                .map(v -> new MonthlyRevenueResponseDto(v.getMonth(), v.getRevenue()))
+                .toList();
     }
 
     @Override
     @CacheEvict(value = "products", key = "#id")
-    @Transactional  // ← Bắt buộc: giữ session mở cho đến khi toResponse() truy cập category (LAZY)
+    @Transactional
     public ProductResponseDto uploadProductImage(Long id, MultipartFile file) {
-       ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
+       ProductEntity product = productRepository.findById(id)
+               .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         String url = storageService.uploadFile(file,"productImage", true);
         product.setImageUrl(url);
-        productRepository.save(product);
 
-        return  productMapper.toResponseDto(product);
+        return productMapper.toResponseDto(product);
     }
 
     @Override
+    @CacheEvict(value = {"products", "home:featuredProducts"}, allEntries = true)
+    @Transactional
     public void toggleFeaturedProduct(Long id) {
-        ProductEntity product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product id is not found"));
-        if(!(product.isActive())) throw new ResourceNotFoundException("Product is inactive");
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        if(!(product.isActive())) throw new BadRequestException("Product is inactive");
 
         product.setFeatured(!product.isFeatured());
-        productRepository.save(product);
     }
 
     @Override
+    @CacheEvict(value = {"products", "home:comboSets"}, allEntries = true)
+    @Transactional
     public ProductResponseDto configureCombo(Long id, ConfigureProductComboRequestDto request) {
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         // Chuyển loại sản phẩm sang COMBO
         product.setProductType(ProductType.COMBO);
         if (request.comboCategory() != null) product.setComboCategory(request.comboCategory());

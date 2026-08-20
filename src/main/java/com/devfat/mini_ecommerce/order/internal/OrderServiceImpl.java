@@ -11,6 +11,7 @@ import com.devfat.mini_ecommerce.product.exception.InsufficientStockException;
 import com.devfat.mini_ecommerce.product.internal.ProductEntity;
 import com.devfat.mini_ecommerce.product.internal.ProductRepository;
 import com.devfat.mini_ecommerce.shared.base.PageResponse;
+import com.devfat.mini_ecommerce.shared.exception.BadRequestException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.user.address.internal.AddressRepository;
 import com.devfat.mini_ecommerce.user.address.internal.UserAddressEntity;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import static com.devfat.mini_ecommerce.order.OrderStatus.*;
@@ -67,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public PageResponse<OrderResponseDto> getOrderByUserIdAndStatusWithDetails(Long userId, OrderStatus status, Pageable pageable)  {
         if(userId == null) throw new ResourceNotFoundException("User id is required!");
-        if(userRepository.findById(Objects.requireNonNull(userId)).isEmpty() || userRepository.findById(userId).isEmpty()) {
+        if(userRepository.findById(Objects.requireNonNull(userId)).isEmpty()) {
             throw new ResourceNotFoundException("User not found!");
         }
 
@@ -127,6 +129,8 @@ public class OrderServiceImpl implements OrderService {
                 "addressDetail", defaultAddress.get().getAddressDetail()
         ));
 
+
+
         // b2. Tạo đơn hàng rỗng - có total amount =0
         OrderEntity order = new OrderEntity();
         order.setUser(Objects.requireNonNull(user));
@@ -145,18 +149,26 @@ public class OrderServiceImpl implements OrderService {
          * Gắn item vào order.getItems().add(item) + set item.setOrder(order)
          */
         createOrderRequestDto.items().forEach(requestItem -> {
-           ProductEntity product = productRepository.findById(requestItem.productId()).orElseThrow(() ->  new ResourceNotFoundException("Product not found!"));
-            if (product.getStock() < requestItem.quantity()) {
-                throw new InsufficientStockException("Not enough product: " + product.getName());
+            ProductEntity product = productRepository.findById(requestItem.productId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found!"));
+
+            if (!product.isActive()) {
+                throw new BadRequestException("Product is inactive: " + product.getName());
             }
-           product.setStock(product.getStock() - requestItem.quantity());
-           OrderItemEntity orderItem = OrderItemEntity.builder()
+
+            int rowsAffected = productRepository.decreaseStockAtomically(
+                    requestItem.productId(), requestItem.quantity());
+            if (rowsAffected == 0) {
+                throw new InsufficientStockException("Not enough stock for product: " + product.getName());
+            }
+
+            OrderItemEntity orderItem = OrderItemEntity.builder()
                     .order(order)
                     .product(product)
                     .quantity(requestItem.quantity())
                     .unitPrice(product.getPrice())
                     .build();
-           order.getItems().add(orderItem);
+            order.getItems().add(orderItem);
         });
         // Tính total amount
         BigDecimal totalMoney = order.getItems().stream()
@@ -170,11 +182,6 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toResponseDto(savedOrder);
     }
 
-    // TODO (Optimize later): Xử lý Race Condition khi có nhiều request cùng update stock
-    // Keywords để nâng cấp sau:
-    // 1. JPA Optimistic Locking (Thêm annotation @Version vào entity Product)
-    // 2. JPA Pessimistic Locking (Dùng @Lock(LockModeType.PESSIMISTIC_WRITE) ở Repository)
-    // 3. Native DB Update (Tối ưu nhất: Viết @Modifying @Query("UPDATE Product p SET p.stock = p.stock + :qty WHERE p.id = :id"))
     @Override
     @Transactional
     public OrderResponseDto changeStatus(Long id, UpdateOrderStatusRequestDto updateOrderStatusRequestDto) {
@@ -185,10 +192,9 @@ public class OrderServiceImpl implements OrderService {
             throw new InvalidStatusTransitionException("Do not change from " + order.getStatus() + " to " + updateOrderStatusRequestDto.orderStatus());
         }
 
-        if(updateOrderStatusRequestDto.orderStatus().equals(CANCELLED)) {
+        if (updateOrderStatusRequestDto.orderStatus().equals(CANCELLED) && !order.getStatus().equals(CANCELLED)) {
             order.getItems().forEach(item -> {
-                int quantityInOrderCancel =  item.getQuantity();
-                item.getProduct().setStock(item.getProduct().getStock() + quantityInOrderCancel);
+                productRepository.increaseStockAtomically(item.getProduct().getId(), item.getQuantity());
             });
         }
 
@@ -208,6 +214,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<OrderResponseDto> getMyOrder(Long userId, Pageable pageable) {
        userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
@@ -218,6 +225,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void cancelOrder(Long orderId, Long userId) throws AccessDeniedException {
         userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
@@ -227,11 +235,15 @@ public class OrderServiceImpl implements OrderService {
             throw new AccessDeniedException("Access denied");
         }
 
-        if (order.getStatus().equals(PENDING)) {
-            throw new AccessDeniedException("Access denied! Only change with Pending order");
+        if (!order.getStatus().equals(PENDING)) {
+            throw new BadRequestException("Only PENDING orders can be cancelled.");
         }
 
+        order.getItems().forEach(item -> {
+            productRepository.increaseStockAtomically(item.getProduct().getId(), item.getQuantity());
+        });
+
         order.setStatus(CANCELLED);
-        orderMapper.toResponseDto(orderRepository.save(order));
+        orderRepository.save(order);
     }
 }

@@ -42,4 +42,5 @@ build/
 # SECRETS & LOCAL CONFIG
 # ==========================================
 .env
-.env.production
+.env.*
+!.env.example

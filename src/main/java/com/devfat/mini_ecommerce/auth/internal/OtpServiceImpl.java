@@ -74,6 +74,9 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional
     public String generateAndSendOtp(UserEntity user, OtpPurpose purpose) {
+        // Vô hiệu hoá tất cả OTP cũ chưa dùng của mục đích này
+        otpVerificationRepository.consumeAllPending(user.getId(), purpose);
+
         // BƯỚC 1 — Sinh 6 chữ số bằng SecureRandom
         SecureRandom secureRandom = new SecureRandom();
         int otpNumber = secureRandom.nextInt(900_000) + 100_000;

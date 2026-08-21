@@ -155,12 +155,11 @@ public class AdminProductController {
     }
 
     @PatchMapping("/{id}/featured")
-    public ResponseEntity<ApiResponse<Void>> updateFeatured(
+    public ResponseEntity<ApiResponse<ProductResponseDto>> updateFeatured(
             @PathVariable("id") Long id
     ) {
-        productService.toggleFeaturedProduct(id);
         return  ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(
-                null,
+                productService.toggleFeaturedProduct(id),
                 "Featured Product Successfully!"
         ));
     }

@@ -58,6 +58,7 @@ app:
     max-image-size: 5MB
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    public-url: ${MINIO_PUBLIC_URL:${app.minio.endpoint}}
     access-key: ${MIN_IO_ACCESS_KEY}
     secret-key: ${MIN_IO_SECRET_KEY}
     bucket: ${MIN_IO_BUCKET}

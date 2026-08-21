@@ -38,6 +38,9 @@ public class StorageServiceImpl implements StorageService {
     @Value("${app.minio.endpoint}")
     private String endPoint;
 
+    @Value("${app.minio.public-url:${app.minio.endpoint}}")
+    private String publicUrl;
+
     /**
      * Tự động khởi tạo Bucket & cấu hình Policy PUBLIC READ cho MinIO khi ứng dụng khởi động.
      * Giải quyết triệt để lỗi 403 Forbidden khi Frontend hiển thị hình ảnh.
@@ -119,6 +122,10 @@ public class StorageServiceImpl implements StorageService {
             throw new RuntimeException(e);
         }
 
-        return endPoint + "/" + bucketName + "/" + objectName;
+        String baseUrl = StringUtils.trimTrailingCharacter(
+                (publicUrl != null && !publicUrl.isBlank()) ? publicUrl.trim() : endPoint.trim(),
+                '/'
+        );
+        return baseUrl + "/" + bucketName + "/" + objectName;
     }
 }

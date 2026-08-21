@@ -75,10 +75,8 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "original_price", precision = 12, scale = 2)
     BigDecimal originalPrice;
 
-    @Column(length = 255)
     private String spec;
 
-    @Column(length = 255)
     private String origin;
 
     @Column(name = "weight_options", columnDefinition = "text[]")
@@ -102,7 +100,7 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "combo_cta_text", length = 100)
     private String comboCtaText;
 
-    @Column(name = "combo_href", length = 255)
+    @Column(name = "combo_href")
     private String comboHref;
 
     @Builder.Default

@@ -13,6 +13,7 @@ import com.devfat.mini_ecommerce.shared.exception.BadRequestException;
 import com.devfat.mini_ecommerce.shared.exception.ResourceNotFoundException;
 import com.devfat.mini_ecommerce.storage.StorageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -189,14 +191,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "home:featuredProducts"}, allEntries = true)
+    @CacheEvict(value = {"products", "product:category_browse", "home:featuredProducts", "home:comboSets"}, allEntries = true)
     @Transactional
-    public void toggleFeaturedProduct(Long id) {
+    public ProductResponseDto toggleFeaturedProduct(Long id) {
         ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         if(!(product.isActive())) throw new BadRequestException("Product is inactive");
 
-        product.setFeatured(!product.isFeatured());
+        product.setFeatured(!(product.isFeatured()));
+        log.info("Featured product is set to {}", product.isFeatured());
+       return productMapper.toResponseDto(productRepository.save(product));
     }
 
     @Override

@@ -1,14 +1,11 @@
 package com.devfat.mini_ecommerce.product.dto;
 
 import com.devfat.mini_ecommerce.category.dto.CategoryResponseDto;
-
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +22,7 @@ public class ProductResponseDto {
     private String description;
     private String imageUrl;
     private boolean active;
+    private boolean featured;
     private CategoryResponseDto category;
     private String unit;
     private List<String> tags;

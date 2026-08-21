@@ -21,6 +21,6 @@ public interface ProductService {
 
     ProductResponseDto uploadProductImage(Long id, MultipartFile file);
 
-    void toggleFeaturedProduct(Long id);
+    ProductResponseDto toggleFeaturedProduct(Long id);
     ProductResponseDto configureCombo(Long id, ConfigureProductComboRequestDto request);
 }

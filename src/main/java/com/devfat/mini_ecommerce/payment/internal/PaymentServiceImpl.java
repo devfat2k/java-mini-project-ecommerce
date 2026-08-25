@@ -85,7 +85,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAmount(order.getTotalAmount());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setPaymentProvider(PaymentProvider.VNPAY);
-        payment.setPaymentMethod(PaymentMethod.VNPAY);
+        payment.setPaymentMethod(order.getPaymentMethod());
         payment.setOrder(order);
         payment = paymentRepository.save(payment);
 
@@ -168,6 +168,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public String handleVnPayReturn(Map<String, String> allParams) {
+        boolean isValidSignature = VNPayUtil.verifySignature(allParams, vnPayConfig.getSecretKey());
+        if (!isValidSignature) {
+            throw new BadRequestException("Invalid signature - possible fraud attempt");
+        }
+
         String txnRef = allParams.get("vnp_TxnRef");
         if (txnRef == null || txnRef.isBlank()) {
             throw new BadRequestException("Missing vnp_TxnRef parameter");
@@ -181,9 +186,32 @@ public class PaymentServiceImpl implements PaymentService {
         String status = "00".equals(responseCode) ? "success" : "failed";
         String vnpTransactionNo = allParams.getOrDefault("vnp_TransactionNo", "");
 
+        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            if ("00".equals(responseCode)) {
+                payment.setPaymentStatus(PaymentStatus.SUCCESS);
+                payment.setPaidAt(LocalDateTime.now());
+                payment.setProviderTransactionId(vnpTransactionNo);
+                paymentRepository.save(payment);
+
+                OrderEntity order = payment.getOrder();
+                if (order != null && order.getStatus() == OrderStatus.PENDING) {
+                    order.setStatus(OrderStatus.CONFIRMED);
+                    orderRepository.save(order);
+                    try {
+                        emailService.sendPaymentSuccessEmail(order.getUser().getEmail(), order.getId());
+                    } catch (Exception e) {
+                        log.error("Failed to send payment success email: ", e);
+                    }
+                }
+            } else {
+                payment.setPaymentStatus(PaymentStatus.FAILED);
+                paymentRepository.save(payment);
+            }
+        }
+
         String baseUrl = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
         StringBuilder redirectUrl = new StringBuilder(baseUrl)
-                .append("/en/payment-result")
+                .append("/payment-result")
                 .append("?orderId=").append(payment.getOrder().getId())
                 .append("&status=").append(status)
                 .append("&paymentMethod=").append(payment.getPaymentMethod());

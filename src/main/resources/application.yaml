@@ -40,6 +40,10 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     create-schemas: false
+    # Dùng Direct URL (không qua pgBouncer pooler) để tránh lỗi DDL trong transaction mode
+    url: ${DB_DIRECT_URL:${spring.datasource.url}}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     # repair-on-migrate KHÔNG phải Spring Boot property — bị bỏ qua hoàn toàn.
     # Việc repair được xử lý bởi FlywayConfig bean (FlywayMigrationStrategy).
 
